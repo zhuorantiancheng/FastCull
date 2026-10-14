@@ -1,0 +1,117 @@
+{
+  "version": "2.0.7",
+  "date": "2026-10-12",
+  "real_lr_2_0_5_baseline": {
+    "389243B8-DB38-4BC4-8091-383CD87CC425": {
+      "legacy_invoke_unix_ms": 1791813957000,
+      "launcher": {
+        "first_log_unix_ms": 1791813962888
+      },
+      "gui": {
+        "first_log_unix_ms": 1791813962921,
+        "first_frame_unix_ms": 1791813963632,
+        "first_image_unix_ms": 1791813963766
+      },
+      "legacy_invoke_to_launcher_log_ms_range": [
+        4889,
+        5888
+      ],
+      "gui_entry_to_first_frame_ms": 711
+    }
+  },
+  "real_lr_2_0_6_diagnosis": {
+    "6A99CF97-752F-450B-B41C-57E6BF1A3F73": {
+      "lr_phases": {
+        "menu": {
+          "elapsed_ms": 0.0,
+          "unix_ms": 1791815017597
+        },
+        "task": {
+          "elapsed_ms": 1.0,
+          "unix_ms": 1791815017598
+        },
+        "selection": {
+          "elapsed_ms": 1.0,
+          "unix_ms": 1791815017598
+        },
+        "metadata": {
+          "elapsed_ms": 24.1,
+          "unix_ms": 1791815017621
+        },
+        "session-path": {
+          "elapsed_ms": 25.4,
+          "unix_ms": 1791815017622
+        },
+        "state-written": {
+          "elapsed_ms": 26.4,
+          "unix_ms": 1791815017623
+        },
+        "invoke": {
+          "elapsed_ms": 26.4,
+          "unix_ms": 1791815017623
+        },
+        "popen-return": {
+          "elapsed_ms": 62.3,
+          "unix_ms": 1791815017659
+        },
+        "read-return": {
+          "elapsed_ms": 5913.2,
+          "unix_ms": 1791815023510
+        },
+        "pipe-closed": {
+          "elapsed_ms": 5914.2,
+          "unix_ms": 1791815023511
+        },
+        "ready": {
+          "elapsed_ms": 5917.2,
+          "unix_ms": 1791815023514
+        }
+      },
+      "legacy_invoke_unix_ms": 1791815017000,
+      "launcher": {
+        "first_log_unix_ms": 1791815023416,
+        "entry_unix_ms": 1791815023415,
+        "logger_ms": 2.5
+      },
+      "gui": {
+        "first_log_unix_ms": 1791815023450,
+        "entry_unix_ms": 1791815023450,
+        "logger_ms": 2.0,
+        "session_ms": 0.2,
+        "native_begin_unix_ms": 1791815023455,
+        "app_builder_unix_ms": 1791815024017,
+        "font_config_ms": 6.8,
+        "worker_pool_ms": 6.9,
+        "first_frame_unix_ms": 1791815024029,
+        "first_image_unix_ms": 1791815024132
+      },
+      "legacy_invoke_to_launcher_log_ms_range": [
+        5416,
+        6415
+      ],
+      "task_queue_ms": 1.0,
+      "selection_ms": 0.0,
+      "metadata_ms": 23.1,
+      "popen_ms": 35.9,
+      "pipe_read_ms": 5850.9,
+      "invoke_to_program_entry_ms": 5792,
+      "menu_to_first_frame_ms": 6432,
+      "gui_entry_to_first_frame_ms": 579,
+      "graphics_window_init_ms": 562
+    }
+  },
+  "release_hidden_pipe_probe": {
+    "mode": "extra-pipe",
+    "exit_code": 0,
+    "handoff_ms": 131.0,
+    "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n",
+    "gui": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=5894",
+    "session_closed": true
+  },
+  "rust_tests": 32,
+  "lua_sdk_tests": 26,
+  "startup_analysis_tests": 2,
+  "sdk_native_shell_gui_and_sync_tested": true,
+  "true_lr_speed_and_focus_after_2_0_7": "awaiting user retry",
+  "interpretation": "2.0.6 main entry lag confirms delay precedes Rust work; cooperative SDK execution replaces blocking native pipe read. Foreground grant and one visible-frame focus request added."
+}

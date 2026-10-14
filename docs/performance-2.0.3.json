@@ -1,0 +1,71 @@
+{
+  "version": "2.0.3",
+  "date": "2026-10-12",
+  "rust_tests": 30,
+  "lua_tests": 15,
+  "includes_lightroom_export": false,
+  "measurement": "application draw-frame callback, excludes display presentation; OS file cache not flushed",
+  "zoom_pixels": [
+    6192,
+    4128
+  ],
+  "zoom_runs": [
+    {
+      "run": 1,
+      "uncached_ms": 113.7,
+      "cached_ms": 0.8
+    },
+    {
+      "run": 2,
+      "uncached_ms": 111.1,
+      "cached_ms": 1.2
+    },
+    {
+      "run": 3,
+      "uncached_ms": 115.3,
+      "cached_ms": 1.0
+    }
+  ],
+  "zoom_uncached_median_ms": 113.7,
+  "zoom_cached_median_ms": 1.0,
+  "startup_before": {
+    "count": 340,
+    "handoff_ms": 176.4,
+    "first_ui_frame_ms": 449.8,
+    "first_image_ms": 635.8,
+    "gui": "first_draw=true current=339 photos=340 full=3 thumbs=44 error=None stress_remaining=0 elapsed_ms=6427"
+  },
+  "startup_after": {
+    "count": 340,
+    "handoff_ms": 166.7,
+    "first_ui_frame_ms": 378.2,
+    "first_image_ms": 451.2,
+    "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6410"
+  },
+  "stress": {
+    "count": 340,
+    "pipe": false,
+    "elapsed_seconds": 8.712,
+    "peak_working_set_mb": 319.3,
+    "app": "first_draw=true current=0 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=8304"
+  },
+  "real_lightroom_full_qa": false,
+  "broken_sidecar_native": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 6.806,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=1 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=6299",
+    "session_revision": 3,
+    "session_export_rows": 1
+  },
+  "native_session": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 6.808,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=1 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=6354",
+    "session_revision": 3,
+    "session_export_rows": 1
+  }
+}

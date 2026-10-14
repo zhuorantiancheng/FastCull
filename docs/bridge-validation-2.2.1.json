@@ -1,0 +1,66 @@
+{
+  "version": "2.2.1",
+  "rust_tests": 68,
+  "python_tests": 44,
+  "extendscript_contract_tests": 6,
+  "total_tests": 118,
+  "python_native_gui_test_enabled": true,
+  "clippy_warnings": 0,
+  "release_native_bridge": {
+    "count": 4,
+    "pipe": true,
+    "bridge": true,
+    "elapsed_seconds": 15.312,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=14693",
+    "helper_return_seconds": 0.18,
+    "visual": {
+      "width": 800,
+      "height": 600,
+      "photo_canvas_left": 0,
+      "exposure_channel_samples": 1899,
+      "exposure_mean_error": 0.473,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    }
+  },
+  "raw_sha256_unchanged": true,
+  "close_dialog_visually_checked": true,
+  "registered_user_script_directories": [
+    "%APPDATA%/Adobe/Bridge 2025/Startup Scripts",
+    "%APPDATA%/Adobe/Bridge 2026/Startup Scripts"
+  ],
+  "installed_bridge_2026_version": "16.0.8.10",
+  "installed_scripts_match_source": true,
+  "real_bridge_menu_click_verified": false,
+  "global_hotkey_installed": false,
+  "lr_menu_mnemonic": "F, only after opening the plug-in command menu",
+  "large_selection_contract_test_photos": 5000,
+  "limitations": [
+    "Bridge startup script activation and actual host menu clicks need user verification.",
+    "Bridge native file moves are outside this entry integration; Lightroom plans still use original session identities.",
+    "The existing custom sr:Flag protocol is not Bridge xmp:Rating=-1.",
+    "The 13-frame smoke duration is not ordinary window-opening latency; pipe-mode memory is unmeasured."
+  ],
+  "guide": "docs/BRIDGE.md"
+}

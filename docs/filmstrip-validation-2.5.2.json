@@ -1,0 +1,35 @@
+{
+  "version": "2.5.2",
+  "tests": {
+    "rust_main": 49,
+    "bridge_script": 14
+  },
+  "clippy_warnings": 0,
+  "native_layouts": {
+    "default": {
+      "size": [
+        1280,
+        850
+      ],
+      "frames": 5,
+      "result": "first_draw=true current=15 photos=16 full=2 fit=7 thumbs=16 error=None stress_remaining=0 elapsed_ms=6507"
+    },
+    "expanded": {
+      "size": [
+        1280,
+        850
+      ],
+      "frames": 5,
+      "result": "first_draw=true current=15 photos=16 full=4 fit=5 thumbs=16 error=None stress_remaining=0 elapsed_ms=6303"
+    },
+    "small": {
+      "size": [
+        800,
+        600
+      ],
+      "frames": 5,
+      "result": "first_draw=true current=15 photos=16 full=1 fit=2 thumbs=16 error=None stress_remaining=0 elapsed_ms=6039"
+    }
+  },
+  "interaction_validation": "Real egui pointer drag and wheel events verified resize, filtered navigation, comparison reference avoidance, outside hover, drag and close-modal exclusion. Native screenshots visually reviewed."
+}

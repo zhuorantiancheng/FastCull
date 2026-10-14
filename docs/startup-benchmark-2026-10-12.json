@@ -1,0 +1,19 @@
+{
+  "before_version": "2.0.1",
+  "after_version": "2.0.2",
+  "count": 340,
+  "includes_lightroom_export": false,
+  "before": {
+    "count": 340,
+    "handoff_ms": 7650.3,
+    "first_image_ms": 1138.7,
+    "gui": "first_draw=true current=339 photos=340 full=3 thumbs=44 error=None stress_remaining=0 elapsed_ms=6540"
+  },
+  "after": {
+    "count": 340,
+    "handoff_ms": 175.2,
+    "first_ui_frame_ms": 382.5,
+    "first_image_ms": 589.5,
+    "gui": "first_draw=true current=339 photos=340 full=3 thumbs=44 error=None stress_remaining=0 elapsed_ms=6569"
+  }
+}

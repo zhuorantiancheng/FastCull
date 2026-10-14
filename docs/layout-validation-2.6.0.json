@@ -1,0 +1,34 @@
+{
+  "version": "2.6.0",
+  "tests": {
+    "rust_main": 51,
+    "bridge_script": 14
+  },
+  "clippy_warnings": 0,
+  "native": {
+    "default": "first_draw=true current=2 photos=3 full=2 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=15536",
+    "small": "first_draw=true current=2 photos=3 full=1 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=6006",
+    "minimum": "first_draw=true current=2 photos=3 full=1 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=5888"
+  },
+  "interaction_checks": [
+    "click point normalized to image rectangle",
+    "anchor retained on navigation",
+    "E G C mode transitions",
+    "filter input and menu keyboard guards"
+  ],
+  "layouts": {
+    "default": [
+      1280,
+      850
+    ],
+    "small": [
+      800,
+      600
+    ],
+    "minimum": [
+      640,
+      480
+    ]
+  },
+  "limits": "Automated UI interaction regressions and native private-photo screenshots; real user selection was not modified."
+}

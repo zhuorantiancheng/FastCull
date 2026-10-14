@@ -1,0 +1,73 @@
+{
+  "version": "2.2.2",
+  "native_bridge_version": "16.0.8.10",
+  "original_native_error": {
+    "quote_original": {
+      "ok": false,
+      "error": "Syntax error",
+      "number": "8",
+      "line": "9"
+    },
+    "quote_without_nul": {
+      "ok": true,
+      "value": "false"
+    },
+    "bom_expression": {
+      "ok": true,
+      "value": "test"
+    },
+    "paths": {
+      "ok": true,
+      "value": "9"
+    },
+    "quote_api": {
+      "ok": true,
+      "value": "\"C:/safe-path\""
+    }
+  },
+  "fixed_native_checks": {
+    "reload": {
+      "ok": true,
+      "value": "2.2.2"
+    },
+    "safe_path": {
+      "ok": true,
+      "value": "\"D:/照片 & (一)/fastcull.exe\""
+    },
+    "unsafe_paths": {
+      "ok": true,
+      "value": "6"
+    },
+    "menus": {
+      "ok": true,
+      "value": "true"
+    },
+    "native_system": {
+      "ok": true,
+      "value": "Bridge app.system ran the Rust helper"
+    }
+  },
+  "native_context_callback": {
+    "version": "2.2.2",
+    "private_photos": 3,
+    "executed": true,
+    "exit_code": "0",
+    "error": ""
+  },
+  "native_gui": "first_draw=true current=2 photos=3 full=1 fit=2 thumbs=3 error=None stress_remaining=0 elapsed_ms=6395",
+  "native_gui_frames": 5,
+  "raw_sha256_unchanged": true,
+  "private_xmp_grading_verified": true,
+  "real_user_selection_setters_called": false,
+  "real_user_photos_modified": false,
+  "rust_tests": 68,
+  "python_tests": 44,
+  "extendscript_contract_tests": 8,
+  "total_tests": 120,
+  "clippy_warnings": 0,
+  "current_bridge_script_reloaded": true,
+  "gui_visually_checked": true,
+  "root_cause": "ExtendScript rejects the NUL escape in the path-validation character class with syntax error 8; Node accepts it.",
+  "fix": "Check forbidden characters with indexOf, explicitly invoke cmd.exe, include stage and native error details.",
+  "scope": "Actual Bridge menu callback and command execution used private Sony copies; no manual clicks on real photos were simulated."
+}

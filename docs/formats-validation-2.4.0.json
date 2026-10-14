@@ -1,0 +1,128 @@
+{
+  "supported": [
+    "ARW",
+    "CR2",
+    "NEF",
+    "JPG",
+    "JPEG"
+  ],
+  "raw": {
+    "佳能 100% & 一.CR2": {
+      "camera": "EOS 5D Mark II",
+      "original": [
+        5616,
+        3744
+      ],
+      "preview": {
+        "kind": 1,
+        "width": 5616,
+        "height": 3744,
+        "channels": 0,
+        "bits": 0,
+        "rendered": false,
+        "ms": 1.5989000094123185
+      },
+      "full": {
+        "kind": 1,
+        "width": 5616,
+        "height": 3744,
+        "channels": 0,
+        "bits": 0,
+        "rendered": false,
+        "ms": 1.6232999914791435
+      },
+      "rust_full_benchmark": "RAW original=5616x3744 orientation=1 ISO3200  f/1.2  1/20s  50mm  RAW 5616×3744 · 预览 5616×3744\nDECODE 67.738ms 5616x3744\nBENCH runs=1 median_ms=67.738 min_ms=67.738\n"
+    },
+    "尼康.NEF": {
+      "camera": "D3S",
+      "original": [
+        4256,
+        2832
+      ],
+      "preview": {
+        "kind": 1,
+        "width": 4256,
+        "height": 2832,
+        "channels": 0,
+        "bits": 0,
+        "rendered": false,
+        "ms": 0.9496000129729509
+      },
+      "full": {
+        "kind": 1,
+        "width": 4256,
+        "height": 2832,
+        "channels": 0,
+        "bits": 0,
+        "rendered": false,
+        "ms": 0.7619999814778566
+      },
+      "rust_full_benchmark": "RAW original=4256x2832 orientation=1 ISO3200  f/1.4  1/2s  28mm  RAW 4256×2832 · 预览 4256×2832\nDECODE 29.468ms 4256x2832\nBENCH runs=1 median_ms=29.468 min_ms=29.468\n"
+    },
+    "小预览.CR2": {
+      "camera": "EOS 5D Mark II",
+      "original": [
+        5616,
+        3744
+      ],
+      "preview": {
+        "kind": 2,
+        "width": 362,
+        "height": 234,
+        "channels": 3,
+        "bits": 8,
+        "rendered": false,
+        "ms": 3.9235999865923077
+      },
+      "full": {
+        "kind": 2,
+        "width": 5616,
+        "height": 3744,
+        "channels": 3,
+        "bits": 8,
+        "rendered": true,
+        "ms": 2258.8655999861658
+      },
+      "rust_full_benchmark": "RAW original=5616x3744 orientation=1 ISO3200  f/1.2  1/20s  50mm  RAW 5616×3744 · 预览 5616×3744\nDECODE 2440.840ms 5616x3744\nBENCH runs=1 median_ms=2440.840 min_ms=2440.840\n"
+    }
+  },
+  "native_windows": {
+    "mixed": "first_draw=true current=2 photos=3 full=1 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=6524",
+    "jpeg-small": "first_draw=true current=0 photos=1 full=1 fit=1 thumbs=1 error=None stress_remaining=0 elapsed_ms=5956",
+    "raw-fallback": "first_draw=true current=0 photos=1 full=1 fit=1 thumbs=1 error=None stress_remaining=0 elapsed_ms=8429"
+  },
+  "source_sha256": {
+    "佳能 100% & 一.CR2": "0da28f6f2718ea82fdf95c35a1790597a3a7ecbe328a3f5b60a05f4e95e380e6",
+    "尼康.NEF": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+    "小预览.CR2": "b8c949b4e86c78555caf648ae667aa4f978bec21c5cb33eb27c469f143e92c21"
+  },
+  "jpeg_compressed_data_unchanged": true,
+  "raw_bytes_unchanged": true,
+  "unsupported_files_unchanged": true,
+  "synthetic_small_preview_sensor_data_unchanged": true,
+  "version": "2.4.0",
+  "rust_tests": 91,
+  "python_tests": 45,
+  "extendscript_contract_tests": 10,
+  "total_tests": 146,
+  "clippy_warnings": 0,
+  "native_gui_visually_checked": true,
+  "lightroom_jpeg_embedded_sync_contract_verified": true,
+  "enabled_extensions": [
+    "arw",
+    "cr2",
+    "nef",
+    "jpg",
+    "jpeg",
+    "jpe"
+  ],
+  "deferred_raw_formats": true,
+  "real_user_photos_modified": false,
+  "real_user_photo_clicks_verified": false,
+  "native_raw_library": "LibRaw 0.22.2",
+  "native_static_crt": true,
+  "upstream_source_sha256": "f4448371523f9960d26a131ed9dc21bee49f967adbcc4fb6f56b9b47c2ba87c6",
+  "samples_source": "https://github.com/letmaik/rawpy/tree/main/test",
+  "previous_ui_validation": "tree-validation-2.3.1.json",
+  "limits": "Only named CR2/NEF cameras sampled; no claim all models tested. Timing is one local run, excludes GPU upload and cold start. RAW render differs from camera JPEG/LR. Extended/ambiguous JPEG XMP is preserved and edits rejected."
+}

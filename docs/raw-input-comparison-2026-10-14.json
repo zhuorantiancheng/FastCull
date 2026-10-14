@@ -1,0 +1,324 @@
+{
+  "date": "2026-10-14",
+  "sample_name": "t01-a6700-ISO5000-original.ARW",
+  "sample_sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+  "cpu": "Intel Core i7-13700HX",
+  "threads": 4,
+  "conditions": "Hot OS cache; one warmup then seven measured runs per input mode; sequential mmap,file,buffer groups. ready_ms excludes cleanup and checksum; includes per-run input loading/mapping. Half size, camera WB, no auto bright, sRGB 8-bit. Not UI or Adobe-edit timing.",
+  "raw_tiff": {
+    "compression": 7,
+    "tile_width": 512,
+    "tile_height": 512,
+    "tiles": 117,
+    "storage_width": 6656,
+    "storage_height": 4608
+  },
+  "source_sha256": "b00789b240ef05e90561041cb88e1ce30d2d6879569fb9e3d7f4e0e9271cbd66",
+  "libraw_static_sha256": "ab4c6e9feae4d2998630a5dc465a71f68a541d7b4e9fda26799b3c38cbcc6f57",
+  "cases": {
+    "file": {
+      "libraw": "0.22.2-Release",
+      "threads": 4,
+      "runs": [
+        {
+          "warmup": true,
+          "open_ms": 1.6572,
+          "unpack_ms": 510.278,
+          "process_ms": 66.6869,
+          "output_ms": 11.3676,
+          "ready_ms": 589.9897,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.6377,
+          "unpack_ms": 511.3498,
+          "process_ms": 67.3628,
+          "output_ms": 12.6513,
+          "ready_ms": 592.0016,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.8094,
+          "unpack_ms": 519.9476,
+          "process_ms": 70.5612,
+          "output_ms": 11.3611,
+          "ready_ms": 602.6793,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.6086,
+          "unpack_ms": 526.6456,
+          "process_ms": 67.0247,
+          "output_ms": 10.8894,
+          "ready_ms": 605.1683,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.6015,
+          "unpack_ms": 520.1937,
+          "process_ms": 68.1376,
+          "output_ms": 11.7367,
+          "ready_ms": 600.6695,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.5935,
+          "unpack_ms": 516.6681,
+          "process_ms": 66.3165,
+          "output_ms": 11.2899,
+          "ready_ms": 594.868,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.6353,
+          "unpack_ms": 507.424,
+          "process_ms": 68.0244,
+          "output_ms": 12.1197,
+          "ready_ms": 588.2034,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.7056,
+          "unpack_ms": 506.2596,
+          "process_ms": 66.7999,
+          "output_ms": 11.845,
+          "ready_ms": 585.6101,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        }
+      ],
+      "median": {
+        "open_ms": 0.6353,
+        "unpack_ms": 516.6681,
+        "process_ms": 67.3628,
+        "output_ms": 11.7367,
+        "ready_ms": 594.868
+      }
+    },
+    "buffer": {
+      "libraw": "0.22.2-Release",
+      "threads": 4,
+      "runs": [
+        {
+          "warmup": true,
+          "open_ms": 17.1853,
+          "unpack_ms": 479.6191,
+          "process_ms": 67.7366,
+          "output_ms": 11.6326,
+          "ready_ms": 576.1736,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 16.349,
+          "unpack_ms": 479.7901,
+          "process_ms": 70.1993,
+          "output_ms": 11.2003,
+          "ready_ms": 577.5387,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 16.7405,
+          "unpack_ms": 481.3053,
+          "process_ms": 64.032,
+          "output_ms": 10.9027,
+          "ready_ms": 572.9805,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 15.7972,
+          "unpack_ms": 473.0856,
+          "process_ms": 66.926,
+          "output_ms": 12.2695,
+          "ready_ms": 568.0783,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 15.3466,
+          "unpack_ms": 472.881,
+          "process_ms": 67.6666,
+          "output_ms": 12.0564,
+          "ready_ms": 567.9506,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 15.7067,
+          "unpack_ms": 477.2508,
+          "process_ms": 71.6565,
+          "output_ms": 10.8236,
+          "ready_ms": 575.4376,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 16.3008,
+          "unpack_ms": 476.6777,
+          "process_ms": 68.9979,
+          "output_ms": 13.9133,
+          "ready_ms": 575.8897,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 15.7669,
+          "unpack_ms": 485.1828,
+          "process_ms": 68.8296,
+          "output_ms": 11.588,
+          "ready_ms": 581.3673,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        }
+      ],
+      "median": {
+        "open_ms": 15.7972,
+        "unpack_ms": 477.2508,
+        "process_ms": 68.8296,
+        "output_ms": 11.588,
+        "ready_ms": 575.4376
+      }
+    },
+    "mmap": {
+      "libraw": "0.22.2-Release",
+      "threads": 4,
+      "runs": [
+        {
+          "warmup": true,
+          "open_ms": 1.5201,
+          "unpack_ms": 516.9953,
+          "process_ms": 68.0569,
+          "output_ms": 11.6489,
+          "ready_ms": 598.2212,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.5599,
+          "unpack_ms": 523.004,
+          "process_ms": 66.6842,
+          "output_ms": 12.9481,
+          "ready_ms": 603.1962,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.4888,
+          "unpack_ms": 515.8944,
+          "process_ms": 68.328,
+          "output_ms": 11.8977,
+          "ready_ms": 596.6089,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.4727,
+          "unpack_ms": 509.817,
+          "process_ms": 68.9164,
+          "output_ms": 11.4786,
+          "ready_ms": 590.6847,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.4918,
+          "unpack_ms": 514.748,
+          "process_ms": 67.3693,
+          "output_ms": 12.761,
+          "ready_ms": 595.3701,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.5806,
+          "unpack_ms": 514.716,
+          "process_ms": 67.6328,
+          "output_ms": 12.0623,
+          "ready_ms": 594.9917,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.5303,
+          "unpack_ms": 522.9627,
+          "process_ms": 70.0155,
+          "output_ms": 12.6756,
+          "ready_ms": 606.1841,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        },
+        {
+          "warmup": false,
+          "open_ms": 0.4656,
+          "unpack_ms": 523.0501,
+          "process_ms": 70.4369,
+          "output_ms": 12.012,
+          "ready_ms": 605.9646,
+          "checksum": "10187968096365770956",
+          "decoder": "sony_ljpeg_load_raw()",
+          "warnings": 0
+        }
+      ],
+      "median": {
+        "open_ms": 0.4918,
+        "unpack_ms": 515.8944,
+        "process_ms": 68.328,
+        "output_ms": 12.0623,
+        "ready_ms": 596.6089
+      }
+    }
+  },
+  "full_output_checksums_match": true
+}

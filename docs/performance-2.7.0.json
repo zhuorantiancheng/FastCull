@@ -1,0 +1,219 @@
+{
+  "version": "2.7.0",
+  "baseline": "2.6.1",
+  "date": "2026-10-14",
+  "tests": {
+    "rust": 107,
+    "bridge_script": 14,
+    "python_lua": 48,
+    "python_default_skipped": 1,
+    "optional_native_roundtrip_passed": 1
+  },
+  "clippy_warnings": 0,
+  "decode": {
+    "baseline": {
+      "t01-a6700-ISO5000-original.ARW": {
+        "Thumb": 0.144,
+        "Fit(2560)": 6.567,
+        "Full": 84.604
+      },
+      "RAW_CANON_5DMARK2_PREPROD.CR2": {
+        "Thumb": 97.326,
+        "Fit(2560)": 116.798,
+        "Full": 63.562
+      },
+      "iss030e122639.NEF": {
+        "Thumb": 48.494,
+        "Fit(2560)": 64.267,
+        "Full": 27.847
+      },
+      "尼康.jpg": {
+        "Thumb": 46.255,
+        "Fit(2560)": 64.669,
+        "Full": 26.953
+      }
+    },
+    "optimized": {
+      "t01-a6700-ISO5000-original.ARW": {
+        "Thumb": 0.151,
+        "Fit(2560)": 6.362,
+        "Full": 83.573
+      },
+      "RAW_CANON_5DMARK2_PREPROD.CR2": {
+        "Thumb": 32.766,
+        "Fit(2560)": 68.136,
+        "Full": 63.188
+      },
+      "iss030e122639.NEF": {
+        "Thumb": 16.486,
+        "Fit(2560)": 47.801,
+        "Full": 27.321
+      },
+      "尼康.jpg": {
+        "Thumb": 16.668,
+        "Fit(2560)": 47.243,
+        "Full": 27.931
+      }
+    }
+  },
+  "gui": {
+    "baseline": {
+      "runs": [
+        {
+          "window_ms": 233,
+          "photo_ms": 536,
+          "zoom_ms": 88.9
+        },
+        {
+          "window_ms": 245,
+          "photo_ms": 535,
+          "zoom_ms": 90.3
+        },
+        {
+          "window_ms": 245,
+          "photo_ms": 533,
+          "zoom_ms": 91.6
+        }
+      ],
+      "median": {
+        "window_ms": 245,
+        "photo_ms": 535,
+        "zoom_ms": 90.3
+      }
+    },
+    "optimized": {
+      "runs": [
+        {
+          "window_ms": 233,
+          "photo_ms": 306,
+          "zoom_ms": 2.1
+        },
+        {
+          "window_ms": 250,
+          "photo_ms": 350,
+          "zoom_ms": 0.9
+        },
+        {
+          "window_ms": 240,
+          "photo_ms": 308,
+          "zoom_ms": 1.0
+        }
+      ],
+      "median": {
+        "window_ms": 240,
+        "photo_ms": 308,
+        "zoom_ms": 1.0
+      }
+    }
+  },
+  "sidebar": {
+    "baseline": "10000 rows, default sidebar, median_ms=11.549 p95_ms=12.555",
+    "optimized": "10000 rows, default sidebar, median_ms=0.037 p95_ms=0.039"
+  },
+  "quality": {
+    "t01-a6700-ISO5000-original.ARW": {
+      "full_payload_sha256": "77da86b593dadcc5cda30ca9892610bb07fb7ba1f38e8f495787b29d7451a64c",
+      "unchanged": true,
+      "full_dimensions": [
+        6192,
+        4128
+      ],
+      "scaled": [
+        {
+          "edge": 200,
+          "rgb_mae_255": 0.351203007518797
+        },
+        {
+          "edge": 1280,
+          "rgb_mae_255": 0.9060317140484564
+        },
+        {
+          "edge": 2560,
+          "rgb_mae_255": 0.7009685913395822
+        }
+      ]
+    },
+    "iss030e122639.NEF": {
+      "full_payload_sha256": "f7b6a16e2626e799620ea93bf417a0d3bda5170673c2834ce3d59aeac011b277",
+      "unchanged": true,
+      "full_dimensions": [
+        4256,
+        2832
+      ],
+      "scaled": [
+        {
+          "edge": 200,
+          "rgb_mae_255": 0.24402255639097745
+        },
+        {
+          "edge": 1280,
+          "rgb_mae_255": 0.2061900919405321
+        }
+      ]
+    },
+    "RAW_CANON_5DMARK2_PREPROD.CR2": {
+      "full_payload_sha256": "ec60d3dd578d68046cc742a14248281c26b072c963ba2b2f8996f62bead4d652",
+      "unchanged": true,
+      "full_dimensions": [
+        5616,
+        3744
+      ],
+      "scaled": [
+        {
+          "edge": 200,
+          "rgb_mae_255": 0.32746867167919796
+        },
+        {
+          "edge": 1280,
+          "rgb_mae_255": 0.827156298847206
+        },
+        {
+          "edge": 2560,
+          "rgb_mae_255": 0.5140058246680336
+        }
+      ]
+    }
+  },
+  "native_ui": {
+    "default": "first_draw=true current=2 photos=3 full=2 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=15457",
+    "small": "first_draw=true current=2 photos=3 full=2 fit=2 thumbs=3 error=None stress_remaining=0 elapsed_ms=6016",
+    "minimum": "first_draw=true current=2 photos=3 full=2 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=5938"
+  },
+  "stress": "first_draw=true current=0 photos=3 full=3 fit=3 thumbs=3 error=None stress_remaining=0 elapsed_ms=8288",
+  "relative_comparison": {
+    "verified": true,
+    "a": {
+      "zoom": 1.25,
+      "pan": [
+        0.08206413,
+        0.030666666
+      ]
+    },
+    "b": {
+      "zoom": 1.25,
+      "pan": [
+        -0.02793587,
+        0.09066667
+      ]
+    },
+    "offset": [
+      0.11,
+      -0.06
+    ]
+  },
+  "limits": [
+    "Decode: one warmup then seven measurements; OS file cache not flushed.",
+    "Native GUI: three runs; timing starts inside the process and excludes host menu/IPC time and display scanout.",
+    "100% optimized measurements hit the idle warm cache; uncached decoding is not significantly faster.",
+    "Sidebar: 10000 synthetic rows with unchanged metadata and default collapsed facets; CPU egui only.",
+    "SDK roundtrip uses mocked Lightroom API and a real executable; no actual Lightroom catalogue or user photo was edited."
+  ],
+  "screenshots": {
+    "default": "docs/images/rust-2.7.0-default.png",
+    "small": "docs/images/rust-2.7.0-small.png",
+    "minimum": "docs/images/rust-2.7.0-minimum.png",
+    "comparison": "docs/images/rust-2.7.0-comparison.png",
+    "grid": "docs/images/rust-2.7.0-grid.png",
+    "close": "docs/images/rust-2.7.0-close.png"
+  }
+}

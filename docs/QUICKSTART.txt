@@ -1,0 +1,41 @@
+FastCull — Windows 快速开始
+
+安装界面的组件：
+  FastCull (required)：独立选片器
+  Register / update Adobe Bridge integration：注册 Bridge 插件
+  Register / update Lightroom Classic integration：注册 Lightroom Classic 插件
+
+安装前关闭 Adobe 应用与 FastCull，默认当前用户安装，无需管理员权限。
+安装完成后启动 FastCull.exe，即可选择照片或文件夹。
+支持 ARW、CR2、NEF、JPG/JPEG。E / G / C 切换单图 / 网格 / 对比。
+
+Bridge：
+  先启动过一次 Bridge，安装器才能找到它的用户目录。
+  安装后重启 Bridge，允许 FastCull 启动脚本；或在首选项 → 启动脚本启用。
+  选中照片/文件夹，右键菜单选择 FastCull，或 Ctrl + Alt + K。
+  新安装或升级 Bridge 后，再次运行安装器即可补注册。
+
+Lightroom Classic：
+  重启 LR，在文件 → 增效工具管理器检查 FastCull。
+  未显示时，点击添加并选择：
+  %APPDATA%\Adobe\Lightroom\Modules\FastCull.lrplugin
+  选中照片，Ctrl + Alt + K，或图库 → 增效工具额外命令打开。
+  升级手动安装的旧插件时先移除旧注册，避免重复。
+
+便携 ZIP：
+  完整解压到固定目录，运行 FastCull.exe。
+  注册 Adobe：双击 register-adobe.cmd；取消注册：unregister-adobe.cmd。
+  切换安装版/便携版或移动便携目录前，先取消旧注册。
+
+升级：关闭 Adobe 和 FastCull，使用相同目录重新安装。
+卸载：Windows 已安装的应用 → FastCull → 卸载。
+照片、XMP、会话与恢复备份不会被卸载器删除。
+注册恢复记录：%LOCALAPPDATA%\FastCull\Installer
+安装器只覆盖 FastCull 自己的插件文件，不重置 Adobe 偏好设置。
+
+如果插件注册失败：
+  关闭 Adobe 与 FastCull 后重试；检查原安装位置是否仍然存在。
+  可在程序目录双击 register-adobe.cmd 查看具体错误。
+
+当前发行包未签名。使用受信任的 GitHub Release 下载，并校验 SHA256SUMS.txt。
+完整说明见 README.md。第三方许可见 THIRD-PARTY-NOTICES.txt。

@@ -1,0 +1,69 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CARGO_BUILD_TARGET: x86_64-pc-windows-msvc
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.agent-temp/ci/target
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Prepare scratch directory
+        run: |
+          $scratch = Join-Path $env:GITHUB_WORKSPACE '.agent-temp/ci/tmp'
+          New-Item -ItemType Directory -Force $scratch | Out-Null
+          "TEMP=$scratch" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "TMP=$scratch" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Validate version and install build tools
+        run: |
+          $version = python -c "import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['package']['version'])"
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and Cargo version differ' }
+          rustup toolchain install 1.90.0 --profile minimal --component clippy --component rustfmt --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE) { throw 'Rust installation failed' }
+          python -m pip install lupa pillow
+          if ($LASTEXITCODE) { throw 'Test dependency installation failed' }
+          if (!(Test-Path "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe")) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE) { throw 'Inno Setup installation failed' }
+          }
+      - name: Build native decoder and test
+        run: |
+          ./scripts/build-native.ps1
+          cargo test --locked
+          if ($LASTEXITCODE) { throw 'Rust tests failed' }
+          cargo build --locked
+          if ($LASTEXITCODE) { throw 'Debug build failed' }
+          node --test tests/bridge_entry.test.cjs
+          if ($LASTEXITCODE) { throw 'Bridge tests failed' }
+          # The legacy Bridge installer test expects the bundled program to exist.
+          Copy-Item "$env:CARGO_TARGET_DIR/x86_64-pc-windows-msvc/debug/fastcull.exe" lrplugins/FastCull.lrplugin/fastcull.exe
+          python -m unittest discover -s tests -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Python tests failed' }
+      - name: Build Windows artifacts
+        run: ./scripts/build-release.ps1
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: FastCull-Windows
+          path: dist/public-*/*
+          if-no-files-found: error
+      - name: Create draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = @(Get-ChildItem dist/public-*/* -File | ForEach-Object FullName)
+          gh release create $env:GITHUB_REF_NAME @assets --draft --verify-tag --title "FastCull $env:GITHUB_REF_NAME" --notes-file docs/RELEASE-NOTES.md
+          if ($LASTEXITCODE) { throw 'Draft release creation failed; built artifacts remain available in Actions' }

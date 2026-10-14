@@ -1,0 +1,59 @@
+{
+  "version": "2.1.0",
+  "rust_tests": 46,
+  "lua_sdk_tests": 30,
+  "startup_analysis_tests": 2,
+  "clippy_warnings": 0,
+  "release_native": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 16.426,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=15633",
+    "visual": {
+      "width": 1280,
+      "height": 850,
+      "exposure_channel_samples": 4608,
+      "exposure_mean_error": 0.396,
+      "both_comparison_canvases_visible": true
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "release_small_window": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 15.288,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=14517",
+    "visual": {
+      "width": 640,
+      "height": 480,
+      "exposure_channel_samples": 1092,
+      "exposure_mean_error": 0.402,
+      "both_comparison_canvases_visible": true
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "release_startup_340": {
+    "count": 340,
+    "handoff_ms": 171.5,
+    "first_ui_frame_ms": 385.1,
+    "first_image_ms": 428.1,
+    "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6430"
+  },
+  "gui_screenshots_visually_checked": true,
+  "exposure_pixel_check_passed": true,
+  "native_gui_exit_then_stars_receipt_verified": true,
+  "sdk_mock_session_scope_and_stars_only_verified": true,
+  "real_lightroom_new_features_verified": false,
+  "previous_user_verified_foreground_version": "2.0.8",
+  "limitations": [
+    "SDK mock and native GUI QA do not replace real Lightroom catalog validation.",
+    "Embedded JPEG exposure preview is approximate, not full RAW development.",
+    "Pipe-mode peak memory was not measured; 0.0 in native reports is unavailable.",
+    "Startup timings exclude Lightroom SDK export and do not establish cold-start guarantees.",
+    "Samples include two genuine scenes and camera-model metadata variants."
+  ]
+}

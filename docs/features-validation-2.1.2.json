@@ -1,0 +1,102 @@
+{
+  "version": "2.1.2",
+  "rust_tests": 56,
+  "lua_sdk_tests": 31,
+  "startup_analysis_tests": 2,
+  "clippy_warnings": 0,
+  "release_native": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 16.723,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=15647",
+    "visual": {
+      "width": 1280,
+      "height": 850,
+      "exposure_channel_samples": 4578,
+      "exposure_mean_error": 0.398,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "release_small_window": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 15.148,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=14502",
+    "visual": {
+      "width": 640,
+      "height": 480,
+      "exposure_channel_samples": 1143,
+      "exposure_mean_error": 0.392,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "gui_screenshots_visually_checked": true,
+  "relative_link_regression_failed_before_fix": true,
+  "linked_zoom_preserves_anchors_and_scale_ratio": true,
+  "linked_translation_preserves_anchor_offset_at_edges": true,
+  "navigation_preserves_reference_alignment": true,
+  "close_dialog": {
+    "content_width": 440,
+    "margin": 22,
+    "title_px": 24,
+    "body_px": 18,
+    "note_px": 14,
+    "button_font_px": 16,
+    "button_height": 40
+  },
+  "real_lightroom_new_features_verified": false,
+  "limitations": [
+    "Real Lightroom catalog behavior still needs user verification.",
+    "Fit shows the entire image while retaining its loupe anchor.",
+    "Linked pan uses image-relative increments, so differently sized images can move different screen distances.",
+    "Pipe-mode memory figures are unmeasured; 0.0 does not mean zero usage."
+  ]
+}

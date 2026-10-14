@@ -1,0 +1,179 @@
+{
+  "version": "2.0.8",
+  "real_lr_2_0_7": {
+    "36458AAB-78C0-4DE9-B63F-B73C53107903": {
+      "lr_phases": {
+        "menu": {
+          "elapsed_ms": 0.0,
+          "unix_ms": 1791816524288
+        },
+        "task": {
+          "elapsed_ms": 0.5,
+          "unix_ms": 1791816524289
+        },
+        "selection": {
+          "elapsed_ms": 0.5,
+          "unix_ms": 1791816524289
+        },
+        "metadata": {
+          "elapsed_ms": 24.8,
+          "unix_ms": 1791816524313
+        },
+        "session-path": {
+          "elapsed_ms": 26.5,
+          "unix_ms": 1791816524315
+        },
+        "state-written": {
+          "elapsed_ms": 27.5,
+          "unix_ms": 1791816524316
+        },
+        "invoke": {
+          "elapsed_ms": 27.5,
+          "unix_ms": 1791816524316
+        },
+        "execute-start": {
+          "elapsed_ms": 28.5,
+          "unix_ms": 1791816524317
+        },
+        "execute-return": {
+          "elapsed_ms": 258.0,
+          "unix_ms": 1791816524546
+        },
+        "file-read": {
+          "elapsed_ms": 259.0,
+          "unix_ms": 1791816524547
+        },
+        "ready": {
+          "elapsed_ms": 268.2,
+          "unix_ms": 1791816524556
+        }
+      },
+      "legacy_invoke_unix_ms": 1791816524000,
+      "launcher": {
+        "first_log_unix_ms": 1791816524456,
+        "entry_unix_ms": 1791816524455,
+        "logger_ms": 2.5
+      },
+      "gui": {
+        "first_log_unix_ms": 1791816524490,
+        "entry_unix_ms": 1791816524490,
+        "logger_ms": 1.9,
+        "session_ms": 0.5,
+        "native_begin_unix_ms": 1791816524497,
+        "app_builder_unix_ms": 1791816524753,
+        "font_config_ms": 6.1,
+        "worker_pool_ms": 6.2,
+        "first_frame_unix_ms": 1791816524763,
+        "first_image_unix_ms": 1791816524860
+      },
+      "legacy_invoke_to_launcher_log_ms_range": [
+        -544,
+        455
+      ],
+      "task_queue_ms": 0.5,
+      "selection_ms": 0.0,
+      "metadata_ms": 24.3,
+      "sdk_execute_ms": 229.5,
+      "invoke_to_program_entry_ms": 139,
+      "menu_to_first_frame_ms": 475,
+      "gui_entry_to_first_frame_ms": 273,
+      "graphics_window_init_ms": 256
+    }
+  },
+  "real_lr_2_0_8": {
+    "CBCEACC3-7ECA-452D-A304-5691D0399DE6": {
+      "lr_phases": {
+        "menu": {
+          "elapsed_ms": 0.0,
+          "unix_ms": 1791817441684
+        },
+        "task": {
+          "elapsed_ms": 1.0,
+          "unix_ms": 1791817441685
+        },
+        "selection": {
+          "elapsed_ms": 3.0,
+          "unix_ms": 1791817441687
+        },
+        "metadata": {
+          "elapsed_ms": 53.2,
+          "unix_ms": 1791817441737
+        },
+        "session-path": {
+          "elapsed_ms": 55.7,
+          "unix_ms": 1791817441739
+        },
+        "state-written": {
+          "elapsed_ms": 56.8,
+          "unix_ms": 1791817441741
+        },
+        "invoke": {
+          "elapsed_ms": 56.8,
+          "unix_ms": 1791817441741
+        },
+        "execute-start": {
+          "elapsed_ms": 57.7,
+          "unix_ms": 1791817441741
+        },
+        "execute-return": {
+          "elapsed_ms": 284.2,
+          "unix_ms": 1791817441968
+        },
+        "file-read": {
+          "elapsed_ms": 285.7,
+          "unix_ms": 1791817441969
+        },
+        "ready": {
+          "elapsed_ms": 298.7,
+          "unix_ms": 1791817441982
+        }
+      },
+      "legacy_invoke_unix_ms": 1791817441000,
+      "launcher": {
+        "first_log_unix_ms": 1791817441879,
+        "entry_unix_ms": 1791817441878,
+        "logger_ms": 2.5
+      },
+      "gui": {
+        "first_log_unix_ms": 1791817441914,
+        "entry_unix_ms": 1791817441914,
+        "logger_ms": 2.0,
+        "session_ms": 0.5,
+        "native_begin_unix_ms": 1791817441918,
+        "app_builder_unix_ms": 1791817442163,
+        "font_config_ms": 5.8,
+        "worker_pool_ms": 6.0,
+        "first_frame_unix_ms": 1791817442173,
+        "foreground_verified_unix_ms": 1791817442272,
+        "first_image_unix_ms": 1791817442275
+      },
+      "legacy_invoke_to_launcher_log_ms_range": [
+        -121,
+        878
+      ],
+      "task_queue_ms": 1.0,
+      "selection_ms": 2.0,
+      "metadata_ms": 50.2,
+      "sdk_execute_ms": 226.5,
+      "invoke_to_program_entry_ms": 137,
+      "menu_to_first_frame_ms": 489,
+      "menu_to_first_image_ms": 591,
+      "gui_entry_to_first_frame_ms": 259,
+      "graphics_window_init_ms": 245
+    }
+  },
+  "release_probe": {
+    "mode": "extra-pipe",
+    "exit_code": 0,
+    "handoff_ms": 120.8,
+    "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n",
+    "gui": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=5876",
+    "session_closed": true
+  },
+  "rust_tests": 35,
+  "lua_sdk_tests": 26,
+  "startup_analysis_tests": 2,
+  "user_confirmed_foreground": true,
+  "real_catalog_full_sync_qa": false,
+  "input_attach_fallback_used_in_confirmed_run": false
+}

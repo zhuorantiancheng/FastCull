@@ -1,0 +1,33 @@
+{
+  "version": "2.3.1",
+  "rust_tests": 85,
+  "python_tests": 44,
+  "extendscript_contract_tests": 9,
+  "total_tests": 138,
+  "clippy_warnings": 0,
+  "native_results": {
+    "final": "first_draw=true current=283 photos=284 full=1 fit=2 thumbs=41 error=None stress_remaining=0 elapsed_ms=6344",
+    "final-small": "first_draw=true current=283 photos=284 full=1 fit=2 thumbs=21 error=None stress_remaining=0 elapsed_ms=5834",
+    "final-cli": "first_draw=true current=283 photos=284 full=1 fit=2 thumbs=41 error=None stress_remaining=0 elapsed_ms=6383"
+  },
+  "photos_per_window": 284,
+  "frames_per_window": 5,
+  "mixed_formats_skipped": [
+    "JPG",
+    "CR3",
+    "XMP",
+    "MP4"
+  ],
+  "skipped_files_unchanged": true,
+  "all_unsupported_cli_and_bridge_rejected": true,
+  "scrollbar_lane_reserved": true,
+  "valid_cursor": "Move",
+  "invalid_cursor": "NotAllowed",
+  "cursor_platform_output_asserted": true,
+  "os_cursor_bitmap_captured": false,
+  "native_tree_images_visually_checked": true,
+  "real_user_photos_modified": false,
+  "real_bridge_menu_callback_repeated": false,
+  "cross_volume_move_repeated": false,
+  "previous_feature_validation": "bridge-validation-2.3.0.json"
+}

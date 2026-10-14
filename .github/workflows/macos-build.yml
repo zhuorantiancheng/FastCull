@@ -1,0 +1,37 @@
+name: macOS build
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths: ['src/**', 'native/**', 'scripts/**', 'tests/**', 'Cargo.*', 'rust-toolchain.toml', '.cargo/**', 'lrplugins/**', 'bridge/**', '.github/workflows/macos-build.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Bridge tests
+        run: |
+          node --test tests/bridge_entry.test.cjs
+          python3 -m pip install lupa
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_macos.py
+      - name: Build, test and package
+        run: python3 scripts/build-macos.py --arch ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: FastCull-macos-${{ matrix.arch }}
+          path: dist/macos/*
+          if-no-files-found: error

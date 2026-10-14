@@ -1,0 +1,20 @@
+{
+  "version": "2.5.3",
+  "tests": {
+    "rust_main": 50,
+    "bridge_script": 14
+  },
+  "clippy_warnings": 0,
+  "native_zoom_navigation": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=6237",
+  "anchor_assertion": [
+    0.09,
+    0.03
+  ],
+  "checks": [
+    "arrow navigation roundtrip preserves nonzero anchor",
+    "different resolution and orientation",
+    "200 percent display scale",
+    "comparison active and reference offsets preserved"
+  ],
+  "limits": "Automated egui input and native private-photo smoke; not a manual user selection trial."
+}

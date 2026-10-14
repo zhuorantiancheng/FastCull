@@ -1,0 +1,33 @@
+{
+  "version": "2.2.3",
+  "root_cause": "Bridge skipped container selections and native list validation accepted files only",
+  "fix": "Collect ARW and folder roots; recursive expansion in detached Rust child; overlapping paths deduplicated",
+  "native_bridge_version": "16.0.8.10",
+  "native_context_callback": {
+    "version": "2.2.3",
+    "selected_roots": 4,
+    "menu_enabled": true,
+    "executed": true,
+    "exit_code": "0",
+    "helper_ms": 672,
+    "error": ""
+  },
+  "native_gui": "first_draw=true current=2 photos=3 full=1 fit=2 thumbs=3 error=None stress_remaining=0 elapsed_ms=6335",
+  "native_gui_frames": 5,
+  "folder_tree_visually_checked": true,
+  "raw_sha256_unchanged": true,
+  "private_xmp_grading_verified": true,
+  "empty_folder_error_cli_verified": true,
+  "failed_child_request_retained": true,
+  "real_user_selection_setters_called": false,
+  "real_user_photos_modified": false,
+  "rust_tests": 72,
+  "python_tests": 44,
+  "extendscript_contract_tests": 9,
+  "total_tests": 125,
+  "clippy_warnings": 0,
+  "bridge_registration_files_updated": true,
+  "native_script_loaded_for_test": true,
+  "scope": "Native File/Folder objects and actual menu callback with private copied samples; no manual real-photo selection test",
+  "limitation": "Directory enumeration completes before GUI creation; large-tree launch latency is not eliminated"
+}

@@ -1,0 +1,80 @@
+{
+  "version": "2.0.5",
+  "date": "2026-10-12",
+  "old_version": "2.0.4",
+  "old_unmodifiable_stdio": {
+    "mode": "invalid-stdin",
+    "exit_code": 1,
+    "handoff_ms": 101.3,
+    "stdout": "ERROR FastCull: clear inherited stdio: 拒绝访问。 (os error 5)\n"
+  },
+  "old_extra_pipe": {
+    "mode": "extra-pipe",
+    "exit_code": 0,
+    "handoff_ms": 6384.6,
+    "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n"
+  },
+  "release_probes": [
+    {
+      "mode": "invalid-stdin",
+      "exit_code": 0,
+      "handoff_ms": 126.0,
+      "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n",
+      "gui": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=5873",
+      "session_closed": true
+    },
+    {
+      "mode": "extra-pipe",
+      "exit_code": 0,
+      "handoff_ms": 124.1,
+      "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n",
+      "gui": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=5915",
+      "session_closed": true
+    },
+    {
+      "mode": "normal",
+      "exit_code": 0,
+      "handoff_ms": 127.7,
+      "stdout": "RESULT wrote=0 kept=0 error=0 pending=2\nRESULT launched=1\n",
+      "gui": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=5926",
+      "session_closed": true
+    }
+  ],
+  "startup_340_initial": {
+    "count": 340,
+    "handoff_ms": 163.8,
+    "first_ui_frame_ms": 1012.7,
+    "first_image_ms": 1528.7,
+    "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6538"
+  },
+  "startup_340_single_pair": {
+    "old": {
+      "count": 340,
+      "handoff_ms": 172.8,
+      "first_ui_frame_ms": 398.2,
+      "first_image_ms": 446.2,
+      "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6429"
+    },
+    "new": {
+      "count": 340,
+      "handoff_ms": 161.4,
+      "first_ui_frame_ms": 368.9,
+      "first_image_ms": 421.9,
+      "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6424"
+    }
+  },
+  "scope": {
+    "real_lr_catalog_tested": false,
+    "windows_processes_and_gui_tested": true,
+    "sdk_mock_to_native_gui_sync_roundtrip": true,
+    "arw_inputs_private_synthetic_or_copies": true,
+    "original_arw_or_sidecars_modified": false,
+    "os_file_cache_cleared": false,
+    "handoff_metric": "launch command to pipe EOF, not menu click to visible GUI",
+    "first_image_metric": "application draw frame, excludes LR export and physical display",
+    "startup_probe_reads_complete_report": true
+  },
+  "rust_tests": 32,
+  "lua_tests": 21,
+  "clippy_warnings": 0
+}

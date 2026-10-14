@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-13",
+  "bridge_version": "16.0.8.10",
+  "initial_windowless_pid": 43272,
+  "initial_process_started": "2026-10-11 22:53:28 +08:00",
+  "failure_module": "dvacore.dll",
+  "failure_code": "c0000005",
+  "failure_offset": "00000000001301c2",
+  "trials": [
+    {
+      "label": "script-disabled-old-process",
+      "visible_window": false,
+      "before_pids": [
+        43272
+      ],
+      "launched_pid": 20640,
+      "crashes": [
+        {
+          "time": "2026-10-13T12:52:20.6282707+08:00",
+          "app": "Adobe Bridge.exe",
+          "module": "dvacore.dll",
+          "code": "c0000005",
+          "offset": "00000000001301c2"
+        }
+      ],
+      "last_processes": [
+        {
+          "pid": 43272,
+          "window": 0,
+          "title": "",
+          "cpu": 7534.328125,
+          "responding": true
+        }
+      ]
+    },
+    {
+      "label": "script-disabled-fresh-process",
+      "visible_window": false,
+      "before_pids": [
+        43272
+      ],
+      "launched_pid": 43412,
+      "crashes": [
+        {
+          "time": "2026-10-13T12:53:05.093756+08:00",
+          "app": "Adobe Bridge.exe",
+          "module": "dvacore.dll",
+          "code": "c0000005",
+          "offset": "00000000001301c2"
+        }
+      ],
+      "last_processes": []
+    },
+    {
+      "label": "clean-registry-preferences",
+      "visible_window": true,
+      "before_pids": [],
+      "launched_pid": 2440,
+      "crashes": [],
+      "last_processes": [
+        {
+          "pid": 2440,
+          "window": 992680,
+          "title": "",
+          "cpu": 1.0,
+          "responding": true
+        }
+      ]
+    },
+    {
+      "label": "original-preferences-english",
+      "visible_window": true,
+      "before_pids": [],
+      "launched_pid": 51848,
+      "crashes": [],
+      "last_processes": [
+        {
+          "pid": 51848,
+          "window": 3352252,
+          "title": "261011奥森 - Adobe Bridge",
+          "cpu": 14.03125,
+          "responding": true
+        }
+      ]
+    },
+    {
+      "label": "chinese-language-repro",
+      "visible_window": true,
+      "before_pids": [
+        51848
+      ],
+      "launched_pid": 39460,
+      "crashes": [],
+      "last_processes": [
+        {
+          "pid": 39460,
+          "window": 402848,
+          "title": "261011奥森 - Adobe Bridge",
+          "cpu": 13.390625,
+          "responding": true
+        }
+      ]
+    },
+    {
+      "label": "english-with-fastcull-restored",
+      "visible_window": true,
+      "before_pids": [
+        39460
+      ],
+      "launched_pid": 52552,
+      "crashes": [
+        {
+          "time": "2026-10-13T13:09:27.416772+08:00",
+          "app": "Adobe Bridge.exe",
+          "module": "dvacore.dll",
+          "code": "c0000005",
+          "offset": "00000000001301c2"
+        }
+      ],
+      "last_processes": [
+        {
+          "pid": 39460,
+          "window": 402848,
+          "title": "261011奥森 - Adobe Bridge",
+          "cpu": 14.046875,
+          "responding": true
+        }
+      ]
+    },
+    {
+      "label": "original-full-settings-fresh-process",
+      "visible_window": true,
+      "before_pids": [],
+      "launched_pid": 47440,
+      "crashes": [],
+      "last_processes": [
+        {
+          "pid": 47440,
+          "window": 13900170,
+          "title": "261011奥森 - Adobe Bridge",
+          "cpu": 1.75,
+          "responding": true
+        }
+      ]
+    }
+  ],
+  "current_language": "zh_CN",
+  "all_original_preferences_restored": true,
+  "fastcull_script_files_restored": true,
+  "original_preferences_backup": "%LOCALAPPDATA%/FastCull/bridge-recovery/20261013/Bridge2026-original-preferences.reg",
+  "photo_metadata_edited_by_agent": false,
+  "cache_manually_purged": false,
+  "reinstalled": false,
+  "interpretation": "Residual/windowless instances and the secondary-instance exit path are implicated. Full original preferences, including Chinese language, work after all old processes are confirmed exited. The temporary language hypothesis was not confirmed.",
+  "limitations": [
+    "The dvacore crash is an Adobe native exit/cleanup fault; its internal source-level defect is not fixed.",
+    "A visible migration window was initially counted as startup success; final acceptance additionally confirmed the photo-browser window title and normal startup log.",
+    "FastCull still requires its normal Bridge startup-script permission; restoring the file does not prove menu activation."
+  ],
+  "script_causality_recheck": {
+    "script_created": "2026-10-13 11:21:07 +08:00",
+    "residual_process_started_before_script": true,
+    "original_backup_fastcull_permitted": false,
+    "current_fastcull_permitted": false,
+    "same_crash_reproduced_with_script_file_disabled": true,
+    "script_contract_tests_passed": 6,
+    "actual_enabled_script_native_startup_ab_verified": false,
+    "conclusion": "The observed original startup crash reproduces without FastCull, and the residual process predates installation. This excludes FastCull execution as the demonstrated cause of that crash; native stability with the script actually enabled remains unverified."
+  }
+}

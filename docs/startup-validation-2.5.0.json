@@ -1,0 +1,36 @@
+{
+  "version": "2.5.0",
+  "bridge_native_callback": {
+    "start": 1791896864847,
+    "return_ms": 153,
+    "error": "",
+    "first_frame_ms": 499,
+    "first_photo_ms": 825
+  },
+  "historical_request_to_process_ms": 5771,
+  "standalone_and_owned_request": {
+    "standalone": {
+      "first_frame_ms": 236,
+      "scan_finished_ms": 293,
+      "result": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=6297"
+    },
+    "bridge-owned": {
+      "first_frame_ms": 259,
+      "scan_finished_ms": 319,
+      "result": "first_draw=true current=1 photos=2 full=1 fit=2 thumbs=2 error=None stress_remaining=0 elapsed_ms=6290"
+    }
+  },
+  "tests": {
+    "rust": 91,
+    "python": 45,
+    "extendscript": 12
+  },
+  "clippy_warnings": 0,
+  "arw_full_pixels": [
+    6192,
+    4128
+  ],
+  "arw_full_decode_ms_single_run": 83.901,
+  "previous_raw_validation": "formats-validation-2.4.0.json",
+  "limits": "Local timings on private fixtures, not all camera models; native picker selection is not automated. UI renders and native Bridge callback verified; no real user photos changed."
+}

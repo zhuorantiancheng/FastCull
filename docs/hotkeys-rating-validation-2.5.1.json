@@ -1,0 +1,28 @@
+{
+  "version": "2.5.1",
+  "tests": {
+    "rust": 96,
+    "python": 48,
+    "extendscript": 14
+  },
+  "clippy_warnings": 0,
+  "bridge_native_callback": {
+    "calls": 1,
+    "ticks": 4,
+    "task": "14",
+    "error": ""
+  },
+  "bridge_helper_persistent_process_verified": true,
+  "camera_rating_regressions": [
+    "RAW IFD0 rating",
+    "embedded XMP priority",
+    "sidecar missing rating fallback",
+    "explicit zero priority",
+    "Lightroom zero override",
+    "JPEG big endian EXIF",
+    "invalid offsets",
+    "RAW bytes unchanged"
+  ],
+  "native_gui_lua_session_roundtrip": true,
+  "limits": "Camera rating tests use deterministic metadata fixtures; user camera files and physical Ctrl+Alt+K in Lightroom have not been verified. Bridge real scheduler dispatch and helper persistence verified."
+}

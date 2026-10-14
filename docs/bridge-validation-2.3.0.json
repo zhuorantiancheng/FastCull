@@ -1,0 +1,84 @@
+{
+  "version": "2.3.0",
+  "rust_tests": 81,
+  "python_tests": 44,
+  "extendscript_contract_tests": 9,
+  "total_tests": 134,
+  "clippy_warnings": 0,
+  "native_bridge_callback": {
+    "version": "2.3.0",
+    "selected_roots": 4,
+    "executed": true,
+    "exit_code": "0",
+    "error": ""
+  },
+  "native_bridge_gui": "first_draw=true current=1 photos=4 full=2 fit=4 thumbs=4 error=None stress_remaining=0 elapsed_ms=23035",
+  "native_bridge_visual": {
+    "width": 640,
+    "height": 480,
+    "photo_canvas_left": 242,
+    "exposure_channel_samples": 366,
+    "exposure_mean_error": 0.475,
+    "both_comparison_canvases_visible": true
+  },
+  "native_gui_cross_volume": {
+    "count": 4,
+    "pipe": true,
+    "bridge": true,
+    "elapsed_seconds": 25.516,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=1 photos=4 full=2 fit=4 thumbs=4 error=None stress_remaining=0 elapsed_ms=24496",
+    "helper_return_seconds": 0.188,
+    "visual": {
+      "width": 1280,
+      "height": 850,
+      "photo_canvas_left": 242,
+      "exposure_channel_samples": 3240,
+      "exposure_mean_error": 0.477,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    }
+  },
+  "frames_per_window": 21,
+  "cross_volume_verified": true,
+  "cross_volume_drives": [
+    "E",
+    "C"
+  ],
+  "raw_sha256_unchanged": true,
+  "continuous_move_verified": true,
+  "batch_move_verified": true,
+  "second_move_verified": true,
+  "grading_after_move_verified": true,
+  "sidecars_moved_with_raw": true,
+  "move_journal_batches": 5,
+  "move_journal_photo_commits": 6,
+  "small_modal_visually_checked": true,
+  "full_modal_visually_checked": true,
+  "move_ui_clipped": false,
+  "real_user_selection_modified": false,
+  "real_user_photos_modified": false,
+  "lightroom_actual_file_moves": false,
+  "scope": "Actual Bridge menu callback on private File/Folder objects; private Sony copies for native GUI and E to C moves; no manual real-photo clicks",
+  "limits": "Per-photo rollback with durable recovery records; no whole-batch/crash atomicity, no automatic crash recovery, no Lightroom catalog path updates"
+}

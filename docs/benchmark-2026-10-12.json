@@ -1,0 +1,46 @@
+[
+  {
+    "file": "t01-a6700-ISO5000-original.ARW",
+    "dimensions": [
+      4128,
+      6192
+    ],
+    "orientation": 8,
+    "python_median_ms": 157.94129999994766,
+    "rust_median_ms": 145.243,
+    "rust_gui_decode_median_ms": 80.989
+  },
+  {
+    "file": "t02-spoof-ILCE-7M5.ARW",
+    "dimensions": [
+      4128,
+      6192
+    ],
+    "orientation": 8,
+    "python_median_ms": 160.09370000392664,
+    "rust_median_ms": 147.968,
+    "rust_gui_decode_median_ms": 80.771
+  },
+  {
+    "file": "t03-spoof-ILCE-9M3.ARW",
+    "dimensions": [
+      4128,
+      6192
+    ],
+    "orientation": 8,
+    "python_median_ms": 159.19639999628998,
+    "rust_median_ms": 147.337,
+    "rust_gui_decode_median_ms": 82.309
+  },
+  {
+    "file": "t04-day-ISO1250-spoof-ILCE-7M5.ARW",
+    "dimensions": [
+      6192,
+      4128
+    ],
+    "orientation": 1,
+    "python_median_ms": 93.70070000295527,
+    "rust_median_ms": 67.259,
+    "rust_gui_decode_median_ms": 66.421
+  }
+]

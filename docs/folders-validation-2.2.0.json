@@ -1,0 +1,118 @@
+{
+  "version": "2.2.0",
+  "rust_tests": 66,
+  "lua_sdk_tests": 38,
+  "startup_analysis_tests": 2,
+  "pixel_validation_tests": 2,
+  "total_tests": 108,
+  "clippy_warnings": 0,
+  "release_native": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 23.056,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=22294",
+    "visual": {
+      "width": 1280,
+      "height": 850,
+      "photo_canvas_left": 242,
+      "exposure_channel_samples": 3210,
+      "exposure_mean_error": 0.401,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    },
+    "session_revision": 4,
+    "session_export_rows": 1,
+    "folders": {
+      "planned_photos": 2,
+      "original_raw_files_unchanged": true,
+      "files_actually_moved": false,
+      "new_directory_created": true,
+      "exit_receipt_mode": "all"
+    }
+  },
+  "release_small_window": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 21.386,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=20851",
+    "visual": {
+      "width": 640,
+      "height": 480,
+      "photo_canvas_left": 242,
+      "exposure_channel_samples": 369,
+      "exposure_mean_error": 0.402,
+      "both_comparison_canvases_visible": true
+    },
+    "relative_link": {
+      "verified": true,
+      "a": {
+        "zoom": 1.25,
+        "pan": [
+          0.05775194,
+          0.022583978
+        ]
+      },
+      "b": {
+        "zoom": 1.25,
+        "pan": [
+          -0.05224806,
+          0.08258398
+        ]
+      },
+      "offset": [
+        0.11,
+        -0.06
+      ]
+    },
+    "session_revision": 4,
+    "session_export_rows": 1,
+    "folders": {
+      "planned_photos": 2,
+      "original_raw_files_unchanged": true,
+      "files_actually_moved": false,
+      "new_directory_created": true,
+      "exit_receipt_mode": "all"
+    }
+  },
+  "gui_screenshots_visually_checked": true,
+  "requested_behavior": "Preserve original Lightroom objects; plan moves, then complete actual moves inside Lightroom.",
+  "folder_creation_and_raw_hash_preservation_verified": true,
+  "folder_metadata_filtering_and_original_photo_identity_verified": true,
+  "original_uuid_and_virtual_copy_objects_used_in_sdk_mock": true,
+  "catalog_collection_creation_and_population_use_separate_committed_gates": true,
+  "organization_retry_does_not_reapply_acknowledged_exposure": true,
+  "small_pixel_check_initially_included_sidebar": true,
+  "pixel_sampling_fix_keeps_original_error_tolerance": true,
+  "photo_files_automatically_moved": false,
+  "real_lightroom_folder_handoff_verified": false,
+  "limitations": [
+    "The original Lightroom photo objects are referenced by UUID; actual file moves require Lightroom native UI.",
+    "Real Lightroom collection selection and native moves still need user verification.",
+    "Folder counts cover loaded photos and planned positions, not the whole disk.",
+    "Empty directories are created on disk; Lightroom needs its native Add Folder operation.",
+    "Pipe-mode peak memory 0.0 is unmeasured; GUI smoke duration is not ordinary photo latency."
+  ],
+  "guide": "docs/FOLDERS.md"
+}

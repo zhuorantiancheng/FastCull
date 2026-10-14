@@ -1,0 +1,62 @@
+{
+  "version": "2.1.1",
+  "rust_tests": 52,
+  "lua_sdk_tests": 31,
+  "startup_analysis_tests": 2,
+  "clippy_warnings": 0,
+  "release_native": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 16.388,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=15610",
+    "visual": {
+      "width": 1280,
+      "height": 850,
+      "exposure_channel_samples": 4578,
+      "exposure_mean_error": 0.398,
+      "both_comparison_canvases_visible": true
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "release_small_window": {
+    "count": 4,
+    "pipe": true,
+    "elapsed_seconds": 15.005,
+    "peak_working_set_mb": 0.0,
+    "app": "first_draw=true current=3 photos=4 full=2 fit=2 thumbs=4 error=None stress_remaining=0 elapsed_ms=14461",
+    "visual": {
+      "width": 640,
+      "height": 480,
+      "exposure_channel_samples": 1143,
+      "exposure_mean_error": 0.392,
+      "both_comparison_canvases_visible": true
+    },
+    "session_revision": 4,
+    "session_export_rows": 1
+  },
+  "release_startup_340": {
+    "count": 340,
+    "handoff_ms": 167.5,
+    "first_ui_frame_ms": 381.3,
+    "first_image_ms": 437.3,
+    "gui": "first_draw=true current=339 photos=340 full=1 fit=2 thumbs=44 error=None stress_remaining=0 elapsed_ms=6434"
+  },
+  "requirement_checklist": "docs/UI-ACCEPTANCE.md",
+  "gui_screenshots_visually_checked": true,
+  "keyboard_order_and_comparison_interaction_regressions_verified": true,
+  "grading_filtering_exposure_comparison_combination_verified": true,
+  "automatic_stars_complete_session_cleanup_and_no_extra_success_dialog_verified": true,
+  "minimum_window_toolbar_maximum_height_px": 112,
+  "additional_ui_suite_completed_runs": 15,
+  "additional_exposure_save_completed_runs": 200,
+  "transient_exposure_test_failure_reproduced_after_retest": false,
+  "real_lightroom_new_features_verified": false,
+  "limitations": [
+    "Real Lightroom catalog behavior still needs user verification.",
+    "Embedded JPEG exposure is an approximate preview.",
+    "One transient save failure had no detailed error; later repeats passed, so its external cause is not established.",
+    "Pipe-mode memory figures are not measured; startup excludes Lightroom SDK export."
+  ]
+}
