@@ -37,7 +37,7 @@ if (!$SkipShellRegistration) {
     New-Item -Path "$classes\.fastcullrequest" -Force | Out-Null
     Set-Item -LiteralPath "$classes\.fastcullrequest" -Value 'FastCull.Request'
     # Registry writes alone do not invalidate the desktop Shell's association cache.
-    # Notify before enabling the request.execute() launch path in Bridge.
+    # Retain association support for outstanding requests from older versions.
     if (-not ('FastCull.Install.Shell' -as [type])) {
         Add-Type -TypeDefinition @'
 using System;
@@ -66,9 +66,6 @@ foreach ($version in $BridgeVersions) {
     }
     [IO.File]::WriteAllText($script, [IO.File]::ReadAllText($source), $utf8)
     [IO.File]::WriteAllText($config, $exe + [Environment]::NewLine, $utf8)
-    if (!$SkipShellRegistration) {
-        [IO.File]::WriteAllText((Join-Path $directory 'FastCull-shell.txt'), 'FastCull.Request', $utf8)
-    }
     Write-Output "已注册 $version ：$script"
 }
 Write-Output '重新启动 Bridge；若提示新启动脚本，请启用 FastCull。选中 ARW 或文件夹后，右键或工具菜单均可打开选片器。'

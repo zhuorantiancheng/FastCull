@@ -141,26 +141,18 @@ test("launch failures retain stage and native ExtendScript error details", () =>
     assert.match(h.alerts[0], /错误号：8，行号：73/);
 });
 
-test("registered shell launch bypasses blocking app.system and preserves photo paths", () => {
+test("legacy shell marker cannot route photo requests through File.execute", () => {
     const h = host(); h.select("D:\\照片 100% & (一).NEF");
     h.files[h.config.replace('FastCull-path.txt', 'FastCull-shell.txt')] = 'FastCull.Request';
-    const opened = [];
-    h.context.File.prototype.execute = function () { opened.push(this.fsName); return true; };
-    h.context.app.system = () => { throw new Error('blocking launch must not run'); };
+    h.context.File.prototype.execute = () => { throw new Error('Windows Open With dialog'); };
     h.context.FastCullBridge.open();
     assert.equal(h.alerts.length, 0);
-    assert.equal(opened.length, 1);
-    assert.match(opened[0], /\.fastcullrequest$/);
-    assert.match(h.files[opened[0]], /照片 100% & \(一\)\.NEF/);
-});
-
-test("failed shell launch reports error without executing the blocking fallback", () => {
-    const h = host(); h.select("D:\\a.CR2");
-    h.files[h.config.replace('FastCull-path.txt', 'FastCull-shell.txt')] = 'FastCull.Request';
-    h.context.File.prototype.execute = () => false;
-    h.context.FastCullBridge.open();
-    assert.equal(h.commands.length, 0);
-    assert.match(h.alerts[0], /重新运行 Bridge 安装脚本/);
+    assert.equal(h.commands.length, 1);
+    const request = Object.keys(h.files).find(name => /bridge-requests.*\.txt$/.test(name));
+    assert.ok(request);
+    assert.match(h.files[request], /照片 100% & \(一\)\.NEF/);
+    assert.ok(h.commands[0].includes(' --bridge-open '));
+    assert.ok(!h.commands[0].includes('100%'));
 });
 
 test("hotkey consumes a fresh request exactly once and discards stale requests", () => {

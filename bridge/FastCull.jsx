@@ -68,9 +68,10 @@
                 throw new Error("无法创建 Bridge 选片请求目录。");
             }
             var name = (new Date()).getTime() + "-" + Math.floor(Math.random() * 1000000000);
-            var fastLaunch = new File(scriptFolder.fsName + "/FastCull-shell.txt");
-            var useShell = !api.isMac && fastLaunch.exists;
-            request = new File(directory.fsName + "/" + name + (useShell ? ".fastcullrequest" : ".txt"));
+            // Always launch the configured executable. ExtendScript File.execute()
+            // can show Open With even when Windows ShellExecute resolves the type.
+            // Ignore legacy FastCull-shell.txt markers left by older installers.
+            request = new File(directory.fsName + "/" + name + ".txt");
             if (request.exists) { throw new Error("请求编号重复，请重试。"); }
             stage = "检查启动路径";
             // app.system's direct executable handling differs from a cmd shell.
@@ -90,12 +91,6 @@
             // The native helper validates and snapshots the list, starts a detached
             // GUI and returns immediately. No wait for GUI exit, no RAW/XMP parsing.
             stage = "启动 Rust 选片器";
-            // Shell association launches directly, avoiding app.system's Windows
-            // dispatch delay. Old installations retain the compatible helper.
-            if (useShell) {
-                if (!request.execute()) { throw new Error("无法启动 FastCull，请重新运行 Bridge 安装脚本。"); }
-                return;
-            }
             var result = api.runCommand(command);
             if (typeof result == "number" && result != 0) {
                 throw new Error("FastCull 启动失败，退出码：" + result);
