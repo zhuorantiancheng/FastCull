@@ -30,10 +30,27 @@ $utf8 = [Text.UTF8Encoding]::new($true)
 # A private data-file association, never a RAW/JPEG default application change.
 if (!$SkipShellRegistration) {
     $classes = 'HKCU:\Software\Classes'
+    New-Item -Path "$classes\FastCull.Request" -Force | Out-Null
+    Set-Item -LiteralPath "$classes\FastCull.Request" -Value 'FastCull Bridge Request'
     $requestType = New-Item -Path "$classes\FastCull.Request\shell\open\command" -Force
     Set-Item -LiteralPath $requestType.PSPath -Value ('"' + $exe + '" --bridge-list-owned "%1"')
     New-Item -Path "$classes\.fastcullrequest" -Force | Out-Null
     Set-Item -LiteralPath "$classes\.fastcullrequest" -Value 'FastCull.Request'
+    # Registry writes alone do not invalidate the desktop Shell's association cache.
+    # Notify before enabling the request.execute() launch path in Bridge.
+    if (-not ('FastCull.Install.Shell' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace FastCull.Install {
+    public static class Shell {
+        [DllImport("shell32.dll")]
+        public static extern void SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
+    }
+}
+'@
+    }
+    [FastCull.Install.Shell]::SHChangeNotify(0x08000000, 0x1000, [IntPtr]::Zero, [IntPtr]::Zero)
 }
 foreach ($version in $BridgeVersions) {
     $directory = Join-Path (Join-Path $AdobeUserDirectory $version) 'Startup Scripts'
