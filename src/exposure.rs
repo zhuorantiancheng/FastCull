@@ -26,11 +26,17 @@ fn parse_row(line: &str) -> Option<(PathBuf, Baseline)> {
     }
     let path = PathBuf::from(fastcull::handoff::decode(fields[0]).ok()?);
     let mut value = Baseline {
-        exposure: fields[1].parse::<i32>().ok().filter(|v| (-5_000_000..=5_000_000).contains(v)),
+        exposure: fields[1]
+            .parse::<i32>()
+            .ok()
+            .filter(|v| (-5_000_000..=5_000_000).contains(v)),
         ..Default::default()
     };
     if fields.len() == 9 {
-        value.orientation = fields[2].parse::<u16>().ok().filter(|v| (1..=8).contains(v));
+        value.orientation = fields[2]
+            .parse::<u16>()
+            .ok()
+            .filter(|v| (1..=8).contains(v));
         value.crop = match fields[3] {
             "0" => Some(fastcull::crop::Crop::default()),
             "1" => (|| {
@@ -96,6 +102,27 @@ impl Drop for Baselines {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn catalog_crop_is_independent_of_exposure_and_legacy_rows_still_work() {
+        let (_, b) = parse_row("61\t-\t6\t1\t100000\t200000\t900000\t800000\t2500000\n").unwrap();
+        assert_eq!(b.exposure, None);
+        assert_eq!(b.orientation, Some(6));
+        let crop = b.crop.unwrap();
+        assert_eq!(
+            (crop.left, crop.bottom, crop.angle),
+            (100000, 800000, 2500000)
+        );
+        assert!(crop.enabled);
+        let (_, reset) = parse_row("61\t0\t8\t0\t-\t-\t-\t-\t-\n").unwrap();
+        assert_eq!(reset.crop, Some(Default::default()));
+        let (_, invalid) = parse_row("61\t0\t99\t1\t-1\t0\t900000\t800000\t0\n").unwrap();
+        assert!(invalid.crop.is_none() && invalid.orientation.is_none());
+        assert_eq!(invalid.exposure, Some(0));
+        let (_, legacy) = parse_row("61\t433333\n").unwrap();
+        assert_eq!(legacy.exposure, Some(433333));
+        assert!(legacy.crop.is_none() && legacy.orientation.is_none());
+        assert!(parse_row("61\t0\t6\t1").is_none());
+    }
     #[test]
     fn partial_sdk_records_are_not_published_and_completed_values_remain_available() {
         let dir = tempfile::tempdir().unwrap();

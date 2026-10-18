@@ -8,6 +8,7 @@ import hashlib
 import os
 from pathlib import Path
 import shutil
+import struct
 import subprocess
 from PIL import Image, ImageDraw
 
@@ -17,7 +18,10 @@ p.add_argument('--scratch', required=True, type=Path)
 p.add_argument('--sample', type=Path, help='Optional source photo, copied before editing')
 p.add_argument('--size', default='1200x800')
 p.add_argument('--orientation', type=int, default=1, choices=range(1, 9))
+p.add_argument('--import-source', choices=['xmp', 'lightroom'], help='Test an existing Adobe crop on the generated grid')
 args = p.parse_args()
+if args.sample and args.import_source:
+    p.error('--import-source uses the generated grid; do not combine with --sample')
 scratch = args.scratch.resolve()
 scratch.mkdir(parents=True, exist_ok=False)
 photos = scratch / 'photos'
@@ -49,7 +53,24 @@ env.update(FASTCULL_CROP_SMOKE='1',FASTCULL_SMOKE_DIR=str(scratch/'screenshots')
            FASTCULL_SMOKE_SIZE=args.size,TEMP=str(scratch),TMP=str(scratch))
 for k in ['FASTCULL_FEATURE_SMOKE','FASTCULL_BRIDGE_MOVE_SMOKE','FASTCULL_TREE_SMOKE','FASTCULL_FOLDER_SMOKE']:
     env.pop(k,None)
-result=subprocess.run([str(args.exe.resolve()),str(photos)],env=env,timeout=75,
+command=[str(args.exe.resolve()),str(photos)]
+if args.import_source:
+    env['FASTCULL_IMPORT_CROP_SMOKE']='1'
+    photo=photos/'crop-grid.jpg'
+    # A portrait crop and quarter turn, deliberately different from EXIF.
+    if args.import_source=='xmp':
+        packet=b'http://ns.adobe.com/xap/1.0/\x00'+b'''<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/" xmlns:tiff="http://ns.adobe.com/tiff/1.0/" crs:HasCrop="True" crs:CropLeft="0.2" crs:CropTop="0.1" crs:CropRight="0.8" crs:CropBottom="0.9" crs:CropAngle="0" tiff:Orientation="6"/></rdf:RDF></x:xmpmeta>'''
+        data=photo.read_bytes()
+        photo.write_bytes(data[:2]+b'\xff\xe1'+struct.pack('>H',len(packet)+2)+packet+data[2:])
+    else:
+        token=str(photo).encode('utf-8').hex()
+        manifest=scratch/'session.txt'
+        manifest.write_text(f'FASTCULL_SESSION_V1\tcrop-import\tactive\t0\n{token}\t0\t0\t0\n',encoding='utf-8')
+        manifest.with_suffix('.exposure').write_text(f'{token}\t-\t6\t1\t200000\t100000\t800000\t900000\t0\nEND\n',encoding='utf-8')
+        state=scratch/'state.txt'
+        state.write_text(str(photo)+'\n',encoding='utf-8')
+        command=[str(args.exe.resolve()),'--open-state-owned',str(state),'--session',str(manifest)]
+result=subprocess.run(command,env=env,timeout=75,
                       stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
                       creationflags=subprocess.CREATE_NO_WINDOW)
 assert result.returncode==0,(result.returncode,result.stderr)

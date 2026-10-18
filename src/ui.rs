@@ -116,10 +116,14 @@ impl Photo {
                 self.values.exposure = Some(e);
             }
         }
-        if !self.crop_edited && let Some(crop) = baseline.crop {
+        if !self.crop_edited
+            && let Some(crop) = baseline.crop
+        {
             self.values.crop = Some(crop);
         }
-        if !self.orientation_edited && let Some(o) = baseline.orientation {
+        if !self.orientation_edited
+            && let Some(o) = baseline.orientation
+        {
             self.values.orientation = Some(o);
         }
         self.develop_loaded = true;
@@ -147,6 +151,7 @@ pub struct App {
     fit: TextureCache,
     fit_edge: u32,
     thumbs: TextureCache,
+    fast_thumbs: TextureCache,
     current: usize,
     visible: Vec<usize>,
     filters: fastcull::filtering::Filters,
@@ -338,6 +343,9 @@ impl App {
             fit: TextureCache::new(96 * 1024 * 1024, 8),
             fit_edge: 2560,
             thumbs: TextureCache::new(64 * 1024 * 1024, 4096),
+            // Camera thumbnails are ~76 KB each; this only ever needs to cover
+            // the cells on screen until the 200 px previews arrive.
+            fast_thumbs: TextureCache::new(8 * 1024 * 1024, 1024),
             current: 0,
             visible: (0..count).collect(),
             filters: Default::default(),
@@ -649,6 +657,10 @@ impl App {
         });
     }
     fn rotate(&mut self, d: i32) {
+        if self.develop_pending(self.current) {
+            self.error = Some("正在读取 Lightroom 裁切和旋转，请稍后再试。".into());
+            return;
+        }
         let p = &self.photos[self.current];
         if p.info.is_some() {
             let mut o = p.orientation();
@@ -881,6 +893,30 @@ impl App {
         self.compare.as_mut().unwrap().scale(side, target, fit);
         self.zoom = self.compare.as_ref().unwrap().views[side].zoom > 0.;
     }
+    fn develop_pending(&self, i: usize) -> bool {
+        !self.photos[i].develop_loaded
+            && self
+                .session
+                .as_ref()
+                .is_some_and(|s| s.exposure_file().is_some())
+    }
+    fn receive_develop(&mut self) {
+        for i in 0..self.photos.len() {
+            let photo = &mut self.photos[i];
+            if !photo.loaded || (i == self.current && self.crop_editor.is_some()) {
+                continue;
+            }
+            if self.session.is_none() {
+                photo
+                    .exposure_base
+                    .get_or_insert(photo.values.exposure.unwrap_or(0));
+            } else if !photo.develop_loaded
+                && let Some(baseline) = self.baselines.get(&self.paths[i])
+            {
+                photo.apply_develop_baseline(baseline);
+            }
+        }
+    }
     fn receive_metadata(&mut self) {
         for message in self.pool.take_metadata() {
             self.filter_dirty = true;
@@ -952,6 +988,8 @@ impl App {
                     } else if let Level::Fit(edge) = message.task.level {
                         self.photos[i].fit_edge_loaded = edge;
                         self.fit.insert_near(i, t, self.current);
+                    } else if message.task.level == Level::FastThumb {
+                        self.fast_thumbs.insert(i, t, self.current);
                     } else {
                         self.thumbs.insert(i, t, self.current);
                     }
@@ -973,11 +1011,17 @@ impl App {
                 self.full.items.contains_key(&i)
                     || (self.fit.items.contains_key(&i) && self.photos[i].fit_edge_loaded >= edge)
             }
+            Level::FastThumb => self.fast_thumbs.items.contains_key(&i),
             Level::Thumb => self.thumbs.items.contains_key(&i),
         };
         if !cached {
             self.pool.request(i, level);
         }
+    }
+    fn fast_thumb_available(&self, i: usize) -> bool {
+        self.photos[i].info.as_ref().is_some_and(|info| {
+            info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset
+        })
     }
     fn retry_current(&mut self) {
         self.photos[self.current].image_errors.clear();
@@ -1443,6 +1487,12 @@ impl App {
     }
     fn cell(&mut self, ui: &mut egui::Ui, i: usize, size: Vec2, film: bool) {
         self.request(i, Level::Thumb);
+        // The 200 px preview can take 20–30 ms per cell on Canon/Nikon/JPEG
+        // sources. Show the camera JPEG (sub-millisecond) first and let the
+        // preview replace it in the same slot when it arrives.
+        if !self.thumbs.items.contains_key(&i) && self.fast_thumb_available(i) {
+            self.request(i, Level::FastThumb);
+        }
         let (rect, response) = ui.allocate_exact_size(size, egui::Sense::click_and_drag());
         let painter = ui.painter_at(rect);
         painter.rect_filled(
@@ -1466,7 +1516,8 @@ impl App {
             rect.min + Vec2::splat(5.),
             Pos2::new(rect.max.x - 5., rect.max.y - if film { 18. } else { 48. }),
         );
-        if let Some(t) = self.thumbs.get(i) {
+        let thumb = self.thumbs.get(i).or_else(|| self.fast_thumbs.get(i));
+        if let Some(t) = thumb {
             paint_image(
                 &painter,
                 &t,
@@ -2030,14 +2081,42 @@ impl App {
                 ctx.request_repaint_after(std::time::Duration::from_millis(50));
                 return;
             }
-            if self.native_size(self.current).is_none() || !self.photos[self.current].loaded {
+            if self.native_size(self.current).is_none()
+                || !self.photos[self.current].loaded
+                || self.develop_pending(self.current)
+            {
                 self.request(self.current, Level::Full);
                 ctx.request_repaint_after(std::time::Duration::from_millis(50));
                 return;
             }
             if !prepared {
                 match step {
-                    0 => {}
+                    0 => {
+                        if std::env::var_os("FASTCULL_IMPORT_CROP_SMOKE").is_some() {
+                            let p = &self.photos[self.current];
+                            assert_eq!(p.orientation(), 6);
+                            assert_eq!(
+                                p.values.crop,
+                                Some(fastcull::crop::Crop {
+                                    enabled: true,
+                                    left: 200000,
+                                    top: 100000,
+                                    right: 800000,
+                                    bottom: 900000,
+                                    angle: 0,
+                                })
+                            );
+                            if self.session.is_some() {
+                                // Catalog-only crop must not be persisted just by viewing.
+                                assert!(
+                                    fastcull::xmp::read(&self.paths[self.current])
+                                        .unwrap()
+                                        .crop
+                                        .is_none()
+                                );
+                            }
+                        }
+                    }
                     1 => self.begin_crop(),
                     2 => {
                         let e = self.crop_editor.as_mut().unwrap();
@@ -2197,13 +2276,14 @@ impl App {
             let _ = std::fs::write(
                 dir.join("result.txt"),
                 format!(
-                    "first_draw={} current={} photos={} full={} fit={} thumbs={} error={:?} stress_remaining={} elapsed_ms={:.0}",
+                    "first_draw={} current={} photos={} full={} fit={} thumbs={} fast_thumbs={} error={:?} stress_remaining={} elapsed_ms={:.0}",
                     self.first_draw,
                     self.current,
                     self.paths.len(),
                     self.full.items.len(),
                     self.fit.items.len(),
                     self.thumbs.items.len(),
+                    self.fast_thumbs.items.len(),
                     self.error,
                     self.stress_remaining,
                     self.started.elapsed().as_secs_f64() * 1000.
@@ -3511,6 +3591,95 @@ fn run_session(paths: Vec<PathBuf>, session: Option<Arc<Session>>, bridge: bool)
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn catalog_crop_overrides_stale_xmp_but_never_later_user_edits() {
+        let catalog = crate::exposure::Baseline {
+            exposure: None, // Older process version must not disable crop import.
+            crop: Some(fastcull::crop::Crop {
+                enabled: true,
+                left: 100000,
+                top: 200000,
+                right: 900000,
+                bottom: 800000,
+                angle: 3000000,
+            }),
+            orientation: Some(6),
+        };
+        let mut photo = Photo::default();
+        photo.apply_develop_baseline(catalog);
+        assert_eq!(photo.values.crop, catalog.crop);
+        assert_eq!(photo.orientation(), 6);
+        assert!(photo.develop_loaded);
+        photo.crop_edited = true;
+        photo.values.crop = Some(Default::default());
+        photo.orientation_edited = true;
+        photo.values.orientation = Some(8);
+        photo.apply_develop_baseline(catalog);
+        assert_eq!(photo.values.crop, Some(Default::default()));
+        assert_eq!(photo.orientation(), 8);
+        photo.crop_edited = false;
+        photo.apply_develop_baseline(crate::exposure::Baseline {
+            crop: Some(Default::default()),
+            ..Default::default()
+        });
+        assert_eq!(photo.values.crop, Some(Default::default()));
+    }
+    #[test]
+    fn asynchronous_catalog_crop_waits_for_metadata_and_does_not_create_an_edit() {
+        let dir = tempfile::tempdir().unwrap();
+        let raw = dir.path().join("catalog.ARW");
+        std::fs::write(&raw, b"original RAW").unwrap();
+        let paths = vec![raw.clone()];
+        let manifest = dir.path().join("session.txt");
+        fastcull::handoff::Manifest::new("crop-import".into(), &paths)
+            .unwrap()
+            .write(&manifest)
+            .unwrap();
+        let session = Arc::new(Session::new(vec![state::Item {
+            path: raw.clone(),
+            updates: Updates::default(),
+        }]));
+        session.attach_manifest(manifest.clone()).unwrap();
+        let ctx = egui::Context::default();
+        let cc = eframe::CreationContext::_new_kittest(ctx);
+        let mut app = App::new_session(&cc, paths, Some(session));
+        app.photos[0].full_size = Some(Vec2::new(6000., 4000.));
+        app.photos[0].loaded = true;
+        app.begin_crop();
+        assert!(app.crop_requested && app.crop_editor.is_none());
+        app.photos[0].loaded = false;
+        std::fs::write(
+            manifest.with_extension("exposure"),
+            format!(
+                "{}\t-\t6\t1\t100000\t200000\t900000\t800000\t0\nEND\n",
+                fastcull::handoff::encode(raw.to_str().unwrap())
+            ),
+        )
+        .unwrap();
+        let deadline = Instant::now() + std::time::Duration::from_secs(2);
+        while app.baselines.get(&raw).is_none() && Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert!(app.baselines.get(&raw).is_some());
+        app.receive_develop();
+        assert!(app.photos[0].values.crop.is_none());
+        app.photos[0].loaded = true;
+        app.receive_develop();
+        let crop = app.photos[0].values.crop.unwrap();
+        assert_eq!((crop.left, crop.bottom), (100000, 800000));
+        app.begin_crop();
+        let editor = app.crop_editor.as_ref().unwrap();
+        assert_eq!(editor.orientation, 6);
+        assert_eq!(editor.value(), crop);
+        assert_eq!(
+            fastcull::handoff::Manifest::read(&manifest)
+                .unwrap()
+                .revision,
+            0
+        );
+        assert!(!raw.with_extension("xmp").exists());
+        assert_eq!(std::fs::read(raw).unwrap(), b"original RAW");
+    }
     #[test]
     fn thumbnail_bounds_do_not_change_when_full_geometry_arrives() {
         for film in [false, true] {

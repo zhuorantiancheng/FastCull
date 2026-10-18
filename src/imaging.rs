@@ -12,6 +12,9 @@ pub struct Pixels {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Level {
+    /// Camera-embedded small JPEG (160×120 style): a sub-millisecond placeholder
+    /// for grid and filmstrip cells while the 200 px preview decodes.
+    FastThumb,
     Thumb,
     Fit(u32),
     Full,
@@ -37,6 +40,16 @@ pub fn decode_level_with_geometry(
     level: Level,
     geometry: &mut dyn FnMut([usize; 2]),
 ) -> Result<Pixels> {
+    if level == Level::FastThumb {
+        // Only large-TIFF sources (Sony ARW and similar) have a separate small
+        // camera JPEG; JPEG files point thumbnail at the full image and native
+        // LibRaw sources leave the refs empty, so callers check availability.
+        ensure!(
+            info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset,
+            "没有可用的相机缩略图"
+        );
+        return decode_jpeg(path, &info.thumbnail, level, geometry);
+    }
     if info.raw_size.is_some() {
         return crate::native_raw::decode_with_geometry(path, level, geometry);
     }
@@ -64,7 +77,8 @@ pub fn decode_level_with_geometry(
         // Camera icon JPEGs can be padded to 4:3 even for a 3:2 photo.
         // Downscale the picture preview so crop UVs describe picture pixels,
         // not that padded canvas. The scaled JPEG path bounds decode cost.
-        Level::Thumb | Level::Fit(_) => &info.preview,
+        // FastThumb returned above; listing it here keeps this match exhaustive.
+        Level::FastThumb | Level::Thumb | Level::Fit(_) => &info.preview,
         Level::Full => &info.jpeg,
     };
     // A damaged small JPEG must not make a valid larger preview inaccessible.
@@ -113,9 +127,9 @@ pub(crate) fn decode_jpeg_bytes_with_geometry(
     );
     geometry([w, h]);
     let edge = match level {
+        Level::FastThumb | Level::Full => usize::MAX,
         Level::Thumb => 200,
         Level::Fit(edge) => edge as usize,
-        Level::Full => usize::MAX,
     };
     if edge > 0
         && w.max(h) / 2 >= edge
@@ -149,7 +163,9 @@ pub(crate) fn resize_level(pixels: Pixels, level: Level) -> Result<Pixels> {
         // buffer and two alpha passes when reducing photographic previews.
         Level::Thumb => resize(pixels, 200, false),
         Level::Fit(edge) => resize(pixels, edge, false),
-        Level::Full => Ok(pixels),
+        // The camera thumbnail is already smaller than any cell; the full-size
+        // texture is used as decoded. Neither should be upscaled on the CPU.
+        Level::FastThumb | Level::Full => Ok(pixels),
     }
 }
 pub fn thumbnail(p: Pixels, edge: u32) -> Result<Pixels> {
@@ -224,6 +240,13 @@ pub fn orient(p: Pixels, o: u16) -> Pixels {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn fast_thumb_refuses_sources_without_a_separate_camera_jpeg() {
+        let path =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/tiny.jpg");
+        let info = ArwInfo::read(&path).unwrap();
+        assert!(decode_level(&path, &info, Level::FastThumb).is_err());
+    }
     #[test]
     fn opaque_resize_matches_alpha_aware_resize_exactly() {
         let full =

@@ -72,6 +72,45 @@ fn sample_crop() -> Crop {
 }
 
 #[test]
+fn load_adobe_crop_from_raw_sidecar_and_jpeg_embedded_xmp_without_rewriting() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in ["adobe.ARW", "adobe.CR2", "adobe.NEF", "adobe.jpg"] {
+        let path = dir.path().join(name);
+        let jpeg = fastcull::formats::is_jpeg(&path);
+        fs::write(
+            &path,
+            if jpeg {
+                include_bytes!("fixtures/tiny.jpg").as_slice()
+            } else {
+                b"RAW pixels"
+            },
+        )
+        .unwrap();
+        // Adobe-shaped metadata, independent of the culler's XMP writer.
+        let packet = r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/" xmlns:tiff="http://ns.adobe.com/tiff/1.0/" crs:HasCrop="True" crs:CropLeft="0.1" crs:CropTop="0.2" crs:CropRight="0.9" crs:CropBottom="0.8" crs:CropAngle="0" tiff:Orientation="6"/></rdf:RDF></x:xmpmeta>"#;
+        if jpeg {
+            fastcull::jpeg::write_packet(&path, None, packet).unwrap();
+        } else {
+            fs::write(path.with_extension("xmp"), packet).unwrap();
+        }
+        let before = fs::read(&path).unwrap();
+        let values = xmp::read(&path).unwrap();
+        assert_eq!(values.crop, Some(sample_crop()));
+        assert_eq!(values.orientation, Some(6));
+        let geometry = values.crop.unwrap().geometry(Vec2::new(6000., 4000.), 6);
+        assert!((geometry.rect.width() - 2400.).abs() < 0.01);
+        assert!((geometry.rect.height() - 4800.).abs() < 0.01);
+        assert_eq!(fs::read(&path).unwrap(), before);
+        if !jpeg {
+            assert_eq!(
+                fs::read_to_string(path.with_extension("xmp")).unwrap(),
+                packet
+            );
+        }
+    }
+}
+
+#[test]
 fn crop_xmp_keeps_other_develop_settings_and_supports_namespace_aliases() {
     let dir = tempfile::tempdir().unwrap();
     let raw = dir.path().join("photo.ARW");

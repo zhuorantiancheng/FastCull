@@ -783,7 +783,7 @@ class BridgeTests(unittest.TestCase):
         self.assertFalse(manifest.with_suffix('.exposure').exists())
         manifest.with_suffix('.stars-request').write_text('test-id\n',encoding='utf-8')
         self.lua.execute('TASKS[1]()')
-        self.assertIn('\t-200000\n',manifest.with_suffix('.exposure').read_text())
+        self.assertEqual(manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')[1], '-200000')
         self.assertEqual(len(self.lua.globals().WRITES),0)
         self.lua.execute('TASKS[2]()')
         self.assertEqual(len(self.lua.globals().WRITES),0)
@@ -795,9 +795,26 @@ class BridgeTests(unittest.TestCase):
         manifest=self.manifest(raw)
         self.lua.execute("addPhoto(RAW,1,'Red',1);PHOTOS[1].getDevelopSettings=function() return {Exposure2012=-999999} end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
         baseline=manifest.with_suffix('.exposure').read_text()
-        self.assertIn('\t-\n',baseline)
+        self.assertEqual(baseline.splitlines()[0].split('\t')[1], '-')
         self.assertTrue(baseline.endswith('END\n'))
         self.assertEqual(len(self.lua.globals().WRITES),0)
+
+    def test_catalog_crop_and_orientation_are_read_without_writing_photo_or_catalog(self):
+        raw=Path(self.tmp.name)/'catalog-crop.ARW'
+        manifest=self.manifest(raw)
+        self.lua.execute("addPhoto(RAW,1,'Red',1)")
+        for orientation,code in enumerate(['AB','BA','CD','DC','CB','BC','AD','DA'],1):
+            self.lua.globals().CODE=code
+            self.lua.execute("PHOTOS[1].getDevelopSettings=function() return {orientation=CODE,CropLeft=0.1,CropTop=0.2,CropRight=0.9,CropBottom=0.8,CropAngle=-2.5} end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
+            fields=manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')
+            self.assertEqual(fields[1:],['-',str(orientation),'1','100000','200000','900000','800000','-2500000'])
+        self.lua.execute("PHOTOS[1].getDevelopSettings=function() return {HasCrop=false,CropLeft=0.1,CropTop=0.2,CropRight=0.9,CropBottom=0.8} end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
+        fields=manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')
+        self.assertEqual(fields[3:],['0','0','0','1000000','1000000','0'])
+        self.lua.execute("PHOTOS[1].getDevelopSettings=function() error('SDK failed') end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
+        self.assertEqual(manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')[1:],['-'])
+        self.assertFalse(raw.with_suffix('.xmp').exists())
+        self.assertEqual(len(self.lua.globals().DEVELOP_WRITES),0)
 
     def test_corrupt_sidecar_does_not_acknowledge_or_modify_catalog(self):
         raw=Path(self.tmp.name)/'bad.ARW';raw.with_suffix('.xmp').write_text('<broken>',encoding='utf-8')

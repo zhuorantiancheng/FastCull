@@ -15,6 +15,13 @@
 
 编辑期间使用独立工作区，切图、打星和移动照片不会抢占裁切手势。写入失败时显示错误并保留草稿，不把预览当作已保存的结果。预设文件在 `%LOCALAPPDATA%/FastCull/crop-ratios.tsv`，跨重启保留；测试可通过 `FASTCULL_SETTINGS_DIR` 指定私有目录。
 
+## 载入 Lightroom / Camera Raw 已有裁切
+
+- 从 Lightroom Classic 插件打开时，后台直接读取目录中的裁切边界、角度和照片方向；不要求先把 LR 修改保存到 XMP。进入裁切工具时会等待当前照片的目录参数读完，避免从旧裁切开始编辑。
+- 从 Bridge 或独立打开时，读取 RAW 同名 XMP 或 JPEG 内嵌 XMP 中已经保存的 ACR/LR 裁切。仅保存在 LR 目录或 ACR 私有数据库、未写入照片元数据的修改，独立打开时无法读取。
+- 载入的裁切用于单图、100%、对比、网格和胶片带；进入裁切工具后仍能调整原有裁切。读取本身不写照片，也不登记为需要同步回 LR 的新修改。
+- LR 目录参数优先于旧 XMP；明确重置裁切会恢复全图。裁切与曝光独立读取，旧处理版本没有 `Exposure2012` 时仍可载入有效裁切。缺失或无效的目录字段保留原 XMP 对应值。
+
 ## XMP 存储和照片移动
 
 裁切保存当前可恢复的编辑参数，不修改 RAW 像素，也不重新压缩 JPEG。XMP 记录的是应用后的裁切状态；当前工具内的撤销栈不作为 Adobe 历史步骤写入旁车。
@@ -38,8 +45,12 @@
 ```powershell
 python scripts/crop_smoke.py --exe lrplugins/FastCull.lrplugin/fastcull.exe --scratch .agent-temp/<日期>-crop/native-wide
 python scripts/crop_smoke.py --exe lrplugins/FastCull.lrplugin/fastcull.exe --scratch .agent-temp/<日期>-crop/native-small --size 800x600 --orientation 6
+python scripts/crop_smoke.py --exe lrplugins/FastCull.lrplugin/fastcull.exe --scratch .agent-temp/<日期>-crop/import-xmp --import-source xmp
+python scripts/crop_smoke.py --exe lrplugins/FastCull.lrplugin/fastcull.exe --scratch .agent-temp/<日期>-crop/import-lr --import-source lightroom
 ```
 
 也可传 `--sample <照片路径>`；脚本只编辑私有复制文件，验证原文件哈希未变。截图覆盖自由裁切、带角度的固定比例、90° 旋转、应用、重新进入、网格和 100%。脚本成功仍需检查截图布局。
+
+`--import-source` 使用生成的网格图，分别从手写 Adobe XMP 和模拟 LR 目录基线载入相同的竖幅裁切，并断言首次显示的范围与方向；LR 模式同时验证读取没有把目录裁切写回照片。Lua 模拟和 Rust 测试另覆盖缺少 `HasCrop`、旧曝光协议、目录读取先于照片元数据、明确重置及读取不产生会话修订。
 
 本轮测试不等同于 Camera Raw / Lightroom 真机往返验收；两者的镜头校正、透视校正及完整 RAW 显影不由选片器复现，选片器在原始预览上呈现裁切。最终 Adobe 显影效果应在对应宿主中核对。
