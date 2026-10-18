@@ -25,3 +25,11 @@
 - 为保持 tag 语义，2.7.5 之后 bump 到 **2.7.6** 正式发布：提交 `c8b3722`，tag `v2.7.6`；旧 tag `v2.7.5` 仍指向失败的 `870dc60`（如需清理需另行确认）。
 - `dist/public-2.7.6/` 已在本机重建并自校验：三个包 SHA-256 与 `SHA256SUMS.txt` 一致、安装器 ProductVersion=2.7.6、便携包含 `photo_edits.lua`、源码包 97 项含 macOS 构建文件。
 - CI 经验：任何硬编码版本断言都要从 `Cargo.toml` 读取；Windows/macOS 工作流都由 `v*` 标签触发，推 tag 前必须先本地跑 `node --test tests/bridge_entry.test.cjs`。
+
+## 修订记录（2026-10-19 发布 v2.7.6）
+
+- v2.7.6 的 Windows release 工作流在 tag 上成功，创建 draft Release（3 个 Windows 包 + SHA256SUMS）。
+- 同一 tag 的 macOS run 失败于 `build-macos.py`：`make libraw_r.la` 不是 LibRaw 0.22.2 的目标，正确目标是 `lib/libraw_r.la`，静态库在 `lib/.libs/libraw_r.a`。修复提交 `88ac14f` 推送到 main 后手动触发 macOS build，arm64 与 x86_64 两个任务均成功。
+- 把两个架构的 zip 与 `.sha256` 下载后上传到同一 Release，并取消 draft：<https://github.com/zhuorantiancheng/FastCull/releases/tag/v2.7.6>，共 8 个附件；macOS 包 SHA-256 自校验通过，包内 app/插件/bridge/文档结构完整。
+- **已知残留**：tag `v2.7.6` 仍指向 `c8b3722`（不含 `build-macos.py` 修复），Release 里 `FastCull-Source-2.7.6.zip` 的该脚本仍是修复前版本；macOS 二进制包本身构建自 `88ac14f`，可使用。要让 tag、源码包与二进制完全一致，应发 2.7.7 或在 Release 中替换 Source asset。
+- 本地 `dist/public-2.7.6/` 保留同一份 Windows 包；macOS 包下载副本在 `.agent-temp/2026-10-18-perf/macos-artifacts/`（临时目录）。
