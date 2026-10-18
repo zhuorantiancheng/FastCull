@@ -7,8 +7,9 @@
 - [project-overview](project-overview.md) — FastCull 是 Rust + egui 的 RAW/JPEG 选片器，2.7.4，Windows 分发 + macOS 待验收（2026-10-18，DSH）
 - [build-and-test](build-and-test.md) — Rust 工具链在 `.agent-temp/2026-10-12-rust/toolchain/`，构建需设 CARGO_HOME/RUSTUP_HOME/TARGET_DIR（2026-10-18，DSH）
 - [workspace-acl](workspace-acl.md) — 工作区曾因缺 WRITE_OWNER 导致 pwsh 无法启动，2026-10-18 已用 acl 诊断脚本修复（2026-10-18，DSH）
-- [uncommitted-work](uncommitted-work.md) — 工作区存有"载入已有裁切"的 8 个未提交文件，Lua 侧已在 HEAD（2026-10-18，DSH）
+- [uncommitted-work](uncommitted-work.md) — 原“载入已有裁切”的未提交文件已于 2026-10-18 在 fae9d98 提交（2026-10-18，DSH）
 - [performance-tuning](performance-tuning.md) — 2026-10-18 实测基线、ColorImage 零拷贝、FastThumb、12 线程三项改动（2026-10-18，DSH）
+- [release-and-macos](release-and-macos.md) — 2.7.4 包校验通过但落后源码；源码包补 macOS 构建文件；Apple 双架构 cross-check 通过（2026-10-18，DSH）
 
 ## 归档（迁移自旧 agent 目录，2026-10-17）
 

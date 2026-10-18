@@ -24,12 +24,14 @@ LUA = ['Info.lua', 'common.lua', 'develop.lua', 'HotkeyInit.lua', 'HotkeyStop.lu
        'SyncSelected.lua', 'SyncSidecars.lua']
 SOURCE_FILES = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'README.md',
                 '.gitignore', '.cargo/config.toml', '.github/workflows/windows-release.yml',
+                '.github/workflows/macos-build.yml',
                 'installer/FastCull.iss', 'docs/DISTRIBUTION.md', 'docs/RELEASE-NOTES.md',
-                'docs/QUICKSTART.txt', 'docs/CROPPING.md', 'docs/LR-SYNC.md', 'vendor/LibRaw-0.22.2.zip']
+                'docs/QUICKSTART.txt', 'docs/CROPPING.md', 'docs/LR-SYNC.md', 'docs/MACOS.md',
+                'vendor/LibRaw-0.22.2.zip']
 SOURCE_SCRIPTS = ['build-release.ps1', 'build-native.ps1', 'release.py',
                   'register-integrations.ps1', 'register-adobe.cmd', 'unregister-adobe.cmd',
                   'analyze_startup.py', 'verify_feature_images.py', 'native_smoke.py', 'crop_smoke.py',
-                  'install-bridge.ps1', 'verify_samples.py']
+                  'install-bridge.ps1', 'verify_samples.py', 'build-macos.py', 'install-macos.command']
 
 
 def sha(path):

@@ -7,3 +7,7 @@
 证据：`git diff --stat`（8 files, +280/-9）；`git log -3`（main 最新 `9869800`，2026-10-16 Bridge 启动修复）；验证记录 `.agent-temp/2026-10-14-import-crop/`（137 Rust + 59 Lua 测试通过、Clippy 无警告、release 构建成功、接触表截图 `native-lr-contact.png` / `native-xmp-contact.png`）。本轮未运行测试，未提交任何改动。
 
 更新人：DSH（deepseek-flash），2026-10-18。
+
+## 修订记录（2026-10-18，DSH）
+
+上述改动已在提交 `fae9d98`（feat: load existing crops and speed up the preview pipeline）落地，同时包含当轮的性能改动（ColorImage 零拷贝、FastThumb、解码线程 12）和 AGENTS.md/.agents 记忆协议文件，共 24 个文件 +670/-28。提交前复跑：141 项 Rust、59 项 Python/Lua（1 跳过）、Clippy 无警告、release 构建和 GUI 冒烟均通过。本条保留原始事实作为历史，后续以 `git log` 为准。
