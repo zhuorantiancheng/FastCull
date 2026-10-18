@@ -1,6 +1,6 @@
 # Git 版本管理
 
-本项目使用本地 Git 管理源码、测试、构建脚本、正式文档和验证记录。当前主分支为 `main`，包含 Windows 功能和新增的 macOS 适配源码。提交署名在本仓库设置为 `zhuorantiancheng <zhuorantiancheng@localhost>`；该邮箱只是本地标识。尚未配置远程仓库，也未上传代码。
+本项目使用本地 Git 管理源码、测试、构建脚本、正式文档和验证记录。当前主分支为 `main`，包含 Windows 功能和新增的 macOS 适配源码。提交署名在本仓库设置为 `zhuorantiancheng <zhuorantiancheng@localhost>`；该邮箱只是本地标识。远程仓库为 `origin`（`https://github.com/zhuorantiancheng/FastCull.git`），推送 `main` 与 `v*` 标签会触发 GitHub Actions 的 Windows / macOS 构建工作流。
 
 ## 已保存的历史
 

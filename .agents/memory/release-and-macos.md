@@ -11,3 +11,10 @@
 - macOS 边界（文档已声明）：未在真机验收；无 WIC，缩略图/适屏走 zune 全解码（比 Windows 慢，FastThumb 仍有效）；无 Ctrl+Alt+K 助手；仅 ad-hoc 签名、未公证。
 
 更新人：DSH（deepseek-flash），2026-10-18。
+
+## 修订记录（2026-10-18 发版 2.7.5）
+
+- 版本已在 `Cargo.toml`/`Cargo.lock`、`FastCull.lrplugin/Info.lua`、`bridge/FastCull.jsx`、`installer/FastCull.iss` 统一切到 2.7.5，`docs/RELEASE-NOTES.md` 增加 2.7.5 段落，`docs/VERSION-CONTROL.md` 更正为已配置 `origin`。
+- 发现并修复发布阻断缺陷：`scripts/register-integrations.ps1` 的 `$pluginNames` 白名单缺少 `photo_edits.lua`，而 `sync.lua` 会 `require 'photo_edits'`；安装版 LR 插件会因此缺文件。修复后 `tests/test_distribution.py` 9 项通过。
+- 已重建 `dist/public-2.7.5/`（安装器、便携包、源码包、SHA256SUMS），三个包哈希自校验通过；安装器 ProductVersion=2.7.5；便携包含 `photo_edits.lua` 与修复后的注册脚本；源码包 97 项含 macOS 构建文件。
+- 发版命令：`scripts/build-release.ps1` 需要 `cargo` 在 PATH（本机工具链在 `.agent-temp/2026-10-12-rust/toolchain/cargo`）并先结束常驻的 `fastcull-keys.exe`，否则复制插件程序时报占用。
