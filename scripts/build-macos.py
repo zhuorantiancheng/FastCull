@@ -62,10 +62,12 @@ def main():
     env.update(CC="clang", CXX="clang++", CFLAGS="-O2 -fPIC", CXXFLAGS="-O2 -fPIC")
     run(["/bin/sh", "./configure", "--disable-shared", "--enable-static", "--disable-openmp",
          "--disable-examples", "--disable-jpeg", "--disable-zlib", "--disable-lcms"], raw)
-    run(["make", f"-j{os.cpu_count() or 2}", "libraw_r.la"], raw)
+    # LibRaw names the libtool target with its subdirectory (lib/libraw_r.la);
+    # the static archive then lives in lib/.libs.
+    run(["make", f"-j{os.cpu_count() or 2}", "lib/libraw_r.la"], raw)
     dylib = scratch / "libfastcull_raw.dylib"
     run(["clang++", "-std=c++17", "-O2", "-dynamiclib", "-fvisibility=hidden",
-         "-I", raw, ROOT / "native/raw_bridge.cpp", raw / ".libs/libraw_r.a",
+         "-I", raw, ROOT / "native/raw_bridge.cpp", raw / "lib/.libs/libraw_r.a",
          "-install_name", "@rpath/libfastcull_raw.dylib", "-o", dylib])
     # This build must have no dependency on the build machine's Homebrew paths.
     linkage = subprocess.check_output(["otool", "-L", str(dylib)], text=True)

@@ -18,3 +18,10 @@
 - 发现并修复发布阻断缺陷：`scripts/register-integrations.ps1` 的 `$pluginNames` 白名单缺少 `photo_edits.lua`，而 `sync.lua` 会 `require 'photo_edits'`；安装版 LR 插件会因此缺文件。修复后 `tests/test_distribution.py` 9 项通过。
 - 已重建 `dist/public-2.7.5/`（安装器、便携包、源码包、SHA256SUMS），三个包哈希自校验通过；安装器 ProductVersion=2.7.5；便携包含 `photo_edits.lua` 与修复后的注册脚本；源码包 97 项含 macOS 构建文件。
 - 发版命令：`scripts/build-release.ps1` 需要 `cargo` 在 PATH（本机工具链在 `.agent-temp/2026-10-12-rust/toolchain/cargo`）并先结束常驻的 `fastcull-keys.exe`，否则复制插件程序时报占用。
+
+## 修订记录（2026-10-18 发版 2.7.6）
+
+- 2.7.5 的 tag 推送后 CI 立即失败：`tests/bridge_entry.test.cjs` 把期望版本硬编码成 `2.7.4`，两个 macOS 架构都在 “Bridge tests” 步骤挂掉（Windows run 手动取消）。测试已改为从 `Cargo.toml` 读取版本。
+- 为保持 tag 语义，2.7.5 之后 bump 到 **2.7.6** 正式发布：提交 `c8b3722`，tag `v2.7.6`；旧 tag `v2.7.5` 仍指向失败的 `870dc60`（如需清理需另行确认）。
+- `dist/public-2.7.6/` 已在本机重建并自校验：三个包 SHA-256 与 `SHA256SUMS.txt` 一致、安装器 ProductVersion=2.7.6、便携包含 `photo_edits.lua`、源码包 97 项含 macOS 构建文件。
+- CI 经验：任何硬编码版本断言都要从 `Cargo.toml` 读取；Windows/macOS 工作流都由 `v*` 标签触发，推 tag 前必须先本地跑 `node --test tests/bridge_entry.test.cjs`。
