@@ -131,7 +131,11 @@ test("path protection rejects each unsafe character and preserves valid Unicode"
         assert.throws(() => h.context.FastCullBridge.quote("C:/before" + character + "after"), /命令字符/);
     }
     assert.equal(h.context.FastCullBridge.quote("D:/照片 & (一)/fastcull.exe"), '"D:/照片 & (一)/fastcull.exe"');
-    assert.equal(h.context.FastCullBridge.version, "2.7.4");
+    // Read the crate version instead of repeating it here, so a release bump
+    // cannot leave this contract test behind.
+    const version = /^version = "([^"]+)"/m.exec(
+        fs.readFileSync(path.join(__dirname, "../Cargo.toml"), "utf8"))[1];
+    assert.equal(h.context.FastCullBridge.version, version);
 });
 test("launch failures retain stage and native ExtendScript error details", () => {
     const h = host(); h.select("D:\\a.ARW");

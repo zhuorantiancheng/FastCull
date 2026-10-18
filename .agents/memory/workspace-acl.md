@@ -1,6 +1,6 @@
 # 工作区 Windows 文件权限（DSH 沙箱）
 
-事实：2026-10-18 本工作区（`E:\documents\Study\codes\IEDT`）在 DSH 沙箱里每次启动 pwsh 都报 `SetNamedSecurityInfoW failed (Win32 5): grantWrite(E:\documents\Study\codes\IEDT)`，所有命令不可用。原因是该目录缺少当前用户的 WRITE_OWNER（WRITE_DAC 已有），DSH 无法完成工作区授权写入。按 `diagnose-windows-sandbox-acl` skill 跑一次诊断脚本（unconfined），给目录加上当前用户 FullControl 后，pwsh 恢复正常。
+事实：2026-10-18 本工作区（项目根，Study 库内）在 DSH 沙箱里每次启动 pwsh 都报 `SetNamedSecurityInfoW failed (Win32 5): grantWrite(<项目根>)`，所有命令不可用。原因是该目录缺少当前用户的 WRITE_OWNER（WRITE_DAC 已有），DSH 无法完成工作区授权写入。按 `diagnose-windows-sandbox-acl` skill 跑一次诊断脚本（unconfined），给目录加上当前用户 FullControl 后，pwsh 恢复正常。
 
 适用条件：再次出现 pwsh 启动即失败、工作区读写被拒或目录列不出来时。先看恢复记录，不要手工改权限。
 

@@ -1,6 +1,6 @@
 [package]
 name = "fastcull"
-version = "2.7.5"
+version = "2.7.6"
 edition = "2024"
 rust-version = "1.90"
 description = "Fast RAW/JPEG culler with Lightroom and Adobe Bridge integration"
