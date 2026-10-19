@@ -410,7 +410,23 @@ impl Pool {
         let path = self.locations[index]
             .read()
             .unwrap_or_else(|e| e.into_inner());
-        xmp::write(&path, updates).map(|_| ())
+        // An Adobe host or the metadata worker can hold the sidecar for a few
+        // milliseconds while reading; Windows then refuses the atomic replace.
+        // Retry briefly instead of surfacing a failure the user would have to
+        // repeat by hand.
+        let mut last = None;
+        for attempt in 0..4 {
+            match xmp::write(&path, updates) {
+                Ok(_) => return Ok(()),
+                Err(error) => {
+                    last = Some(error);
+                    if attempt < 3 {
+                        thread::sleep(std::time::Duration::from_millis(10));
+                    }
+                }
+            }
+        }
+        Err(last.expect("at least one write attempt"))
     }
     pub fn navigate(&self, index: usize) {
         self.queue.0.lock().unwrap().navigate(index);
