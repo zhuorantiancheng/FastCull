@@ -33,3 +33,10 @@
 - 把两个架构的 zip 与 `.sha256` 下载后上传到同一 Release，并取消 draft：<https://github.com/zhuorantiancheng/FastCull/releases/tag/v2.7.6>，共 8 个附件；macOS 包 SHA-256 自校验通过，包内 app/插件/bridge/文档结构完整。
 - **已知残留**：tag `v2.7.6` 仍指向 `c8b3722`（不含 `build-macos.py` 修复），Release 里 `FastCull-Source-2.7.6.zip` 的该脚本仍是修复前版本；macOS 二进制包本身构建自 `88ac14f`，可使用。要让 tag、源码包与二进制完全一致，应发 2.7.7 或在 Release 中替换 Source asset。
 - 本地 `dist/public-2.7.6/` 保留同一份 Windows 包；macOS 包下载副本在 `.agent-temp/2026-10-18-perf/macos-artifacts/`（临时目录）。
+
+## 修订记录（2026-10-19 发布 v2.7.7）
+
+- 2.7.7 用来收口 2.7.6 的 tag/源码不一致：最终 tag 指向 `9d0d59a`（含 macOS 构建修复、测试稳定性修复和写重试），Release 的 Source zip 与 macOS 包都来自同一提交。
+- 期间 CI 两次在 Windows 上失败，都是"App 创建后立即写旁车并读回"的测试：`rapid_rating_and_navigation_keep_original_event_order` 与 `folder_plan_filtering_and_grading_keep_original_photo_identity`。修复两项：测试先排空后台 metadata 读取再发按键（`5d59657`），`Pool::write_xmp` 对 Windows 瞬时占用做 4 次重试（`9d0d59a`）。
+- 手动/重推 tag 后第三次两个工作流均成功；从成功 run 下载 arm64 与 x86_64 包，校验 SHA-256 与包内 `scripts/build-macos.py`（已含 `lib/libraw_r.la`）后上传 Release 并取消 draft：<https://github.com/zhuorantiancheng/FastCull/releases/tag/v2.7.7>，8 个附件。
+- 旧 tag：`v2.7.5` 指向失败构建（`870dc60`，无 Release）；`v2.7.6` 已发布但源码包的 `build-macos.py` 是修复前版本。如需清理 `v2.7.5` 需另行确认。
