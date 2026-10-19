@@ -4498,6 +4498,17 @@ mod tests {
             let ctx = egui::Context::default();
             let cc = eframe::CreationContext::_new_kittest(ctx.clone());
             let mut app = App::new(&cc, paths.clone());
+            // Drain the background sidecar reads before writing again: on a slow
+            // CI machine the metadata worker can otherwise hold the same file
+            // while this test replaces it, and Windows drops that write.
+            let deadline = Instant::now() + std::time::Duration::from_secs(5);
+            let mut drained = 0;
+            while drained < paths.len() && Instant::now() < deadline {
+                drained += app.pool.take_metadata().len();
+                if drained < paths.len() {
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+            }
             for (i, p) in paths.iter().enumerate() {
                 app.photos[i].loaded = true;
                 app.photos[i].values = xmp::read(p).unwrap();
