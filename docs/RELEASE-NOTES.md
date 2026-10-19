@@ -1,4 +1,9 @@
-# FastCull 2.7.6 · 载入已有裁切与预览提速
+# FastCull 2.7.7 · macOS 源码构建修复
+
+- 修复源码包内 `scripts/build-macos.py` 的 LibRaw 构建目标：改用 `lib/libraw_r.la` 和 `lib/.libs/libraw_r.a`，macOS 工作流在 Apple Silicon 和 Intel 上都能完成构建、测试和打包。2.7.6 的源码包在 Mac 上按文档构建会失败，请使用本版源码包。
+- 功能与 2.7.6 相同，见下。
+
+## 2.7.6 的载入已有裁切与预览提速
 
 - 载入已有裁切：从 Lightroom Classic 打开时后台直接读取目录中的裁切边界、角度和方向，无需先把修改保存到 XMP；Bridge 和独立打开读取 RAW 旁车或 JPEG 内嵌 XMP 中已保存的 ACR/LR 裁切。读取不写照片，也不登记为需要同步的新修改。
 - 100% 全尺寸显示不再逐像素复制 25.6 MP 缓冲，6192×4128 图片的纹理准备从约 27 ms 降到可忽略。
