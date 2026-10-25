@@ -39,6 +39,7 @@ jobs:
         if: always()
         with:
           name: FastCull-macos-${{ matrix.arch }}-validation
+          include-hidden-files: true
           path: |
             .agent-temp/*-macos-*/raw-gui/screenshots/*.png
             .agent-temp/*-macos-*/raw-gui/screenshots/error.txt
