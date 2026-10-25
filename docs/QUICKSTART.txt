@@ -7,7 +7,7 @@ FastCull — Windows 快速开始
 
 安装前关闭 Adobe 应用与 FastCull，默认当前用户安装，无需管理员权限。
 安装完成后启动 FastCull.exe，即可选择照片或文件夹。
-支持 ARW、CR2、NEF、JPG/JPEG。E / G / C 切换单图 / 网格 / 对比。
+支持 ARW、CR2、NEF、DNG、JPG/JPEG。E / G / C 切换单图 / 网格 / 对比。
 
 Bridge：
   先启动过一次 Bridge，安装器才能找到它的用户目录。

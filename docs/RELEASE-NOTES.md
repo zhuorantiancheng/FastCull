@@ -1,4 +1,16 @@
-# FastCull 2.7.7 · macOS 源码构建修复
+# FastCull 2.8.0 · 本地 RAW 显影与独立编辑窗口
+
+- 新增 ARW、NEF、DNG 独立 RAW 编辑窗口；主选片窗口可继续切图、评分和筛选。显影使用随包提供的 LibRaw，不启动 Photoshop 或 Camera Raw。
+- 支持曝光、白平衡、色温、色调、灰点估计吸管，以及对比度、高光、阴影、白色、黑色、自然饱和度和饱和度。预览目标为 sRGB。
+- 自动读取旁车 XMP，DNG 无旁车时读取内嵌 XMP；从 Lightroom 打开可按需取得目录中的完整配方。保存保留未知字段，ARW/NEF 写旁车，DNG 使用本地原子内嵌更新并保留图像载荷。
+- DNG 选片新增有界 TIFF/SubIFD 预览与 RGB8 小图读取，修复旧 Bridge 入口拒绝 DNG 的问题，覆盖 DxO PureRAW 输出。
+- 先快速预览、后台适屏显影，七项基础调节直接由 GPU 显示；曝光/WB 请求去抖、可取消，并复用当前 RAW 解包缓存；全尺寸按需加载。
+- macOS 提供 Apple Silicon 和 Intel 构建及安装注册脚本；本版补齐新 RAW 文档、原生显影接口检查和独立窗口间的 LR 邮箱锁。
+- 本地色彩模型不完整复现 Adobe DCP Look、曲线、蒙版及专有处理；Tint 标度与 Adobe 不保证等价。XMP 数值互通不等于两个引擎画面一致，见 `docs/RAW-EDITING.md`。
+
+Windows 安装包和便携包包含 Bridge/LR 注册入口；Mac 包含安装注册脚本。macOS 运行及 Adobe 宿主的人工验收仍与构建、单元测试分开，见 `docs/MACOS.md`。本版不包含独立的 Bridge/DxO PureRAW 调用集成。
+
+## 2.7.7 · macOS 源码构建修复
 
 - 修复源码包内 `scripts/build-macos.py` 的 LibRaw 构建目标：改用 `lib/libraw_r.la` 和 `lib/.libs/libraw_r.a`，macOS 工作流在 Apple Silicon 和 Intel 上都能完成构建、测试和打包。2.7.6 的源码包在 Mac 上按文档构建会失败，请使用本版源码包。
 - 功能与 2.7.6 相同，见下。
@@ -34,6 +46,6 @@
 - 修复 Lightroom 插件安装位置变更后仍引用旧内置程序的问题。
 - 保留 2.7.0 的界面、快捷键、启动优化和预览缓存行为。
 
-支持 Windows 10/11 x64；RAW 格式初步支持 ARW、CR2、NEF，另支持 JPG/JPEG。安装器界面为英文，应用为中文。安装包暂未签名。
+支持 Windows 10/11 x64；选片支持 ARW、CR2、NEF、DNG 和 JPG/JPEG；RAW 编辑首先支持 ARW、NEF、DNG。安装器界面为英文，应用为中文。安装包暂未签名。
 
 Bridge 需先启动过一次，安装后允许 FastCull 启动脚本。Lightroom 仅支持 Classic；详情见 README。

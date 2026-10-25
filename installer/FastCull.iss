@@ -2,7 +2,7 @@
   #error Payload must name the staged Windows distribution
 #endif
 #ifndef Version
-  #define Version "2.7.7"
+  #define Version "2.8.0"
 #endif
 
 [Setup]

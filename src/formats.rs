@@ -1,5 +1,9 @@
 use std::path::{Path, PathBuf};
-pub const EXTENSIONS: &[&str] = &["arw", "cr2", "nef", "jpg", "jpeg", "jpe"];
+pub const EXTENSIONS: &[&str] = &["arw", "cr2", "nef", "dng", "jpg", "jpeg", "jpe"];
+pub fn is_dng(path: &Path) -> bool {
+    path.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("dng"))
+}
 pub fn supported(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())

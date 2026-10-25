@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
+#include <cstdio>
 using Microsoft::WRL::ComPtr;
 struct FCFrame {
     uint32_t kind, width, height, channels, bits, rendered;
@@ -62,3 +63,37 @@ extern "C" __declspec(dllexport) int fc_jpeg_scaled(
     } catch(...) { return int(E_FAIL); }
 }
 extern "C" __declspec(dllexport) void fc_jpeg_release(void *pixels) { free(pixels); }
+
+extern "C" __declspec(dllexport) int fc_jpeg_write(const wchar_t *path,const unsigned char *rgba,uint32_t width,uint32_t height,char *error) {
+    try {
+        Apartment apartment;
+        if(FAILED(apartment.status) && apartment.status!=RPC_E_CHANGED_MODE)return int(apartment.status);
+        if(!width || !height || uint64_t(width)*height>160000000)return int(E_INVALIDARG);
+        ComPtr<IWICImagingFactory> factory;
+        CHECK_WIC(CoCreateInstance(CLSID_WICImagingFactory,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&factory)));
+        ComPtr<IWICStream> stream;CHECK_WIC(factory->CreateStream(&stream));
+        CHECK_WIC(stream->InitializeFromFilename(path,GENERIC_WRITE));
+        ComPtr<IWICBitmapEncoder> encoder;CHECK_WIC(factory->CreateEncoder(GUID_ContainerFormatJpeg,&GUID_VendorMicrosoft,&encoder));
+        CHECK_WIC(encoder->Initialize(stream.Get(),WICBitmapEncoderNoCache));
+        ComPtr<IWICBitmapFrameEncode> frame;ComPtr<IPropertyBag2> options;
+        CHECK_WIC(encoder->CreateNewFrame(&frame,&options));
+        PROPBAG2 property={};property.pstrName=const_cast<wchar_t*>(L"ImageQuality");
+        VARIANT quality={};quality.vt=VT_R4;quality.fltVal=0.94f;
+        CHECK_WIC(options->Write(1,&property,&quality));
+        CHECK_WIC(frame->Initialize(options.Get()));CHECK_WIC(frame->SetSize(width,height));
+        WICPixelFormatGUID format=GUID_WICPixelFormat24bppBGR;CHECK_WIC(frame->SetPixelFormat(&format));
+        ComPtr<IWICBitmap> bitmap;CHECK_WIC(factory->CreateBitmapFromMemory(width,height,GUID_WICPixelFormat32bppRGBA,width*4,width*height*4,const_cast<BYTE*>(rgba),&bitmap));
+        ComPtr<IWICFormatConverter> converter;CHECK_WIC(factory->CreateFormatConverter(&converter));
+        CHECK_WIC(converter->Initialize(bitmap.Get(),format,WICBitmapDitherTypeNone,nullptr,0,WICBitmapPaletteTypeCustom));
+        ComPtr<IWICColorContext> color;CHECK_WIC(factory->CreateColorContext(&color));
+        CHECK_WIC(color->InitializeFromExifColorSpace(1));
+        IWICColorContext *contexts[]={color.Get()};frame->SetColorContexts(1,contexts);
+        ComPtr<IWICMetadataQueryWriter> metadata;
+        if(SUCCEEDED(frame->GetMetadataQueryWriter(&metadata))){
+            PROPVARIANT value;PropVariantInit(&value);value.vt=VT_UI2;value.uiVal=1;
+            metadata->SetMetadataByName(L"/app1/ifd/exif/{ushort=40961}",&value);
+        }
+        CHECK_WIC(frame->WriteSource(converter.Get(),nullptr));CHECK_WIC(frame->Commit());CHECK_WIC(encoder->Commit());
+        return 0;
+    }catch(...){snprintf(error,256,"Native JPEG encode failed");return int(E_FAIL);}
+}

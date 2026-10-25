@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / 'lrplugins/FastCull.lrplugin'
 BINARIES = ['fastcull.exe', 'fastcull-keys.exe', 'fastcull_raw.dll']
 PLUGIN_SUPPORT = ['LICENSE', 'THIRD-PARTY-NOTICES.txt']
-LUA = ['Info.lua', 'common.lua', 'develop.lua', 'HotkeyInit.lua', 'HotkeyStop.lua',
+LUA = ['Info.lua', 'common.lua', 'develop.lua', 'raw_settings.lua', 'HotkeyInit.lua', 'HotkeyStop.lua',
        'OpenCuller.lua', 'organization.lua', 'PluginInfo.lua', 'sync.lua', 'photo_edits.lua',
        'SyncSelected.lua', 'SyncSidecars.lua']
 SOURCE_FILES = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'README.md',
@@ -27,8 +27,11 @@ SOURCE_FILES = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'R
                 '.github/workflows/macos-build.yml',
                 'installer/FastCull.iss', 'docs/DISTRIBUTION.md', 'docs/RELEASE-NOTES.md',
                 'docs/QUICKSTART.txt', 'docs/CROPPING.md', 'docs/LR-SYNC.md', 'docs/MACOS.md',
+                'docs/RAW-EDITING.md', 'docs/DNG.md',
+                'docs/raw-window-validation-2026-10-24.json',
+                'docs/raw-edit-validation-2026-10-24.json', 'docs/dng-validation-2026-10-23.json',
                 'vendor/LibRaw-0.22.2.zip']
-SOURCE_SCRIPTS = ['build-release.ps1', 'build-native.ps1', 'release.py',
+SOURCE_SCRIPTS = ['build-release.ps1', 'build-native.ps1', 'release.py', 'adobe-raw-render.ps1',
                   'register-integrations.ps1', 'register-adobe.cmd', 'unregister-adobe.cmd',
                   'analyze_startup.py', 'verify_feature_images.py', 'native_smoke.py', 'crop_smoke.py',
                   'install-bridge.ps1', 'verify_samples.py', 'build-macos.py', 'install-macos.command']
@@ -116,7 +119,10 @@ def main():
     for name in BINARIES+LUA:
         copy(PLUGIN/name, payload/'FastCull.lrplugin'/name)
     for path in ['bridge/FastCull.jsx', 'scripts/register-integrations.ps1', 'scripts/build-native.ps1',
-                 'native/raw_bridge.cpp', 'native/jpeg_scaled.cpp', 'vendor/LibRaw-0.22.2.zip', 'LICENSE', 'README.md']:
+                 'native/raw_bridge.cpp', 'native/jpeg_scaled.cpp', 'vendor/LibRaw-0.22.2.zip', 'LICENSE', 'README.md',
+                 'docs/RAW-EDITING.md', 'docs/DNG.md', 'docs/MACOS.md',
+                 'docs/raw-edit-validation-2026-10-24.json',
+                 'docs/raw-window-validation-2026-10-24.json', 'docs/dng-validation-2026-10-23.json']:
         copy(ROOT/path, payload/path)
     copy(ROOT/'docs/QUICKSTART.txt', payload/'QUICKSTART.txt')
     copy(ROOT/'LICENSE', payload/'FastCull.lrplugin/LICENSE')

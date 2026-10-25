@@ -81,9 +81,13 @@ def main():
         shutil.copy2(dylib, output / dylib.name)
         print(f"Native adapter: {output / dylib.name}")
         return
+    env["FASTCULL_RAW_DLL"] = str(dylib)
     version = tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]["version"]
     run(["cargo", "test", "--locked", "--target", target])
     run(["cargo", "build", "--release", "--locked", "--target", target, "--bin", "fastcull"])
+    # The packaged app must locate Contents/Frameworks itself, without the
+    # development override used to exercise the native adapter in cargo tests.
+    env.pop("FASTCULL_RAW_DLL", None)
     package = scratch / f"FastCull-{version}-macos-{args.arch}"
     app = package / "FastCull.app"
     contents = app / "Contents"
@@ -102,9 +106,13 @@ def main():
     run(["codesign", "--force", "--sign", "-", app])
     run(["codesign", "--verify", "--deep", "--strict", app])
     run([contents / "MacOS/fastcull", "--inspect", ROOT / "tests/fixtures/preview-3x2.jpg"])
+    run([sys.executable, ROOT / "tests/macos_raw_gui_smoke.py",
+         contents / "MacOS/fastcull", scratch / "raw-gui"])
     shutil.copytree(app, plugin / "FastCull.app")
     for relative in ("bridge/FastCull.jsx", "scripts/install-macos.command", "scripts/build-macos.py",
-                     "native/raw_bridge.cpp", "vendor/LibRaw-0.22.2.zip", "docs/MACOS.md", "LICENSE"):
+                     "native/raw_bridge.cpp", "vendor/LibRaw-0.22.2.zip", "docs/MACOS.md",
+                     "docs/RAW-EDITING.md", "docs/DNG.md", "docs/raw-window-validation-2026-10-24.json",
+                     "docs/raw-edit-validation-2026-10-24.json", "docs/dng-validation-2026-10-23.json", "LICENSE"):
         destination = package / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / relative, destination)

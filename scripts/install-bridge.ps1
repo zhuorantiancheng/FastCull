@@ -68,4 +68,4 @@ foreach ($version in $BridgeVersions) {
     [IO.File]::WriteAllText($config, $exe + [Environment]::NewLine, $utf8)
     Write-Output "已注册 $version ：$script"
 }
-Write-Output '重新启动 Bridge；若提示新启动脚本，请启用 FastCull。选中 ARW 或文件夹后，右键或工具菜单均可打开选片器。'
+Write-Output '重新启动 Bridge；若提示新启动脚本，请启用 FastCull。选中支持的 RAW/JPEG（包括 DNG）或包含照片的文件夹后，右键或工具菜单均可打开选片器。'

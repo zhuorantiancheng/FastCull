@@ -9,6 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MacTests(unittest.TestCase):
+    def test_lightroom_manifest_uses_exact_case(self):
+        names = {path.name for path in (ROOT / 'lrplugins/FastCull.lrplugin').iterdir()}
+        self.assertIn('Info.lua', names)
+        self.assertNotIn('info.lua', names)
+
     def setUp(self):
         self.lua = LuaRuntime(unpack_returned_tuples=True)
         self.lua.globals().SOURCE = str(ROOT / "lrplugins/FastCull.lrplugin/common.lua")

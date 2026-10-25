@@ -5,7 +5,7 @@
     var scriptFolder = new File($.fileName).parent;
     var api = {};
     api.isMac = /mac/i.test($.os || "");
-    api.version = "2.7.7";
+    api.version = "2.8.0";
     // Capture roots only; recursive enumeration belongs to the detached Rust
     // process, never to Bridge's menu display callback or metadata API.
     api.collect = function (selected) {
@@ -13,7 +13,7 @@
         for (i = 0; i < selected.length; ++i) {
             entry = selected[i].container ? new Folder(selected[i].spec) : new File(selected[i].spec);
             path = entry.fsName;
-            if (!entry.exists || (!selected[i].container && !/\.(arw|cr2|nef|jpg|jpeg|jpe)$/i.test(path))) { continue; }
+            if (!entry.exists || (!selected[i].container && !/\.(arw|cr2|nef|dng|jpg|jpeg|jpe)$/i.test(path))) { continue; }
             if (/[\r\n]/.test(path)) { throw new Error("照片或文件夹名称含换行，请先重命名再打开。"); }
             key = "$" + (api.isMac ? path : path.toLowerCase().replace(/\//g, "\\"));
             if (!seen[key]) { paths.push(path); seen[key] = true; }

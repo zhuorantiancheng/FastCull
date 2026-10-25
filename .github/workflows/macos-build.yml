@@ -35,3 +35,13 @@ jobs:
           name: FastCull-macos-${{ matrix.arch }}
           path: dist/macos/*
           if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: FastCull-macos-${{ matrix.arch }}-validation
+          path: |
+            .agent-temp/*-macos-*/raw-gui/screenshots/*.png
+            .agent-temp/*-macos-*/raw-gui/screenshots/error.txt
+            .agent-temp/*-macos-*/raw-gui/report.json
+            .agent-temp/*-macos-*/raw-gui/logs/*.log
+          if-no-files-found: warn

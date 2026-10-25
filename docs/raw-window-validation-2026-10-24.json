@@ -1,0 +1,1929 @@
+{
+  "date": "2026-10-24",
+  "implementation": "Local LibRaw 0.22.2 + GPU tone controls, modeless independent RAW process",
+  "version": "2.7.7",
+  "runtime_exe": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "runtime_native": "lrplugins/FastCull.lrplugin/fastcull_raw.dll",
+  "exe_sha256": "05e56b084b31213d60eacf17f338723c5be302f22ad6242883192884d01d9809",
+  "native_sha256": "029e0892508cc421d579cbf897bfe99379b1fb3054cd1e975c18ba822effeda5",
+  "requires_adobe_for_raw_development": false,
+  "controls": [
+    "Exposure",
+    "WhiteBalance",
+    "Temperature",
+    "Tint",
+    "Contrast",
+    "Highlights",
+    "Shadows",
+    "Whites",
+    "Blacks",
+    "Vibrance",
+    "Saturation",
+    "Estimated grey-point picker"
+  ],
+  "validation": {
+    "rust_passed": 214,
+    "rust_ignored": 2,
+    "rust_ignored_reasons": [
+      "legacy Photoshop test intentionally not run",
+      "private real DNG test separately run successfully"
+    ],
+    "bridge_node_passed": 19,
+    "lr_sync_sdk_passed": 74,
+    "lr_sync_optional_gui_skipped": 1,
+    "lr_original_export_sdk_passed": 12,
+    "distribution_passed": 9,
+    "clippy_all_targets": "passed with -D warnings",
+    "dng_embedding_tests_including_real_copy": 9,
+    "gpu_preview_cases": {
+      "passed": true,
+      "screenshots": 11,
+      "individual_basic_controls": 7,
+      "saturation_minus_100_vibrance_plus_100_max_rgb_difference_old": 64,
+      "saturation_minus_100_vibrance_plus_100_max_rgb_difference_fixed": 0,
+      "neutral_pixels_unchanged": true,
+      "results": "legacy saturation=-100 vibrance=+100: max RGB spread=64; grayscale=false (expected RED)\nfixed saturation=-100 vibrance=+100: max RGB spread=0; grayscale=true\ncontrast independent +80: changed=196608, fraction=1.0000, mean abs channel delta=27.4161, pass=true\nhighlights independent +80: changed=196558, fraction=0.9997, mean abs channel delta=19.4340, pass=true\nshadows independent +80: changed=196607, fraction=1.0000, mean abs channel delta=20.5260, pass=true\nwhites independent +80: changed=179310, fraction=0.9120, mean abs channel delta=6.0213, pass=true\nblacks independent +80: changed=180681, fraction=0.9190, mean abs channel delta=6.2266, pass=true\nvibrance independent +80: changed=196598, fraction=0.9999, mean abs channel delta=17.0021, pass=true\nsaturation independent +80: changed=196598, fraction=0.9999, mean abs channel delta=27.8001, pass=true\nneutral old/new shaders identical=true\nGPU_REGRESSION_PASS=true\n"
+    }
+  },
+  "measurement_boundary": "Windows release; samples and warm OS cache only. Quick preview is embedded-image decode, excluding child startup and texture upload; render timings include native development, transform, PNG write/read, exclude texture upload. Main input polling granularity about 50ms. Full resolution is explicit.",
+  "gui_runs": [
+    {
+      "format": "arw",
+      "source_sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+      "elapsed_seconds": 6.797,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 78.0,
+      "main_responsiveness_checks": 81,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 16.212,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10"
+      },
+      "source_unchanged": true,
+      "group": "final-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 816.598,
+          "full": false,
+          "width": 1067,
+          "height": 1600
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 17.716,
+          "full": false,
+          "width": 1067,
+          "height": 1600
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 252.01,
+          "full": false,
+          "width": 1067,
+          "height": 1600
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 3741.995,
+          "full": true,
+          "width": 4128,
+          "height": 6192
+        }
+      ],
+      "source_file": "0.ARW"
+    },
+    {
+      "format": "nef",
+      "source_sha256": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+      "elapsed_seconds": 4.079,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 79.0,
+      "main_responsiveness_checks": 42,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 42.391,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10"
+      },
+      "source_unchanged": true,
+      "group": "final-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 347.465,
+          "full": false,
+          "width": 1600,
+          "height": 1065
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 15.617,
+          "full": false,
+          "width": 1600,
+          "height": 1065
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 155.585,
+          "full": false,
+          "width": 1600,
+          "height": 1065
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 1382.305,
+          "full": true,
+          "width": 4256,
+          "height": 2832
+        }
+      ],
+      "source_file": "iss030e122639.NEF"
+    },
+    {
+      "format": "dng",
+      "source_sha256": "5b6b749b31683c69418b8229c9eb11d9dafc05b2a9454edbdd816828765e44a1",
+      "elapsed_seconds": 6.937,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 63.0,
+      "main_responsiveness_checks": 81,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 52.45,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RawFileName": "20261018-DSC03309.dng",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorNoiseReduction": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceSmoothing": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Sharpness": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AlreadyApplied": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProcessVersion": "15.4",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Name": "Adobe Color",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Amount": "1.000000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfile": "Adobe Standard",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LookTable": "E1095149FDB39D7A057BAB208837E2E1"
+      },
+      "dng_compressed_pixel_sha256": [
+        "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475",
+        "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f",
+        "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      ],
+      "embedded_xmp_matches_sidecar": true,
+      "original_payload_bytes_unchanged": true,
+      "source_unchanged": true,
+      "group": "final-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 1961.974,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 47.302,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 999.355,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 1243.16,
+          "full": true,
+          "width": 6192,
+          "height": 4128
+        }
+      ],
+      "source_file": "20261018-DSC03309.dng (historical copy)"
+    },
+    {
+      "format": "dng",
+      "source_sha256": "539a06aa9691f266750c4f9d222ec5ea90f4a8f6fe963fb501b6ac51ed0eed7b",
+      "elapsed_seconds": 6.953,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 109.0,
+      "main_responsiveness_checks": 78,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 70.689,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=Some(\"Adobe Standard\") full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Version": "18.7",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CompatibleVersion": "285212672",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProcessVersion": "15.4",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Texture": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Clarity2012": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Dehaze": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricShadows": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricDarks": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricLights": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricHighlights": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricShadowSplit": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricMidtoneSplit": "50",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricHighlightSplit": "75",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Sharpness": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceSmoothing": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorNoiseReduction": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningShadowHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningShadowSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningHighlightHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningHighlightSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningBalance": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneSat": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeShadowLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeHighlightLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeBlending": "50",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalSat": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AutoLateralCA": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LensProfileEnable": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LensManualDistortionAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}VignetteAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleHueLo": "30",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleHueHi": "70",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenHueLo": "40",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenHueHi": "60",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveUpright": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveVertical": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveHorizontal": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveRotate": "0.0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveAspect": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveScale": "100",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveX": "0.00",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveY": "0.00",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ReshapeAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GrainAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Glow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PostCropVignetteAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ShadowTint": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RedHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RedSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GreenHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GreenSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}BlueHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}BlueSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HDREditMode": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}OverrideLookVignette": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ToneCurveName2012": "Linear",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfile": "Adobe Standard",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfileDigest": "32B5DBF4BEB7729B6B0ACA6DC0F06292",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropTop": "0.235776",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropLeft": "0.071529",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropBottom": "0.829715",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropRight": "0.863447",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropAngle": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropConstrainToWarp": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropConstrainToUnitSquare": "1",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropWidth": "2",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropHeight": "1",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropUnit": "3",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasCrop": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AlreadyApplied": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ModelVersion": "285409280",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Active": "true",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}InputDigest": "6390A7A83538CBFDB0F0693EE88BB610",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}InputDigestVersion": "5",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AILookData": "9FE07BCB4BD500FF31E8BA39F8DCB16D",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Name": "Adaptive Color",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Amount": "1",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Cluster": "Adobe",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}UUID": "226E6263ED94405B973B41F5A6E67BE9",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SupportsMonochrome": "false",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SupportsOutputReferred": "false",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Copyright": "© 2024 Adobe Systems, Inc.",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProfileGainTableMap": "100",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RGBTables": "100",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ConvertToGrayscale": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LookTable": "E1095149FDB39D7A057BAB208837E2E1"
+      },
+      "dng_compressed_pixel_sha256": [
+        "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475",
+        "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f",
+        "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      ],
+      "embedded_xmp_matches_sidecar": true,
+      "original_payload_bytes_unchanged": true,
+      "source_unchanged": true,
+      "group": "live-dxo-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 2351.897,
+          "full": false,
+          "width": 1600,
+          "height": 800
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 22.422,
+          "full": false,
+          "width": 1600,
+          "height": 800
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 713.376,
+          "full": false,
+          "width": 1600,
+          "height": 800
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 1111.144,
+          "full": true,
+          "width": 4904,
+          "height": 2452
+        }
+      ],
+      "source_file": "20261018-DSC03309.dng"
+    },
+    {
+      "format": "dng",
+      "source_sha256": "6a1279e68235efa16bd8284413b275d06bf907982d659b4b75fd33d97a114b91",
+      "elapsed_seconds": 7.5,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 94.0,
+      "main_responsiveness_checks": 75,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 99.443,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=Some(\"Adobe Standard\") full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Version": "18.7",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProcessVersion": "15.4",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Texture": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Clarity2012": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Dehaze": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricShadows": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricDarks": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricLights": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricHighlights": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricShadowSplit": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricMidtoneSplit": "50",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ParametricHighlightSplit": "75",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Sharpness": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceSmoothing": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorNoiseReduction": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HueAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SaturationAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentRed": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentOrange": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentYellow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentGreen": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentAqua": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentBlue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentPurple": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceAdjustmentMagenta": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningShadowHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningShadowSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningHighlightHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningHighlightSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}SplitToningBalance": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneSat": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeShadowLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeMidtoneLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeHighlightLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeBlending": "50",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalSat": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorGradeGlobalLum": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AutoLateralCA": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LensProfileEnable": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LensManualDistortionAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}VignetteAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleHueLo": "30",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringePurpleHueHi": "70",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenHueLo": "40",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}DefringeGreenHueHi": "60",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveUpright": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveVertical": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveHorizontal": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveRotate": "0.0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveAspect": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveScale": "100",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveX": "0.00",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PerspectiveY": "0.00",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ReshapeAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GrainAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Glow": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}PostCropVignetteAmount": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ShadowTint": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RedHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RedSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GreenHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}GreenSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}BlueHue": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}BlueSaturation": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HDREditMode": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}OverrideLookVignette": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ToneCurveName2012": "Linear",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfile": "Adobe Standard",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfileDigest": "32B5DBF4BEB7729B6B0ACA6DC0F06292",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropTop": "0.37231",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropLeft": "0.476843",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropBottom": "0.734649",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropRight": "0.839182",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropAngle": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropConstrainToWarp": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CropConstrainToUnitSquare": "1",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasCrop": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AlreadyApplied": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Name": "Adobe Color",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Amount": "1",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}UUID": "04FCF287E683E34103866891D7BC669D",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ConvertToGrayscale": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LookTable": "E1095149FDB39D7A057BAB208837E2E1"
+      },
+      "dng_compressed_pixel_sha256": [
+        "f446a00f69a00ddbdc8da9d6b25a00c58e262b6559e255e48ca3f4144534875c",
+        "1bd219646e3217376af5d8eb0dd3c412e214bbb22ea8243555d9f38541560489",
+        "05cba6e1ec2aaeb92a14eaadab4b643b3209c50049657d11a96b75aef100167e"
+      ],
+      "embedded_xmp_matches_sidecar": true,
+      "original_payload_bytes_unchanged": true,
+      "source_unchanged": true,
+      "group": "live-dxo-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 2380.713,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 25.571,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 790.602,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 727.447,
+          "full": true,
+          "width": 2244,
+          "height": 1496
+        }
+      ],
+      "source_file": "20261018-DSC03486.dng"
+    },
+    {
+      "format": "dng",
+      "source_sha256": "e8c5907de44e3b40d4f2d5c61d1a5fe969c8f98c0ffdf0d7a99c19c98b55bbf4",
+      "elapsed_seconds": 8.188,
+      "main_grid_and_navigation_during_render": true,
+      "main_response_ms": 78.0,
+      "main_responsiveness_checks": 91,
+      "new_adobe_processes": 0,
+      "main_remains_open_after_editor": true,
+      "quick_preview_decode_ms": 102.71,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存显影调整 · sRGB basic=BasicAdjustments { contrast: Some(20), highlights: Some(-35), shadows: Some(25), whites: Some(15), blacks: Some(-10), vibrance: Some(20), saturation: Some(10) }",
+      "gpu_screenshots": 4,
+      "gpu_pixels_changed": true,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RawFileName": "20261019-DSC03708.dng",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorNoiseReduction": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceSmoothing": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Sharpness": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AlreadyApplied": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProcessVersion": "15.4",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Contrast2012": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Highlights2012": "-35",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Shadows2012": "25",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Whites2012": "15",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Blacks2012": "-10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Vibrance": "20",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Saturation": "10",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Name": "Adobe Color",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Amount": "1.000000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfile": "Adobe Standard",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LookTable": "E1095149FDB39D7A057BAB208837E2E1"
+      },
+      "dng_compressed_pixel_sha256": [
+        "6abafdf409765ee2b6b27d69dd77ab4e55dfcc5db312baf349dcdb4a20beae5a",
+        "922c186250346308a282f562d877357cbac25598eb1f60cb1f5dde06b166e1f9",
+        "d57faa7fd12b33502f0b18623b71d3d58995959e49d1eabc51c7f566f91b8b7a"
+      ],
+      "embedded_xmp_matches_sidecar": true,
+      "original_payload_bytes_unchanged": true,
+      "source_unchanged": true,
+      "group": "live-dxo-gui",
+      "independent_processes": true,
+      "render_timings": [
+        {
+          "generation": 1,
+          "cache_hit": false,
+          "milliseconds": 2483.62,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 2,
+          "cache_hit": true,
+          "milliseconds": 43.26,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 3,
+          "cache_hit": false,
+          "milliseconds": 891.438,
+          "full": false,
+          "width": 1600,
+          "height": 1067
+        },
+        {
+          "generation": 4,
+          "cache_hit": false,
+          "milliseconds": 1555.673,
+          "full": true,
+          "width": 6192,
+          "height": 4128
+        }
+      ],
+      "source_file": "20261019-DSC03708.dng"
+    }
+  ],
+  "native_roundtrips": [
+    {
+      "format": "arw",
+      "variant": "camera",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4735.634960716696,
+      "tint": -21.044198669301363,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 2.1489,
+      "unpack_ms": 1817.4209,
+      "process_ms": 365.6415,
+      "wall_ms": 2721.9269999768585,
+      "mean_rgb": [
+        81.43199157714844,
+        78.45184326171875,
+        65.81793212890625
+      ],
+      "pixel_sha256": "cad700ca08f37ad994e9ea65fe3794a3358a5256152b7c208c34a2e2bbb29c08"
+    },
+    {
+      "format": "arw",
+      "variant": "custom",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2.5429673194885254,
+        1.0,
+        1.7567471265792847,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0007,
+      "unpack_ms": 0.0,
+      "process_ms": 840.6472,
+      "wall_ms": 1256.478600029368,
+      "mean_rgb": [
+        83.63141632080078,
+        77.75328826904297,
+        67.1423568725586
+      ],
+      "pixel_sha256": "f5d89be163dfa8340763801c847d6796e2d4043a92a07bab0174d6ccd854dc39"
+    },
+    {
+      "format": "arw",
+      "variant": "warm",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 7500.0,
+      "tint": 20.0,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        3.146939992904663,
+        1.0,
+        1.3610481023788452,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0011,
+      "unpack_ms": 0.0,
+      "process_ms": 339.7545,
+      "wall_ms": 683.4965999587439,
+      "mean_rgb": [
+        96.94277954101562,
+        79.54188537597656,
+        53.45954132080078
+      ],
+      "pixel_sha256": "ca9d6a46943813c4441212dde5854940867dd001e7c1243e7dbd6c6d9a55f265"
+    },
+    {
+      "format": "arw",
+      "variant": "bright",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4735.634960716696,
+      "tint": -21.044198669301363,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0046,
+      "unpack_ms": 0.0,
+      "process_ms": 293.2357,
+      "wall_ms": 641.0798999713734,
+      "mean_rgb": [
+        109.38279724121094,
+        107.18927764892578,
+        91.46380615234375
+      ],
+      "pixel_sha256": "fda7b52a493f6b958fd4a7a2cadedb29c7447a243944070f37688592a17dee45"
+    },
+    {
+      "format": "arw",
+      "variant": "custom-return",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2.5429673194885254,
+        1.0,
+        1.7567471265792847,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0004,
+      "unpack_ms": 0.0,
+      "process_ms": 287.2977,
+      "wall_ms": 648.0854999972507,
+      "mean_rgb": [
+        83.63141632080078,
+        77.75328826904297,
+        67.1423568725586
+      ],
+      "pixel_sha256": "f5d89be163dfa8340763801c847d6796e2d4043a92a07bab0174d6ccd854dc39"
+    },
+    {
+      "format": "arw",
+      "variant": "camera-return",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4735.634960716696,
+      "tint": -21.044198669301363,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0037,
+      "unpack_ms": 0.0,
+      "process_ms": 976.334,
+      "wall_ms": 1314.41970000742,
+      "mean_rgb": [
+        81.43199157714844,
+        78.45184326171875,
+        65.81793212890625
+      ],
+      "pixel_sha256": "cad700ca08f37ad994e9ea65fe3794a3358a5256152b7c208c34a2e2bbb29c08"
+    },
+    {
+      "format": "arw",
+      "variant": "full",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 8,
+      "temperature": 4735.634960716696,
+      "tint": -21.044198669301363,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0034,
+      "unpack_ms": 0.0,
+      "process_ms": 9699.4678,
+      "wall_ms": 11012.632100027986,
+      "mean_rgb": [
+        82.6978759765625,
+        78.5836181640625,
+        66.40839385986328
+      ],
+      "pixel_sha256": "e8a1938a6423051c7891f8c8670965415366b56907161eccfc1c860bc6a34661"
+    },
+    {
+      "format": "arw",
+      "variant": "camera-final",
+      "native_size": [
+        3096,
+        2064
+      ],
+      "orientation": 8,
+      "temperature": 4735.634960716696,
+      "tint": -21.044198669301363,
+      "camera_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "applied_mul": [
+        2500.0,
+        1024.0,
+        1753.0,
+        1024.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0036,
+      "unpack_ms": 0.0,
+      "process_ms": 382.3007,
+      "wall_ms": 763.8826000038534,
+      "mean_rgb": [
+        81.43199157714844,
+        78.45184326171875,
+        65.81793212890625
+      ],
+      "pixel_sha256": "cad700ca08f37ad994e9ea65fe3794a3358a5256152b7c208c34a2e2bbb29c08"
+    },
+    {
+      "format": "nef",
+      "variant": "camera",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 0.0,
+      "tint": 0.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 1.0797,
+      "unpack_ms": 539.2413,
+      "process_ms": 815.6703,
+      "wall_ms": 1786.8720999686047,
+      "mean_rgb": [
+        35.0090217590332,
+        32.31148910522461,
+        32.91618347167969
+      ],
+      "pixel_sha256": "c565a021ce05de62686b18bacc7992c4ac3339eee8b522cd738db19e445b9f6d"
+    },
+    {
+      "format": "nef",
+      "variant": "custom",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        1.7589325904846191,
+        1.0,
+        1.4107341766357422,
+        1.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0004,
+      "unpack_ms": 0.0,
+      "process_ms": 368.839,
+      "wall_ms": 791.8436999898404,
+      "mean_rgb": [
+        26.890928268432617,
+        34.40489196777344,
+        28.318500518798828
+      ],
+      "pixel_sha256": "0c871923c650fb12fecfb66f65b3d4c793891db4996a29ce3874c6698b54f7fc"
+    },
+    {
+      "format": "nef",
+      "variant": "warm",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 7500.0,
+      "tint": 20.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        2.1403868198394775,
+        1.0,
+        1.0807147026062012,
+        1.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0011,
+      "unpack_ms": 0.0,
+      "process_ms": 267.0527,
+      "wall_ms": 675.2001999993809,
+      "mean_rgb": [
+        34.343955993652344,
+        35.360042572021484,
+        21.61268424987793
+      ],
+      "pixel_sha256": "0a46799a3cadd7a834fb467b5e4c79f6bc0232bd99f9e9cd56c82adbe8f45165"
+    },
+    {
+      "format": "nef",
+      "variant": "bright",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 0.0,
+      "tint": 0.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.005,
+      "unpack_ms": 0.0,
+      "process_ms": 208.721,
+      "wall_ms": 1038.5366000118665,
+      "mean_rgb": [
+        51.15419006347656,
+        47.26144790649414,
+        48.260009765625
+      ],
+      "pixel_sha256": "6ab0e333e611ac39f44003eef5be511f2b66bd73153116d8262f2b8c1d28c480"
+    },
+    {
+      "format": "nef",
+      "variant": "custom-return",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        1.7589325904846191,
+        1.0,
+        1.4107341766357422,
+        1.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0005,
+      "unpack_ms": 0.0,
+      "process_ms": 162.587,
+      "wall_ms": 399.37270001973957,
+      "mean_rgb": [
+        26.890928268432617,
+        34.40489196777344,
+        28.318500518798828
+      ],
+      "pixel_sha256": "0c871923c650fb12fecfb66f65b3d4c793891db4996a29ce3874c6698b54f7fc"
+    },
+    {
+      "format": "nef",
+      "variant": "camera-return",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 0.0,
+      "tint": 0.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0038,
+      "unpack_ms": 0.0,
+      "process_ms": 267.9461,
+      "wall_ms": 568.9574999851175,
+      "mean_rgb": [
+        35.0090217590332,
+        32.31148910522461,
+        32.91618347167969
+      ],
+      "pixel_sha256": "c565a021ce05de62686b18bacc7992c4ac3339eee8b522cd738db19e445b9f6d"
+    },
+    {
+      "format": "nef",
+      "variant": "full",
+      "native_size": [
+        4256,
+        2832
+      ],
+      "orientation": 1,
+      "temperature": 0.0,
+      "tint": 0.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0037,
+      "unpack_ms": 0.0,
+      "process_ms": 3678.6906,
+      "wall_ms": 4413.808899989817,
+      "mean_rgb": [
+        35.226871490478516,
+        32.26420974731445,
+        32.98255920410156
+      ],
+      "pixel_sha256": "5e7a76b0f31722005177f6c95cca306c7be74e4b324392b5d26451b6bc8a00d9"
+    },
+    {
+      "format": "nef",
+      "variant": "camera-final",
+      "native_size": [
+        2128,
+        1416
+      ],
+      "orientation": 1,
+      "temperature": 0.0,
+      "tint": 0.0,
+      "camera_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "applied_mul": [
+        576.0,
+        256.0,
+        432.0,
+        256.0
+      ],
+      "matrix": [
+        0.8827999830245972,
+        -0.24060000479221344,
+        -0.06939999759197235,
+        -0.48739999532699585,
+        1.2603000402450562,
+        0.2540999948978424,
+        -0.06599999964237213,
+        0.1509000062942505,
+        0.7587000131607056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0052,
+      "unpack_ms": 0.0,
+      "process_ms": 378.6245,
+      "wall_ms": 1664.9073000298813,
+      "mean_rgb": [
+        35.0090217590332,
+        32.31148910522461,
+        32.91618347167969
+      ],
+      "pixel_sha256": "c565a021ce05de62686b18bacc7992c4ac3339eee8b522cd738db19e445b9f6d"
+    },
+    {
+      "format": "dng",
+      "variant": "camera",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 5324.649271377141,
+      "tint": 5.257467907734358,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 8.9148,
+      "unpack_ms": 7147.0159,
+      "process_ms": 1894.3372,
+      "wall_ms": 11752.30220000958,
+      "mean_rgb": [
+        102.42013549804688,
+        86.94327545166016,
+        67.35198974609375
+      ],
+      "pixel_sha256": "b69ddede8d0bc18372806a8aa0835948a1e0f622876e4aab76b18e54c3da2b70"
+    },
+    {
+      "format": "dng",
+      "variant": "custom",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.5429673194885254,
+        1.0,
+        1.7567471265792847,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0013,
+      "unpack_ms": 0.0,
+      "process_ms": 1543.2247,
+      "wall_ms": 2307.600900006946,
+      "mean_rgb": [
+        98.9712905883789,
+        86.21861267089844,
+        71.8954849243164
+      ],
+      "pixel_sha256": "db8bc9af84e27cbd4dcbbee785855d5f95fc22d76ca0869d3f2aced77a18d310"
+    },
+    {
+      "format": "dng",
+      "variant": "warm",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 7500.0,
+      "tint": 20.0,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        3.146939992904663,
+        1.0,
+        1.3610481023788452,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0015,
+      "unpack_ms": 0.0,
+      "process_ms": 1869.671,
+      "wall_ms": 4344.8399000335485,
+      "mean_rgb": [
+        114.23896789550781,
+        87.58856964111328,
+        56.77883529663086
+      ],
+      "pixel_sha256": "8c652f841e002af9ef85fb5623b1d28356ac30c31fcf60db7d6ee6ab93821388"
+    },
+    {
+      "format": "dng",
+      "variant": "bright",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 5324.649271377141,
+      "tint": 5.257467907734358,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0065,
+      "unpack_ms": 0.0,
+      "process_ms": 3146.2456,
+      "wall_ms": 5321.180000028107,
+      "mean_rgb": [
+        141.57843017578125,
+        120.92259216308594,
+        94.76213836669922
+      ],
+      "pixel_sha256": "51759cb7e03ae191d79d5bdcac2529f9fc2ecc40ec32dbc37212af6a3caf48c6"
+    },
+    {
+      "format": "dng",
+      "variant": "custom-return",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 4850.0,
+      "tint": 17.0,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.5429673194885254,
+        1.0,
+        1.7567471265792847,
+        1.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0009,
+      "unpack_ms": 0.0,
+      "process_ms": 1231.6527,
+      "wall_ms": 2452.6454000151716,
+      "mean_rgb": [
+        98.9712905883789,
+        86.21861267089844,
+        71.8954849243164
+      ],
+      "pixel_sha256": "db8bc9af84e27cbd4dcbbee785855d5f95fc22d76ca0869d3f2aced77a18d310"
+    },
+    {
+      "format": "dng",
+      "variant": "camera-return",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 5324.649271377141,
+      "tint": 5.257467907734358,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0059,
+      "unpack_ms": 0.0,
+      "process_ms": 1196.7476,
+      "wall_ms": 2298.243500001263,
+      "mean_rgb": [
+        102.42013549804688,
+        86.94327545166016,
+        67.35198974609375
+      ],
+      "pixel_sha256": "b69ddede8d0bc18372806a8aa0835948a1e0f622876e4aab76b18e54c3da2b70"
+    },
+    {
+      "format": "dng",
+      "variant": "full",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 5324.649271377141,
+      "tint": 5.257467907734358,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0051,
+      "unpack_ms": 0.0,
+      "process_ms": 791.893,
+      "wall_ms": 1683.132200036198,
+      "mean_rgb": [
+        102.42013549804688,
+        86.94327545166016,
+        67.35198974609375
+      ],
+      "pixel_sha256": "b69ddede8d0bc18372806a8aa0835948a1e0f622876e4aab76b18e54c3da2b70"
+    },
+    {
+      "format": "dng",
+      "variant": "camera-final",
+      "native_size": [
+        6192,
+        4128
+      ],
+      "orientation": 1,
+      "temperature": 5324.649271377141,
+      "tint": 5.257467907734358,
+      "camera_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "applied_mul": [
+        2.664059638977051,
+        1.0,
+        1.6249990463256836,
+        0.0
+      ],
+      "matrix": [
+        0.6972000002861023,
+        -0.24079999327659607,
+        -0.05999999865889549,
+        -0.43299999833106995,
+        1.2101000547409058,
+        0.2515000104904175,
+        -0.03880000114440918,
+        0.12770000100135803,
+        0.5846999883651733,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "open_ms": 0.0079,
+      "unpack_ms": 0.0,
+      "process_ms": 1535.7864,
+      "wall_ms": 2622.82689998392,
+      "mean_rgb": [
+        102.42013549804688,
+        86.94327545166016,
+        67.35198974609375
+      ],
+      "pixel_sha256": "b69ddede8d0bc18372806a8aa0835948a1e0f622876e4aab76b18e54c3da2b70"
+    }
+  ],
+  "native_cancellation": {
+    "cancel_ms": 114.56070002168417,
+    "cancel_error": "",
+    "recovery_ms": 825.7215999765322,
+    "cached_ms": 160.81569995731115,
+    "stamp_invalidation_ms": 1155.4583000252023,
+    "file_rename_while_cached": true
+  },
+  "live_original_baselines": [
+    {
+      "file": "20261018-DSC03309.dng",
+      "bytes": 74817534,
+      "last_write": "2026-10-24T21:04:01.4466699+08:00",
+      "sha256": "539A06AA9691F266750C4F9D222EC5EA90F4A8F6FE963FB501B6AC51ED0EED7B",
+      "historical_sha256": "5B6B749B31683C69418B8229C9EB11D9DAFC05B2A9454EDBDD816828765E44A1",
+      "matches_historical": false
+    },
+    {
+      "file": "20261018-DSC03486.dng",
+      "bytes": 84824364,
+      "last_write": "2026-10-24T21:04:01.4552566+08:00",
+      "sha256": "6A1279E68235EFA16BD8284413B275D06BF907982D659B4B75FD33D97A114B91",
+      "historical_sha256": "3A2689B257DCD4FB3A25B6E3FCE150B19D7D5882EB4B4D56501CAED17BC456D9",
+      "matches_historical": false
+    },
+    {
+      "file": "20261019-DSC03708.dng",
+      "bytes": 93099218,
+      "last_write": "2026-10-23T22:28:52.6616806+08:00",
+      "sha256": "E8C5907DE44E3B40D4F2D5C61D1A5FE969C8F98C0FFDF0D7A99C19C98B55BBF4",
+      "historical_sha256": "E8C5907DE44E3B40D4F2D5C61D1A5FE969C8F98C0FFDF0D7A99C19C98B55BBF4",
+      "matches_historical": true
+    }
+  ],
+  "live_original_historical_comparison": "Two live originals had metadata/file-size changes dated 21:04 before this 22:xx validation; all compressed image plane hashes match historical copies. Current baseline hashes are tracked separately. No test writes live originals.",
+  "live_original_compressed_payloads": [
+    {
+      "file": "20261018-DSC03309.dng",
+      "live_pixel_hashes": [
+        "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475",
+        "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f",
+        "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      ],
+      "copied_baseline_pixel_hashes": [
+        "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475",
+        "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f",
+        "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      ]
+    },
+    {
+      "file": "20261018-DSC03486.dng",
+      "live_pixel_hashes": [
+        "f446a00f69a00ddbdc8da9d6b25a00c58e262b6559e255e48ca3f4144534875c",
+        "1bd219646e3217376af5d8eb0dd3c412e214bbb22ea8243555d9f38541560489",
+        "05cba6e1ec2aaeb92a14eaadab4b643b3209c50049657d11a96b75aef100167e"
+      ],
+      "copied_baseline_pixel_hashes": [
+        "f446a00f69a00ddbdc8da9d6b25a00c58e262b6559e255e48ca3f4144534875c",
+        "1bd219646e3217376af5d8eb0dd3c412e214bbb22ea8243555d9f38541560489",
+        "05cba6e1ec2aaeb92a14eaadab4b643b3209c50049657d11a96b75aef100167e"
+      ]
+    },
+    {
+      "file": "20261019-DSC03708.dng",
+      "live_pixel_hashes": [
+        "6abafdf409765ee2b6b27d69dd77ab4e55dfcc5db312baf349dcdb4a20beae5a",
+        "922c186250346308a282f562d877357cbac25598eb1f60cb1f5dde06b166e1f9",
+        "d57faa7fd12b33502f0b18623b71d3d58995959e49d1eabc51c7f566f91b8b7a"
+      ],
+      "copied_baseline_pixel_hashes": [
+        "6abafdf409765ee2b6b27d69dd77ab4e55dfcc5db312baf349dcdb4a20beae5a",
+        "922c186250346308a282f562d877357cbac25598eb1f60cb1f5dde06b166e1f9",
+        "d57faa7fd12b33502f0b18623b71d3d58995959e49d1eabc51c7f566f91b8b7a"
+      ]
+    }
+  ],
+  "limitations": [
+    "Local camera/DNG matrices and tone model do not reproduce Adobe DCP Looks, curves, masks, or proprietary processing",
+    "Kelvin/Tint use local color model; Tint calibration and pixels may differ from LR/ACR; XMP fields and unknown settings are preserved",
+    "SDK tests do not prove real Lightroom catalog end-to-end sync",
+    "Current Windows build tested; macOS not verified",
+    "Classic TIFF DNG only for embedded metadata writes; BigTIFF, >32bit offsets, malformed/read-only files rejected"
+  ],
+  "temporary_evidence_directory": ".agent-temp/2026-10-24-raw-window/",
+  "historical_adobe_report": "raw-edit-validation-2026-10-24.json is a prior backend and does not describe this runtime",
+  "live_originals_unchanged_during_final_validation": true,
+  "runtime_deployed_and_hashes_verified": true
+}

@@ -26,7 +26,7 @@
 
 裁切保存当前可恢复的编辑参数，不修改 RAW 像素，也不重新压缩 JPEG。XMP 记录的是应用后的裁切状态；当前工具内的撤销栈不作为 Adobe 历史步骤写入旁车。
 
-- RAW（ARW / CR2 / NEF）：写入同名 `.xmp` 旁车。
+- RAW（ARW / CR2 / NEF / DNG）：写入同名 `.xmp` 旁车。
 - JPG / JPEG：沿用原有的内嵌 XMP 规则。不会创建可能与同名 RAW 共用的 `.xmp`。照片移动时，内嵌元数据随 JPEG 一起移动。
 - 使用 `crs:HasCrop`、`CropLeft`、`CropTop`、`CropRight`、`CropBottom`、`CropAngle` 和 `HasSettings`；90° 方向使用绝对 `tiff:Orientation`，JPEG 同时更新已有 EXIF 方向。
 - 坐标针对未应用 EXIF 方向的原始像素，范围归一化到 0～1。带角度时存放旋转后的对角端点；八种方向（含镜像）都做对应转换。字段定义参见 [Adobe Camera Raw XMP 命名空间](https://developer.adobe.com/xmp/docs/xmp-namespaces/crs/)，几何转换参考 [crop-corners 作者说明](https://community.adobe.com/questions-675/sdk-computing-the-corners-of-a-crop-rectangle-962108)。

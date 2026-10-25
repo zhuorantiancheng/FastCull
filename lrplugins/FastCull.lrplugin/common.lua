@@ -273,7 +273,7 @@ function Common.snapshotMetadata(catalog, photos)
 end
 
 function Common.isSupportedPhoto(path)
-    local extensions={arw=true,cr2=true,nef=true,jpg=true,jpeg=true,jpe=true}
+    local extensions={arw=true,cr2=true,nef=true,dng=true,jpg=true,jpeg=true,jpe=true}
     return path and extensions[path:lower():match('%.([%w]+)$')] == true
 end
 function Common.pickArwPhotos(photos, metadata)
@@ -309,11 +309,13 @@ function Common.parseBridge(out, expectedId)
             if expectedId and id~=expectedId then error('同步会话 ID 不匹配') end
             if result.id then error('重复的会话标识') end
             result.id=id;result.status=status;result.revision=tonumber(revision)
-        elseif line:match('^ROW\t') or line:match('^ROW_V3\t') then
+        elseif line:match('^ROW\t') or line:match('^ROW_V3\t') or line:match('^ROW_V4\t') or line:match('^ROW_V5\t') then
             local fields={}
             for field in (line..'\t'):gmatch('(.-)\t') do fields[#fields+1]=field end
-            local v3=fields[1]=='ROW_V3'
-            if (v3 and #fields~=13) or (not v3 and #fields~=5 and #fields~=6) then error('无效的同步记录') end
+            local v5=fields[1]=='ROW_V5'
+            local v4=fields[1]=='ROW_V4' or v5
+            local v3=fields[1]=='ROW_V3' or v4
+            if (v5 and #fields~=23) or (v4 and not v5 and #fields~=16) or (v3 and not v4 and #fields~=13) or (not v3 and #fields~=5 and #fields~=6) then error('无效的同步记录') end
             local path,rating,label,flag=fields[2],fields[3],fields[4],fields[5]
             local exposure=fields[6]
             if exposure=='-' then exposure=nil end
@@ -345,6 +347,35 @@ function Common.parseBridge(out, expectedId)
                     if crop.HasCrop and crop.CropLeft==crop.CropRight and crop.CropTop==crop.CropBottom then error('裁切范围为空') end
                     row.crop=crop
                 end
+            end
+            if v4 then
+                if fields[14]=='-' then
+                    if fields[15]~='-' or fields[16]~='-' then error('不完整的白平衡记录') end
+                else
+                    local mode=Common.hexDecode(fields[14])
+                    local wb={WhiteBalance=mode}
+                    if mode=='As Shot' then
+                        if fields[15]~='-' or fields[16]~='-' then error('拍摄白平衡不应包含自定义参数') end
+                    elseif mode=='Custom' then
+                        local temperature,tint=tonumber(fields[15]),tonumber(fields[16])
+                        if not temperature or temperature%1~=0 or temperature<2000 or temperature>50000 or
+                           not tint or tint%1~=0 or tint< -150 or tint>150 then error('无效的自定义白平衡参数') end
+                        wb.Temperature=temperature;wb.Tint=tint
+                    else error('不支持的白平衡模式') end
+                    row.whiteBalance=wb
+                end
+            end
+            if v5 then
+                local basic={}
+                for i,key in ipairs({'contrast','highlights','shadows','whites','blacks','vibrance','saturation'}) do
+                    local token=fields[16+i]
+                    if token~='-' then
+                        local value=tonumber(token)
+                        if not token:match('^[-+]?%d+$') or not value or value%1~=0 or value< -100 or value>100 then error('无效的基础调整参数：'..key) end
+                        basic[key]=value
+                    end
+                end
+                if next(basic) then row.basic=basic end
             end
             result.rows[#result.rows+1]=row
         elseif line:match('^ROW_ERROR\t') then

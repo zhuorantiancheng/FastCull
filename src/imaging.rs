@@ -41,6 +41,9 @@ pub fn decode_level_with_geometry(
     geometry: &mut dyn FnMut([usize; 2]),
 ) -> Result<Pixels> {
     if level == Level::FastThumb {
+        if let Some(bitmap) = &info.bitmap_thumbnail {
+            return crate::dng::decode_thumbnail(path, bitmap);
+        }
         // Only large-TIFF sources (Sony ARW and similar) have a separate small
         // camera JPEG; JPEG files point thumbnail at the full image and native
         // LibRaw sources leave the refs empty, so callers check availability.
@@ -50,7 +53,26 @@ pub fn decode_level_with_geometry(
         );
         return decode_jpeg(path, &info.thumbnail, level, geometry);
     }
+    if level == Level::Thumb
+        && let Some(bitmap) = &info.bitmap_thumbnail
+        && bitmap.width.max(bitmap.height) >= 200
+        // Some camera icons contain padding. Keep those as placeholders only.
+        && info.image_size.is_some_and(|(w, h)| {
+            let a = f64::from(bitmap.width) * f64::from(h);
+            let b = f64::from(bitmap.height) * f64::from(w);
+            (a - b).abs() <= b * 0.02
+        })
+        && let Ok(pixels) = crate::dng::decode_thumbnail(path, bitmap)
+    {
+        return resize_level(pixels, level);
+    }
     if info.raw_size.is_some() {
+        return crate::native_raw::decode_with_geometry(path, level, geometry);
+    }
+    let dng = crate::formats::is_dng(path);
+    if dng && level == Level::Full {
+        // LibRaw checks the effective output area and actual JPEG dimensions:
+        // a reduced preview must never be presented as full sensor resolution.
         return crate::native_raw::decode_with_geometry(path, level, geometry);
     }
     if crate::formats::is_jpeg(path) {
@@ -78,16 +100,22 @@ pub fn decode_level_with_geometry(
         // Downscale the picture preview so crop UVs describe picture pixels,
         // not that padded canvas. The scaled JPEG path bounds decode cost.
         // FastThumb returned above; listing it here keeps this match exhaustive.
+        Level::Fit(_) if dng => &info.jpeg,
         Level::FastThumb | Level::Thumb | Level::Fit(_) => &info.preview,
         Level::Full => &info.jpeg,
     };
     // A damaged small JPEG must not make a valid larger preview inaccessible.
-    match decode_jpeg(path, primary, level, geometry) {
+    let decoded = match decode_jpeg(path, primary, level, geometry) {
         Ok(p) => Ok(p),
         Err(_) if primary.offset != info.jpeg.offset => {
             decode_jpeg(path, &info.jpeg, level, geometry)
         }
         Err(e) => Err(e),
+    };
+    if dng {
+        decoded.or_else(|_| crate::native_raw::decode_with_geometry(path, level, geometry))
+    } else {
+        decoded
     }
 }
 fn decode_jpeg(
@@ -133,6 +161,8 @@ pub(crate) fn decode_jpeg_bytes_with_geometry(
     };
     if edge > 0
         && w.max(h) / 2 >= edge
+        // WIC setup costs more than Rust decoding for small JPEG previews.
+        && w * h >= 2_000_000
         && matches!(
             decoder.input_colorspace(),
             Some(ColorSpace::YCbCr | ColorSpace::RGB | ColorSpace::Luma)
@@ -242,8 +272,7 @@ mod tests {
     use super::*;
     #[test]
     fn fast_thumb_refuses_sources_without_a_separate_camera_jpeg() {
-        let path =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/tiny.jpg");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/tiny.jpg");
         let info = ArwInfo::read(&path).unwrap();
         assert!(decode_level(&path, &info, Level::FastThumb).is_err());
     }

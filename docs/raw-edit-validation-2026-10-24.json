@@ -1,0 +1,417 @@
+{
+  "date": "2026-10-24",
+  "build": "Windows x86_64-pc-windows-msvc release, static CRT",
+  "program": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "exe_sha256": "0910c98703a727b11b7c0327e4766a7aa664ffcf76d1aa6b91e7cec86549a4db",
+  "renderer": "Installed Photoshop 27.11.0 / Camera Raw, persistent PowerShell 7 STA COM worker",
+  "output": "sRGB IEC61966-2.1, 8-bit display PNG; RAW pixel data is not converted on save",
+  "tests": {
+    "rust_passed": 184,
+    "lightroom_sync_passed": 69,
+    "lightroom_optional_skipped": 1,
+    "lightroom_original_export_mock_passed": 12,
+    "bridge_passed": 18,
+    "distribution_passed": 9,
+    "clippy_all_targets": "passed, -D warnings"
+  },
+  "real_lightroom_end_to_end_validated": false,
+  "real_adobe_backend": {
+    "images": [
+      {
+        "format": "arw",
+        "variant": "base",
+        "size": [
+          853,
+          1280
+        ],
+        "mean_rgb": [
+          113.9326171875,
+          99.64651489257812,
+          72.8485336303711
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "arw",
+        "variant": "bright",
+        "size": [
+          853,
+          1280
+        ],
+        "mean_rgb": [
+          156.97659301757812,
+          141.6192169189453,
+          109.762939453125
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "arw",
+        "variant": "warm",
+        "size": [
+          853,
+          1280
+        ],
+        "mean_rgb": [
+          130.24278259277344,
+          100.25259399414062,
+          67.43522644042969
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "nef",
+        "variant": "base",
+        "size": [
+          1280,
+          852
+        ],
+        "mean_rgb": [
+          29.117856979370117,
+          39.6817741394043,
+          24.604816436767578
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "nef",
+        "variant": "bright",
+        "size": [
+          1280,
+          852
+        ],
+        "mean_rgb": [
+          50.70016860961914,
+          63.129554748535156,
+          42.96804428100586
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "nef",
+        "variant": "warm",
+        "size": [
+          1280,
+          852
+        ],
+        "mean_rgb": [
+          38.46112060546875,
+          39.982330322265625,
+          20.389972686767578
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "dng",
+        "variant": "base",
+        "size": [
+          1280,
+          853
+        ],
+        "mean_rgb": [
+          144.76158142089844,
+          120.92208099365234,
+          85.70589447021484
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "dng",
+        "variant": "bright",
+        "size": [
+          1280,
+          853
+        ],
+        "mean_rgb": [
+          193.00234985351562,
+          166.9052734375,
+          127.42557525634766
+        ],
+        "srgb_intent": 1
+      },
+      {
+        "format": "dng",
+        "variant": "warm",
+        "size": [
+          1280,
+          853
+        ],
+        "mean_rgb": [
+          165.50283813476562,
+          120.76947784423828,
+          76.32567596435547
+        ],
+        "srgb_intent": 1
+      }
+    ],
+    "hashes": [
+      {
+        "source": ".agent-temp\\2026-10-12-photo-filters\\native-feature-debug\\seeds\\0.ARW",
+        "sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622"
+      },
+      {
+        "source": ".agent-temp\\2026-10-13-multiformat\\samples\\iss030e122639.NEF",
+        "sha256": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4"
+      },
+      {
+        "source": ".agent-temp\\2026-10-23-dng\\dxo-samples\\20261018-DSC03309.dng",
+        "sha256": "5b6b749b31683c69418b8229c9eb11d9dafc05b2a9454edbdd816828765e44a1"
+      }
+    ],
+    "dng_pixel_planes_before_after_identical": [
+      {
+        "width": [
+          193
+        ],
+        "height": [
+          129
+        ],
+        "compression": [
+          1
+        ],
+        "sha256": "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475"
+      },
+      {
+        "width": [
+          6192
+        ],
+        "height": [
+          4128
+        ],
+        "compression": [
+          7
+        ],
+        "sha256": "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f"
+      },
+      {
+        "width": [
+          6192
+        ],
+        "height": [
+          4128
+        ],
+        "compression": [
+          7
+        ],
+        "sha256": "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      }
+    ],
+    "saved_dng_xmp": {
+      "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about": "",
+      "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.33",
+      "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+      "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+      "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17"
+    }
+  },
+  "release_gui": [
+    {
+      "format": "arw",
+      "source_sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+      "elapsed_seconds": 13.36,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存曝光和白平衡 · sRGB",
+      "gpu_screenshots": 4,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17"
+      },
+      "source_unchanged": true
+    },
+    {
+      "format": "nef",
+      "source_sha256": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+      "elapsed_seconds": 9.485,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存曝光和白平衡 · sRGB",
+      "gpu_screenshots": 4,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17"
+      },
+      "source_unchanged": true
+    },
+    {
+      "format": "dng",
+      "source_sha256": "5b6b749b31683c69418b8229c9eb11d9dafc05b2a9454edbdd816828765e44a1",
+      "elapsed_seconds": 14.391,
+      "result": "saved=true exposure=500000 white_balance=Some(WhiteBalanceSettings { mode: Some(\"Custom\"), temperature: Some(4850), tint: Some(17) }) profile=None full=true status=已保存曝光和白平衡 · sRGB",
+      "gpu_screenshots": 4,
+      "xmp": {
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}RawFileName": "20261018-DSC03309.dng",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ColorNoiseReduction": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LuminanceSmoothing": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Sharpness": "0",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}AlreadyApplied": "False",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}ProcessVersion": "15.4",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}HasSettings": "True",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Exposure2012": "0.500000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}WhiteBalance": "Custom",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Temperature": "4850",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Tint": "17",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Name": "Adobe Color",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}Amount": "1.000000",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}CameraProfile": "Adobe Standard",
+        "{http://ns.adobe.com/camera-raw-settings/1.0/}LookTable": "E1095149FDB39D7A057BAB208837E2E1"
+      },
+      "dng_compressed_pixel_sha256": [
+        "16840ffc44d37a080b96b855107e458048d43f1ce86fc8c8b473a93c3ce05475",
+        "fc182303fbee02cf5986ec2e74fbbb5064fcda7de825613b0b17aef7111cd35f",
+        "bb376dd039c2d825962c289e5b41131bde4f117888252916c885ee94063c3326"
+      ],
+      "embedded_xmp_matches_sidecar": true,
+      "source_unchanged": true
+    }
+  ],
+  "performance": [
+    {
+      "format": "arw",
+      "previews": [
+        {
+          "generation": 1,
+          "cached": false,
+          "milliseconds": 4368.069,
+          "full_resolution": false,
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "generation": 2,
+          "cached": true,
+          "milliseconds": 51.867,
+          "full_resolution": false,
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "generation": 3,
+          "cached": false,
+          "milliseconds": 3016.324,
+          "full_resolution": false,
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "generation": 4,
+          "cached": false,
+          "milliseconds": 4647.446,
+          "full_resolution": true,
+          "width": 4128,
+          "height": 6192
+        }
+      ]
+    },
+    {
+      "format": "nef",
+      "previews": [
+        {
+          "generation": 1,
+          "cached": false,
+          "milliseconds": 2778.68,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1703
+        },
+        {
+          "generation": 2,
+          "cached": true,
+          "milliseconds": 36.768,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1703
+        },
+        {
+          "generation": 3,
+          "cached": false,
+          "milliseconds": 2430.901,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1703
+        },
+        {
+          "generation": 4,
+          "cached": false,
+          "milliseconds": 2780.79,
+          "full_resolution": true,
+          "width": 4256,
+          "height": 2832
+        }
+      ]
+    },
+    {
+      "format": "dng",
+      "previews": [
+        {
+          "generation": 1,
+          "cached": false,
+          "milliseconds": 3799.959,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1707
+        },
+        {
+          "generation": 2,
+          "cached": true,
+          "milliseconds": 31.85,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1707
+        },
+        {
+          "generation": 3,
+          "cached": false,
+          "milliseconds": 3216.478,
+          "full_resolution": false,
+          "width": 2560,
+          "height": 1707
+        },
+        {
+          "generation": 4,
+          "cached": false,
+          "milliseconds": 5482.291,
+          "full_resolution": true,
+          "width": 6192,
+          "height": 4128
+        }
+      ]
+    }
+  ],
+  "performance_scope": "One run per stage for each real RAW, Photoshop already running, 2560px fit preview; includes Adobe call, PNG decode and ColorImage creation, excludes main-thread texture upload and screenshots. Cache hit uses identical recipe and source. Not a cold-start benchmark or a cross-machine guarantee.",
+  "original_user_pureraw_checks": [
+    {
+      "file": "20261018-DSC03309.dng",
+      "sha256": "5B6B749B31683C69418B8229C9EB11D9DAFC05B2A9454EDBDD816828765E44A1",
+      "unchanged": true
+    },
+    {
+      "file": "20261018-DSC03486.dng",
+      "sha256": "3A2689B257DCD4FB3A25B6E3FCE150B19D7D5882EB4B4D56501CAED17BC456D9",
+      "unchanged": true
+    },
+    {
+      "file": "20261019-DSC03708.dng",
+      "sha256": "E8C5907DE44E3B40D4F2D5C61D1A5FE969C8F98C0FFDF0D7A99C19C98B55BBF4",
+      "unchanged": true
+    }
+  ],
+  "host_preservation": {
+    "existing_document_and_dialog_mode_verified": true,
+    "already_open_dng_render_and_embed_refused_without_file_or_document_changes": true
+  },
+  "cache_policy": {
+    "preview_png": "1 GiB / 64 entries, only marked cache",
+    "adobe_work": "2 GiB / 16 entries / 7 days; current copy retained, only marked cache",
+    "lightroom_exports": "Separate private session data; not swept by preview/work cache maintenance"
+  },
+  "temporary_evidence": ".agent-temp/2026-10-23-raw-edit/",
+  "boundaries": [
+    "SDK-shaped tests do not establish real Lightroom host export/sync compatibility across versions or all AI mask types.",
+    "Precise RAW editing requires Windows, PowerShell 7 and activated Photoshop/Camera Raw with required profiles.",
+    "Photoshop cold startup can take tens of seconds. Normal culling does not start Adobe.",
+    "Historical release archives have not been rebuilt."
+  ]
+}

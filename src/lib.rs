@@ -1,6 +1,9 @@
 pub mod arw;
+pub mod adobe_raw;
+pub mod local_raw;
 mod camera_rating;
 pub mod crop;
+pub mod dng;
 pub mod filtering;
 pub mod formats;
 pub mod handoff;

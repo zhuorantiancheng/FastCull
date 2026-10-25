@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-23",
+  "build": "Windows x86_64-pc-windows-msvc release, static CRT",
+  "runtime_exe": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "exe_sha256": "3a131cf1539d495cfd07b825b0978950e1a7bc0bd1130202f71b9c8c897eaae8",
+  "originals_and_decode_copies_unchanged": true,
+  "dxo_samples": [
+    {
+      "file": "20261018-DSC03309.dng",
+      "bytes": 73822448,
+      "sha256": "5B6B749B31683C69418B8229C9EB11D9DAFC05B2A9454EDBDD816828765E44A1"
+    },
+    {
+      "file": "20261018-DSC03486.dng",
+      "bytes": 84813242,
+      "sha256": "3A2689B257DCD4FB3A25B6E3FCE150B19D7D5882EB4B4D56501CAED17BC456D9"
+    },
+    {
+      "file": "20261019-DSC03708.dng",
+      "bytes": 93099218,
+      "sha256": "E8C5907DE44E3B40D4F2D5C61D1A5FE969C8F98C0FFDF0D7A99C19C98B55BBF4"
+    }
+  ],
+  "public_samples": [
+    {
+      "file": "Leica-M9.DNG",
+      "url": "https://raw.pixls.us/getfile.php/753/nice/Leica - M9 - 8bit 8bit compressed (3:2).DNG",
+      "sha256": "d1d162fce62210b8951c862189a6098329b5163b7f7492dc397c6e53bba04239",
+      "size": 18324480,
+      "license": "CC0"
+    },
+    {
+      "file": "Pentax-K-x.DNG",
+      "url": "https://raw.pixls.us/getfile.php/830/nice/Pentax - K-x - 12bit (3:2).DNG",
+      "sha256": "7a594b66b54f99bb5aba4627c78abfc41213d6911ea54e4f5d2dd6c8505f6968",
+      "size": 14359791,
+      "license": "CC0"
+    },
+    {
+      "file": "Apple-iPhone-6s-Plus.DNG",
+      "url": "https://raw.pixls.us/getfile.php/915/nice/Apple - iPhone 6s Plus - 16bit (4:3).DNG",
+      "sha256": "845fee4f09c832af3728778737f5ae9b99124debb821b6e2066b94aed1daa91c",
+      "size": 10227467,
+      "license": "CC0"
+    }
+  ],
+  "dxo_performance": {
+    "method": "release build; warm OS cache; one warmup then 7 runs per level; serial runs; CPU decoding and file reads only, no GPU upload",
+    "samples": [
+      {
+        "file": "20261018-DSC03309.dng",
+        "sha256": "5b6b749b31683c69418b8229c9eb11d9dafc05b2a9454edbdd816828765e44a1",
+        "native": {
+          "metadata_ms": 7.23,
+          "median_ms": {
+            "Thumb": 36.059,
+            "Fit(2560)": 79.967,
+            "Full": 72.373
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.375,
+          "median_ms": {
+            "FastThumb": 0.092,
+            "Thumb": 35.181,
+            "Fit(2560)": 78.1,
+            "Full": 73.466
+          }
+        }
+      },
+      {
+        "file": "20261018-DSC03486.dng",
+        "sha256": "3a2689b257dcd4fb3a25b6e3fce150b19d7d5882eb4b4d56501caed17bc456d9",
+        "native": {
+          "metadata_ms": 6.571,
+          "median_ms": {
+            "Thumb": 46.873,
+            "Fit(2560)": 92.048,
+            "Full": 85.156
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.387,
+          "median_ms": {
+            "FastThumb": 0.089,
+            "Thumb": 45.375,
+            "Fit(2560)": 90.691,
+            "Full": 84.331
+          }
+        }
+      },
+      {
+        "file": "20261019-DSC03708.dng",
+        "sha256": "e8c5907de44e3b40d4f2d5c61d1a5fe969c8f98c0ffdf0d7a99c19c98b55bbf4",
+        "native": {
+          "metadata_ms": 6.762,
+          "median_ms": {
+            "Thumb": 49.355,
+            "Fit(2560)": 95.846,
+            "Full": 93.141
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.382,
+          "median_ms": {
+            "FastThumb": 0.106,
+            "Thumb": 49.617,
+            "Fit(2560)": 94.296,
+            "Full": 95.45
+          }
+        }
+      }
+    ]
+  },
+  "public_performance": {
+    "method": "release build; warm OS cache; one warmup then 7 runs per level; serial runs; CPU decoding and file reads only, no GPU upload",
+    "samples": [
+      {
+        "file": "Apple-iPhone-6s-Plus.DNG",
+        "sha256": "845fee4f09c832af3728778737f5ae9b99124debb821b6e2066b94aed1daa91c",
+        "native": {
+          "metadata_ms": 16.432,
+          "median_ms": {
+            "Thumb": 2.842,
+            "Fit(2560)": 2.405,
+            "Full": 1254.606
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.345,
+          "median_ms": {
+            "Thumb": 2.753,
+            "Fit(2560)": 2.3,
+            "Full": 1370.186
+          }
+        }
+      },
+      {
+        "file": "Leica-M9.DNG",
+        "sha256": "d1d162fce62210b8951c862189a6098329b5163b7f7492dc397c6e53bba04239",
+        "native": {
+          "metadata_ms": 8.019,
+          "median_ms": {
+            "Thumb": 0.776,
+            "Fit(2560)": 0.49,
+            "Full": 1819.731
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.31,
+          "median_ms": {
+            "FastThumb": 0.139,
+            "Thumb": 0.413,
+            "Fit(2560)": 0.545,
+            "Full": 1897.841
+          }
+        }
+      },
+      {
+        "file": "Pentax-K-x.DNG",
+        "sha256": "7a594b66b54f99bb5aba4627c78abfc41213d6911ea54e4f5d2dd6c8505f6968",
+        "native": {
+          "metadata_ms": 7.076,
+          "median_ms": {
+            "Thumb": 22.235,
+            "Fit(2560)": 56.619,
+            "Full": 36.572
+          }
+        },
+        "fast": {
+          "metadata_ms": 0.43,
+          "median_ms": {
+            "FastThumb": 0.113,
+            "Thumb": 23.538,
+            "Fit(2560)": 56.958,
+            "Full": 37.37
+          }
+        }
+      }
+    ]
+  },
+  "checks": {
+    "rust_passed": 148,
+    "bridge_passed": 18,
+    "lr_lua_passed": 58,
+    "lr_lua_skipped": 1,
+    "clippy_all_targets": "passed",
+    "dxo_gui": "first_draw=true current=2 photos=3 full=2 fit=3 thumbs=3 fast_thumbs=3 error=None stress_remaining=0 elapsed_ms=6524",
+    "public_gui": "first_draw=true current=2 photos=3 full=2 fit=3 thumbs=3 fast_thumbs=1 error=None stress_remaining=0 elapsed_ms=6535",
+    "visual_review": "DxO screenshots 00 fit, 01 full, 02 grid, 04 rating/rotation inspected",
+    "adobe_host_validation": false,
+    "macos_native_validation": false
+  },
+  "scratch": ".agent-temp/2026-10-23-dng/",
+  "limitations": [
+    "Warm filesystem cache; CPU read/decode/resize, no GPU upload.",
+    "Native metadata first-call timing includes dynamic library initialization.",
+    "FastThumb is a small placeholder, not a full-detail preview.",
+    "DNG edits use external XMP sidecars; Adobe host adoption of DNG sidecars not verified.",
+    "No claim to cover all DNG versions/codecs or all PureRAW exports."
+  ]
+}

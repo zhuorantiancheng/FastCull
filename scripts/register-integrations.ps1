@@ -15,7 +15,7 @@ $StateDirectory = [IO.Path]::GetFullPath($StateDirectory).TrimEnd('\','/')
 $manifest = Join-Path $StateDirectory 'integrations.json'
 $registryKeys = @('Software\Classes\.fastcullrequest', 'Software\Classes\FastCull.Request\shell\open\command')
 $names = @('FastCull.jsx','FastCull-path.txt','FastCull-shell.txt')
-$pluginNames = @('fastcull.exe','fastcull-keys.exe','fastcull_raw.dll','Info.lua','common.lua','develop.lua','photo_edits.lua','HotkeyInit.lua','HotkeyStop.lua','OpenCuller.lua','organization.lua','PluginInfo.lua','sync.lua','SyncSelected.lua','SyncSidecars.lua','LICENSE','THIRD-PARTY-NOTICES.txt')
+$pluginNames = @('fastcull.exe','fastcull-keys.exe','fastcull_raw.dll','Info.lua','common.lua','develop.lua','raw_settings.lua','photo_edits.lua','HotkeyInit.lua','HotkeyStop.lua','OpenCuller.lua','organization.lua','PluginInfo.lua','sync.lua','SyncSelected.lua','SyncSidecars.lua','LICENSE','THIRD-PARTY-NOTICES.txt')
 function Hash([string]$Path) {
     $stream=[IO.File]::OpenRead($Path); $hasher=[Security.Cryptography.SHA256]::Create()
     try { [BitConverter]::ToString($hasher.ComputeHash($stream)).Replace('-','') }

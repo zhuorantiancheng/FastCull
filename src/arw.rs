@@ -15,14 +15,22 @@ pub struct JpegRef {
     pub len: u64,
 }
 #[derive(Clone, Debug)]
+pub struct BitmapRef {
+    pub offset: u64,
+    pub width: u32,
+    pub height: u32,
+}
+#[derive(Clone, Debug)]
 pub struct ArwInfo {
     pub jpeg: JpegRef,
     pub preview: JpegRef,
     pub thumbnail: JpegRef,
+    /// Bounded, uncompressed RGB8 DNG thumbnail, in sensor orientation.
+    pub bitmap_thumbnail: Option<BitmapRef>,
     pub orientation: u16,
     pub summary: String,
     pub capture: CaptureMetadata,
-    /// Present for native LibRaw sources; dimensions before orientation.
+    /// Present when regular previews require LibRaw; before orientation.
     pub raw_size: Option<(u32, u32)>,
     /// Stable, unrotated picture dimensions for fitted layout, before previews
     /// are rounded down or the full-resolution pixels finish decoding.
@@ -95,6 +103,12 @@ impl ArwInfo {
         if crate::formats::is_jpeg(path) {
             return Self::read_jpeg_info(path);
         }
+        if crate::formats::is_dng(path) {
+            return crate::dng::read(path).or_else(|e| {
+                crate::native_raw::read(path)
+                    .with_context(|| format!("DNG JPEG preview unavailable: {e}"))
+            });
+        }
         if crate::formats::supported(path)
             && !path
                 .extension()
@@ -144,6 +158,7 @@ impl ArwInfo {
                 jpeg: whole.clone(),
                 preview: whole.clone(),
                 thumbnail: whole.clone(),
+                bitmap_thumbnail: None,
                 orientation: 1,
                 summary: String::new(),
                 capture: CaptureMetadata::default(),
@@ -287,6 +302,7 @@ impl ArwInfo {
             jpeg,
             preview,
             thumbnail,
+            bitmap_thumbnail: None,
             orientation,
             summary: summary.join("  "),
             raw_size: None,

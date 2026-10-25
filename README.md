@@ -1,18 +1,21 @@
 # FastCull
 
-轻量 RAW/JPEG 选片器，使用 Rust 开发，可独立运行，也可从 Adobe Bridge 和 Lightroom Classic 打开。Windows 提供现有安装包；macOS 已增加适配源码与 Apple Silicon / Intel 构建流程，待 Mac 真机验收。
+轻量 RAW/JPEG 选片器，使用 Rust 开发，可独立运行，也可从 Adobe Bridge 和 Lightroom Classic 打开。2.8.0 提供 Windows 安装与注册包，以及 macOS Apple Silicon / Intel 独立构建包；Mac 桌面与 Adobe 宿主的人工验收范围见下文。
 
-A fast RAW/JPEG photo culler with Adobe Bridge and Lightroom Classic integration. Windows distribution and macOS build support (Mac validation pending).
+A fast RAW/JPEG photo culler with local RAW development, Adobe Bridge and Lightroom Classic integration. Windows installer and separate Apple Silicon / Intel macOS packages.
 
 macOS 的构建、安装和验证范围见 [macOS 说明](docs/MACOS.md)。下述安装包和快捷键说明针对 Windows。
 
+**2.8.0 新增独立 RAW 编辑窗口**：支持 ARW/NEF/DNG，使用本地 LibRaw 显影和 sRGB 预览，编辑曝光、白平衡及七项基础调整，支持灰点吸管估计并保存 XMP。无需安装或启动 Adobe 软件，主选片窗口可继续操作。本地色彩模型与 LR/ACR 的像素结果存在差异，DCP Look、Adobe 曲线及蒙版等保留在 XMP 中；用法、性能策略和验证边界见 [RAW 编辑说明](docs/RAW-EDITING.md)。2.7.x 安装包不包含这套新增功能。
+
 ## 下载与安装
 
-在本仓库的 **Releases** 页面下载：
+在本仓库的 [Releases](https://github.com/zhuorantiancheng/FastCull/releases) 页面下载：
 
 - **FastCull-Setup-版本-windows-x64.exe**：推荐。安装程序可同时注册 Bridge 和 Lightroom Classic 插件。
 - **FastCull-Portable-版本-windows-x64.zip**：免安装，解压到固定目录后运行 `FastCull.exe`；需要 Adobe 集成时运行 `register-adobe.cmd`。
 - `SHA256SUMS.txt`：下载文件的 SHA-256 校验值。`FastCull-Source-版本.zip` 是供开发者使用的源码。
+- macOS 分别下载 `FastCull-版本-macos-arm64.zip`（Apple Silicon）或 `FastCull-版本-macos-x86_64.zip`（Intel），各自有 `.sha256`。包内 `scripts/install-macos.command` 可安装应用并注册 Bridge/LR；仅独立使用可直接复制应用。Mac 包仅做 ad-hoc 签名，未做 Apple 公证。
 
 需要 Windows 10/11 x64，以及支持 OpenGL 3.3 的显卡驱动。用户无需安装 Rust、Python、LibRaw、PowerShell 7 或 Imaging Edge。当前安装包未做代码签名，Windows 可能显示“未知发布者”；请核对下载来源及校验值。
 
@@ -34,18 +37,19 @@ macOS 的构建、安装和验证范围见 [macOS 说明](docs/MACOS.md)。下�
 
 ## 使用
 
-独立打开程序后选择照片或文件夹，或将文件/文件夹拖入窗口。支持 **Sony ARW、Canon CR2、Nikon NEF、JPG/JPEG**；自动跳过其他类型。优先提取 RAW 内嵌的最大可用 JPEG，尺寸由机型和拍摄设置决定，不保证与 RAW 传感器分辨率相同。
+独立打开程序后选择照片或文件夹，或将文件/文件夹拖入窗口。支持 **Sony ARW、Canon CR2、Nikon NEF、DNG、JPG/JPEG**；自动跳过其他类型。DNG 优先按 TIFF 索引直接读取内嵌 JPEG，网格选小预览、适屏选大预览，避免普通浏览时解码传感器数据；无可用 JPEG 时回退 LibRaw。预览尺寸由机型和拍摄设置决定，不保证与 RAW 传感器分辨率相同，100% 查看会检查有效输出尺寸。详见 [DNG 支持与性能](docs/DNG.md)。
 
 - **E / G / C**：单图、网格、对比。左右方向键切图；缩略图栏内滚轮快速切图。
 - 支持星级、旗标、颜色及拍摄元数据筛选；支持曝光快速调整和双图独立/联动查看。
 - 100% 查看支持点击位置放大，切图保留相对查看位置。
 - **T / 裁切**：自由与固定比例裁切、自定义比例预设、角度微调及 90° 旋转；编辑结果保存在 XMP，移动照片时一起携带。详见 [裁切说明](docs/CROPPING.md)。
+- **RAW 编辑**：在独立窗口调整曝光、白平衡、对比度、高光、阴影、白色、黑色、自然饱和度和饱和度；先显示快速预览，再后台加载适屏显影，全尺寸按需加载。灰点吸管给出可微调的估计值，保存后可通过 XMP 与 LR/ACR 交换参数。
 - 载入已有裁切：LR 插件直接读取目录中的裁切与旋转（无需预先保存 XMP）；Bridge/独立打开读取 RAW 旁车或 JPEG 内嵌 XMP 中已保存的裁切。
-- 从 LR 打开后选择 **同步全部并关闭**，自动同步本次修改的星级、色标、旗标、曝光、裁切和旋转；失败保留重试，其他显影设置不变。详见 [退出同步说明](docs/LR-SYNC.md)。
+- 从 LR 打开后选择 **同步全部并关闭**，自动同步本次修改的星级、色标、旗标、曝光、白平衡、基础调整、裁切和旋转；失败保留重试，其他显影设置不变。详见 [退出同步说明](docs/LR-SYNC.md) 及 [RAW 编辑说明](docs/RAW-EDITING.md)。
 - 退出时可确认同步评分。Bridge/独立版使用 RAW 旁车 XMP 或 JPEG 内嵌 XMP；LR 会话可将修改同步回目录。
 - Bridge/独立版可实际移动照片；LR 使用整理计划，由 LR 原生完成文件移动，以保留编辑历史、集合和虚拟副本。
 
-曝光预览基于内嵌 JPEG，不能替代 RAW 显影结果。原始 RAW 像素数据不会被重新编码。
+主选片窗口的快捷曝光预览基于内嵌 JPEG；独立 RAW 窗口使用 LibRaw 与本地 GPU 色调模型。保存编辑不重新编码 RAW 图像数据；DNG 的显影保存会更新其内嵌 XMP 及文件哈希。
 
 ## 升级和卸载
 

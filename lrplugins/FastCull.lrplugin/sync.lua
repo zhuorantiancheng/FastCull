@@ -161,7 +161,8 @@ local function synchronize(catalog, selectedPhotos, selectedOnly, onlySessionId,
             end
             if owner.editsSynced then
                 if starsOnly then
-                    -- Do not acknowledge other fields when only stars were applied.
+                    -- WB and basic adjustments are non-star revisions too. Never acknowledge
+                    -- it (or other Develop edits) when only stars were applied.
                     for _,entry in ipairs(sessions) do
                         if entry.id==owner.entry.id and entry.catalog==owner.entry.catalog then
                             entry.starsSynced=owner.result.revision

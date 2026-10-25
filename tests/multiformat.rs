@@ -200,6 +200,8 @@ fn moving_raw_and_matching_jpeg_keeps_independent_metadata_and_refresh_rules() {
 }
 #[test]
 fn supported_formats_include_raw_families_and_jpeg_but_exclude_video_sidecars_and_png() {
+    assert!(formats::supported(Path::new("photo.DNG")));
+    assert!(formats::supported(Path::new("photo.dng")));
     for ext in formats::EXTENSIONS {
         assert!(formats::supported(Path::new(&format!(
             "photo.{}",
@@ -207,7 +209,7 @@ fn supported_formats_include_raw_families_and_jpeg_but_exclude_video_sidecars_an
         ))));
     }
     for ext in [
-        "mp4", "xmp", "acr", "png", "heic", "txt", "cr3", "raf", "dng", "rw2", "orf",
+        "mp4", "xmp", "acr", "png", "heic", "txt", "cr3", "raf", "rw2", "orf",
     ] {
         assert!(!formats::supported(Path::new(&format!("photo.{ext}"))));
     }
@@ -224,7 +226,8 @@ fn real_raw_samples_use_largest_preview_then_original_resolution_if_needed() {
         .filter(|p| formats::supported(p) && !formats::is_jpeg(p))
     {
         let info = ArwInfo::read(&path).unwrap();
-        let (w, h) = info.raw_size.expect("native format fixture");
+        let native = fastcull::native_raw::read(&path).unwrap();
+        let (w, h) = native.raw_size.expect("native format fixture");
         let fit = imaging::decode_level(&path, &info, Level::Fit(800)).unwrap();
         assert!(fit.width.max(fit.height) <= 800);
         let full = imaging::decode_level(&path, &info, Level::Full).unwrap();
@@ -241,5 +244,114 @@ fn real_raw_samples_use_largest_preview_then_original_resolution_if_needed() {
     assert!(
         checked >= 2,
         "expected real samples from at least Canon and Nikon"
+    );
+}
+
+#[test]
+fn real_dng_samples_cover_fast_previews_and_native_fallback_without_writes() {
+    let Some(folder) = std::env::var_os("FASTCULL_DNG_TEST_DIR") else {
+        return;
+    };
+    let mut checked = 0;
+    let mut fast = 0;
+    let mut fallback = 0;
+    for path in fs::read_dir(folder)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| formats::is_dng(p))
+    {
+        let before = fs::read(&path).unwrap();
+        let info = ArwInfo::read(&path).unwrap();
+        if info.raw_size.is_none() {
+            fast += 1;
+        } else {
+            fallback += 1;
+        }
+        let native = fastcull::native_raw::read(&path).unwrap();
+        let (w, h) = native.raw_size.unwrap();
+        if info.bitmap_thumbnail.is_some() {
+            let p = imaging::decode_level(&path, &info, Level::FastThumb).unwrap();
+            assert!(p.width.max(p.height) <= 1024);
+            assert_eq!(p.rgba.len(), p.width * p.height * 4);
+        }
+        for level in [Level::Thumb, Level::Fit(800), Level::Full] {
+            let p = imaging::decode_level(&path, &info, level).unwrap();
+            assert_eq!(p.rgba.len(), p.width * p.height * 4);
+            match level {
+                Level::Thumb => assert!(p.width.max(p.height) <= 200),
+                Level::Fit(_) => assert!(p.width.max(p.height) <= 800),
+                Level::Full => assert!(
+                    p.width + 2 >= w as usize && p.height + 2 >= h as usize,
+                    "{}: {}x{} vs {w}x{h}",
+                    path.display(),
+                    p.width,
+                    p.height
+                ),
+                _ => unreachable!(),
+            }
+        }
+        assert_eq!(fs::read(&path).unwrap(), before);
+        assert!(!path.with_extension("xmp").exists());
+        checked += 1;
+    }
+    assert!(
+        checked >= 3 && fast > 0 && fallback > 0,
+        "provide >=3 DNGs covering both embedded JPEG and native fallback"
+    );
+}
+
+#[test]
+fn dxo_pureraw_outputs_decode_and_keep_original_pixels_when_saving_ratings() {
+    // Use disposable copies: this test deliberately writes XMP sidecars.
+    let Some(folder) = std::env::var_os("FASTCULL_DXO_TEST_DIR") else {
+        return;
+    };
+    let mut checked = 0;
+    for source in fs::read_dir(folder)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| formats::is_dng(p))
+    {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(source.file_name().unwrap());
+        fs::copy(&source, &path).unwrap();
+        let original = fs::read(&path).unwrap();
+        let info = ArwInfo::read(&path).unwrap();
+        let native = fastcull::native_raw::read(&path).unwrap();
+        let (w, h) = native.raw_size.unwrap();
+        for level in [Level::Thumb, Level::Fit(2560), Level::Full] {
+            let p = imaging::decode_level(&path, &info, level).unwrap();
+            assert_eq!(p.rgba.len(), p.width * p.height * 4);
+            if level == Level::Full {
+                assert!(p.width + 2 >= w as usize && p.height + 2 >= h as usize);
+            }
+        }
+        if info.bitmap_thumbnail.is_some()
+            || (info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset)
+        {
+            assert!(imaging::decode_level(&path, &info, Level::FastThumb).is_ok());
+        }
+        let before = xmp::read(&path).unwrap();
+        xmp::write(
+            &path,
+            &Updates {
+                rating: Some(4),
+                label: Some("Blue".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let after = xmp::read(&path).unwrap();
+        assert_eq!(after.rating, Some(4));
+        assert_eq!(after.label.as_deref(), Some("Blue"));
+        assert_eq!(after.exposure, before.exposure);
+        assert_eq!(after.crop, before.crop);
+        assert_eq!(fs::read(&path).unwrap(), original);
+        assert!(!source.with_extension("xmp").exists());
+        checked += 1;
+    }
+    assert!(
+        checked >= 3,
+        "provide at least three private PureRAW DNG copies"
     );
 }

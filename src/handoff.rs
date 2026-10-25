@@ -11,8 +11,11 @@ use std::{
 #[derive(Clone, Debug)]
 pub struct Entry {
     pub path: PathBuf,
-    // Rating, label, flag, exposure, crop, absolute TIFF orientation.
-    pub revisions: [u64; 6],
+    // Rating, label, flag, exposure, crop, absolute TIFF orientation, WB, basics.
+    pub revisions: [u64; 8],
+    // Basic subfields share an atomic group revision, but retain their own last
+    // edits so a later group edit cannot replay already acknowledged subfields.
+    pub basic_revisions: [u64; 7],
 }
 #[derive(Clone, Debug)]
 pub struct Manifest {
@@ -57,7 +60,8 @@ impl Manifest {
                 .iter()
                 .map(|p| Entry {
                     path: p.clone(),
-                    revisions: [0; 6],
+                    revisions: [0; 8],
+                    basic_revisions: [0; 7],
                 })
                 .collect(),
         })
@@ -74,7 +78,11 @@ impl Manifest {
             h.len() == 4
                 && matches!(
                     h[0],
-                    "FASTCULL_SESSION_V1" | "FASTCULL_SESSION_V2" | "FASTCULL_SESSION_V3"
+                    "FASTCULL_SESSION_V1"
+                        | "FASTCULL_SESSION_V2"
+                        | "FASTCULL_SESSION_V3"
+                        | "FASTCULL_SESSION_V4"
+                        | "FASTCULL_SESSION_V5"
                 ),
             "invalid session manifest header"
         );
@@ -90,6 +98,8 @@ impl Manifest {
             ensure!(
                 f.len()
                     == match h[0] {
+                        "FASTCULL_SESSION_V5" => 16,
+                        "FASTCULL_SESSION_V4" => 8,
                         "FASTCULL_SESSION_V3" => 7,
                         "FASTCULL_SESSION_V2" => 5,
                         _ => 4,
@@ -101,16 +111,32 @@ impl Manifest {
                 f[2].parse()?,
                 f[3].parse()?,
                 if f.len() >= 5 { f[4].parse()? } else { 0 },
-                if f.len() == 7 { f[5].parse()? } else { 0 },
-                if f.len() == 7 { f[6].parse()? } else { 0 },
+                if f.len() >= 7 { f[5].parse()? } else { 0 },
+                if f.len() >= 7 { f[6].parse()? } else { 0 },
+                if f.len() >= 8 { f[7].parse()? } else { 0 },
+                if f.len() == 16 { f[8].parse()? } else { 0 },
             ];
+            let mut basic_revisions = [0; 7];
+            if f.len() == 16 {
+                for (revision, token) in basic_revisions.iter_mut().zip(&f[9..]) {
+                    *revision = token.parse()?;
+                }
+                ensure!(
+                    basic_revisions.iter().copied().max() == Some(revisions[7]),
+                    "invalid basic group revision"
+                );
+            }
             ensure!(
                 revisions.iter().all(|r| *r <= m.revision),
                 "invalid field revision"
             );
             let path = PathBuf::from(decode(f[0])?);
             ensure!(!path.as_os_str().is_empty(), "empty session path");
-            m.entries.push(Entry { path, revisions });
+            m.entries.push(Entry {
+                path,
+                revisions,
+                basic_revisions,
+            });
         }
         Ok(m)
     }
@@ -119,10 +145,16 @@ impl Manifest {
         let v3 = self
             .entries
             .iter()
-            .any(|e| e.revisions[4..].iter().any(|r| *r > 0));
+            .any(|e| e.revisions[4..6].iter().any(|r| *r > 0));
+        let v4 = self.entries.iter().any(|e| e.revisions[6] > 0);
+        let v5 = self.entries.iter().any(|e| e.revisions[7] > 0);
         let mut text = format!(
             "{}\t{}\t{}\t{}\n",
-            if v3 {
+            if v5 {
+                "FASTCULL_SESSION_V5"
+            } else if v4 {
+                "FASTCULL_SESSION_V4"
+            } else if v3 {
                 "FASTCULL_SESSION_V3"
             } else if v2 {
                 "FASTCULL_SESSION_V2"
@@ -140,7 +172,18 @@ impl Manifest {
                 e.revisions[0],
                 e.revisions[1],
                 e.revisions[2],
-                if v3 {
+                if v5 {
+                    e.revisions[3..]
+                        .iter()
+                        .chain(e.basic_revisions.iter())
+                        .map(|revision| format!("\t{revision}"))
+                        .collect::<String>()
+                } else if v4 {
+                    format!(
+                        "\t{}\t{}\t{}\t{}",
+                        e.revisions[3], e.revisions[4], e.revisions[5], e.revisions[6]
+                    )
+                } else if v3 {
                     format!(
                         "\t{}\t{}\t{}",
                         e.revisions[3], e.revisions[4], e.revisions[5]
@@ -173,6 +216,8 @@ impl Manifest {
                 u.exposure.is_some(),
                 u.crop.is_some(),
                 u.orientation.is_some(),
+                u.white_balance.is_some(),
+                !u.basic.empty(),
             ]
             .into_iter()
             .enumerate()
@@ -181,20 +226,51 @@ impl Manifest {
                     e.revisions[i] = self.revision;
                 }
             }
+            for (revision, changed) in e.basic_revisions.iter_mut().zip([
+                u.basic.contrast,
+                u.basic.highlights,
+                u.basic.shadows,
+                u.basic.whites,
+                u.basic.blacks,
+                u.basic.vibrance,
+                u.basic.saturation,
+            ]) {
+                if changed.is_some() {
+                    *revision = self.revision;
+                }
+            }
         }
     }
     pub fn rows_since(&self, after: u64) -> Vec<(PathBuf, Result<Values>)> {
-        self.rows_since_fields([after; 6])
+        self.rows_since_fields([after; 8])
     }
     pub fn rows_with_stars_ack(
         &self,
         after: u64,
         stars_after: u64,
     ) -> Vec<(PathBuf, Result<Values>)> {
-        self.rows_since_fields([after.max(stars_after), after, after, after, after, after])
+        self.rows_since_fields([
+            after.max(stars_after),
+            after,
+            after,
+            after,
+            after,
+            after,
+            after,
+            after,
+        ])
     }
     pub fn stars_since(&self, after: u64) -> Vec<(PathBuf, Result<Values>)> {
-        self.rows_since_fields([after, u64::MAX, u64::MAX, u64::MAX, u64::MAX, u64::MAX])
+        self.rows_since_fields([
+            after,
+            u64::MAX,
+            u64::MAX,
+            u64::MAX,
+            u64::MAX,
+            u64::MAX,
+            u64::MAX,
+            u64::MAX,
+        ])
     }
     pub fn other_fields_since(&self, after: u64) -> usize {
         self.entries
@@ -202,7 +278,7 @@ impl Manifest {
             .filter(|e| e.revisions[1..].iter().any(|r| *r > after))
             .count()
     }
-    fn rows_since_fields(&self, after: [u64; 6]) -> Vec<(PathBuf, Result<Values>)> {
+    fn rows_since_fields(&self, after: [u64; 8]) -> Vec<(PathBuf, Result<Values>)> {
         let mut seen = std::collections::HashSet::new();
         self.entries
             .iter()
@@ -256,6 +332,34 @@ impl Manifest {
                         if e.revisions[5] <= after[5] {
                             v.orientation = None;
                         }
+                        ensure!(
+                            e.revisions[6] <= after[6]
+                                || v.white_balance.as_ref().and_then(|wb| wb.edit()).is_some(),
+                            "changed white balance is missing or unsupported"
+                        );
+                        if e.revisions[6] <= after[6] {
+                            v.white_balance = None;
+                        }
+                        for (value, revision) in [
+                            &mut v.basic.contrast,
+                            &mut v.basic.highlights,
+                            &mut v.basic.shadows,
+                            &mut v.basic.whites,
+                            &mut v.basic.blacks,
+                            &mut v.basic.vibrance,
+                            &mut v.basic.saturation,
+                        ]
+                        .into_iter()
+                        .zip(e.basic_revisions)
+                        {
+                            ensure!(
+                                revision <= after[7] || value.is_some(),
+                                "changed basic adjustment is missing"
+                            );
+                            if revision <= after[7] {
+                                *value = None;
+                            }
+                        }
                         Ok(v)
                     }),
                 )
@@ -264,7 +368,12 @@ impl Manifest {
     }
 }
 pub fn print_row(path: &Path, v: &Values) -> Result<()> {
-    if v.crop.is_some() || v.orientation.is_some() {
+    let wb = v
+        .white_balance
+        .as_ref()
+        .and_then(|settings| settings.edit());
+    let basic = !v.basic.empty();
+    if v.crop.is_some() || v.orientation.is_some() || wb.is_some() || basic {
         let crop = v.crop.map_or_else(
             || "-\t-\t-\t-\t-\t-".to_owned(),
             |c| {
@@ -280,7 +389,14 @@ pub fn print_row(path: &Path, v: &Values) -> Result<()> {
             },
         );
         println!(
-            "ROW_V3\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}{}{}",
+            if basic {
+                "ROW_V5"
+            } else if wb.is_some() {
+                "ROW_V4"
+            } else {
+                "ROW_V3"
+            },
             encode(path.to_str().context("path must be UTF-8")?),
             v.rating.map_or("-".into(), |r| r.to_string()),
             v.label.as_deref().map_or("-".into(), encode),
@@ -288,7 +404,36 @@ pub fn print_row(path: &Path, v: &Values) -> Result<()> {
             v.exposure
                 .map_or("-".into(), |e| format!("{:.6}", e as f64 / 1_000_000.)),
             v.orientation.map_or("-".into(), |o| o.to_string()),
-            crop
+            crop,
+            wb.map_or_else(
+                || if basic {
+                    "\t-\t-\t-".into()
+                } else {
+                    String::new()
+                },
+                |wb| match wb {
+                    xmp::WhiteBalance::AsShot => format!("\t{}\t-\t-", encode("As Shot")),
+                    xmp::WhiteBalance::Custom { temperature, tint } => {
+                        format!("\t{}\t{}\t{}", encode("Custom"), temperature, tint)
+                    }
+                }
+            ),
+            if basic {
+                [
+                    v.basic.contrast,
+                    v.basic.highlights,
+                    v.basic.shadows,
+                    v.basic.whites,
+                    v.basic.blacks,
+                    v.basic.vibrance,
+                    v.basic.saturation,
+                ]
+                .iter()
+                .map(|value| format!("\t{}", value.map_or_else(|| "-".into(), |v| v.to_string())))
+                .collect::<String>()
+            } else {
+                String::new()
+            }
         );
         return Ok(());
     }

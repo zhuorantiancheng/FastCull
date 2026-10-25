@@ -2,6 +2,7 @@
 local LrTasks=import 'LrTasks'
 local LrApplication=import 'LrApplication'
 local Common=require 'common'
+local Edits=require 'photo_edits'
 local Develop={}
 local call=LrTasks.pcall or pcall
 local function hex(s) return (s:gsub('.',function(c) return string.format('%02x',string.byte(c)) end)) end
@@ -12,7 +13,8 @@ local function number(value, low, high)
     return '-'
 end
 local function baseline(settings)
-    local fields={number(settings.Exposure2012,-5,5),'-','-','-','-','-','-','-'}
+    local key,limit=Edits.exposureParameters(settings)
+    local fields={key and number(settings[key],-limit,limit) or '-','-','-','-','-','-','-','-'}
     for n,code in ipairs({'AB','BA','CD','DC','CB','BC','AD','DA'}) do
         if settings.orientation==code then fields[2]=tostring(n) end
     end
@@ -29,6 +31,17 @@ local function baseline(settings)
         end
         fields[8]=number(settings.CropAngle or 0,-45,45)
         if complete and fields[8]~='-' then fields[3]='1' end
+    end
+    -- White balance is one atomic field. Never substitute a made-up As Shot
+    -- temperature, and keep the legacy row when the SDK has no editable WB.
+    if settings.WhiteBalance=='As Shot' then
+        fields[9]=hex('As Shot');fields[10]='-';fields[11]='-'
+    elseif settings.WhiteBalance=='Custom' then
+        local temperature,tint=settings.Temperature,settings.Tint
+        if type(temperature)=='number' and temperature%1==0 and temperature>=2000 and temperature<=50000 and
+           type(tint)=='number' and tint%1==0 and tint>= -150 and tint<=150 then
+            fields[9]=hex('Custom');fields[10]=string.format('%.0f',temperature);fields[11]=string.format('%.0f',tint)
+        end
     end
     return table.concat(fields,'\t')
 end
@@ -52,6 +65,7 @@ function Develop.start(catalog, id, manifest, picked)
     -- Watch immediately instead of waiting for every photo's Develop baseline.
     -- Test SDKs without a scheduler do not install a long-lived watcher.
     if not LrTasks.sleep then return end
+    require('raw_settings').start(catalog,id,manifest,picked)
     LrTasks.startAsyncTask(function()
         local request=manifest:gsub('%.txt$','.stars-request')
         local closedPolls=0

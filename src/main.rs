@@ -10,6 +10,11 @@ mod folder_ui;
 mod launch;
 mod logger;
 mod move_jobs;
+mod raw_editor;
+mod raw_gate;
+mod raw_preview;
+mod raw_sample;
+mod raw_window;
 mod ui;
 use anyhow::{Context, Result, ensure};
 use fastcull::{arw::ArwInfo, handoff, imaging, state, xmp};
@@ -84,6 +89,10 @@ fn run() -> Result<()> {
         return Ok(());
     }
     match mode {
+        "--raw-editor" => {
+            ensure!(args.len() == 2, "expected RAW window request");
+            raw_window::run(Path::new(&args[1]))?;
+        }
         "--bridge-open" | "--bridge-list-owned" => {
             ensure!(args.len() == 2, "expected Bridge photo list");
             let file = Path::new(&args[1]);

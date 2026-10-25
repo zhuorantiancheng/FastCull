@@ -60,6 +60,12 @@ class BridgeTests(unittest.TestCase):
             import = function(name) assert(modules[name], name); return modules[name] end
             SDK_PATHS={home=SCRATCH,temp=SCRATCH,desktop=SCRATCH,appPrefs=SCRATCH..'/sdk/prefs',pictures=SCRATCH,documents=SCRATCH,appData=SCRATCH..'/sdk/data'}
             package.path = PLUGIN_DIR .. '/?.lua;' .. package.path
+            -- Persistent RAW-request watching is exercised by its own suite.
+            -- This SDK mock executes async jobs inline and cannot poll forever.
+            RAW_SETTINGS_STARTS={}
+            package.loaded.raw_settings={start=function(catalog,id,manifest,picked)
+                RAW_SETTINGS_STARTS[#RAW_SETTINGS_STARTS+1]={catalog,id,manifest,picked}
+            end}
             function addPhoto(path, rating, label, flag, uuid)
                 local develop={Exposure2012=0.1,Contrast2012=23,orientation='AB',CropLeft=0,CropTop=0,CropRight=1,CropBottom=1,CropAngle=0}
                 PHOTOS[#PHOTOS+1] = {
@@ -76,7 +82,7 @@ class BridgeTests(unittest.TestCase):
                     end,
                     applyDevelopSettings = function(self,settings)
                         assert(IN_GATE,'develop write outside gate')
-                        assert(settings.Contrast2012==nil)
+                        assert(settings.Contrast2012==nil or ALLOW_BASIC==true)
                         DEVELOP_WRITES[#DEVELOP_WRITES+1]=settings.Exposure2012
                         PATCHES[#PATCHES+1]=settings
                         for k,v in pairs(settings) do develop[k]=v end
@@ -180,10 +186,11 @@ class BridgeTests(unittest.TestCase):
             addPhoto(SCRATCH..'/unsupported.CR3',2,'Blue',0)
             addPhoto(SCRATCH..'/Canon.CR2',2,'Blue',0)
             addPhoto(SCRATCH..'/Nikon.NEF',3,'Green',1)
+            addPhoto(SCRATCH..'/Adobe.DnG',5,'Yellow',1)
             addPhoto(SCRATCH..'/unsupported.xmp',0,'',0)
         ''')
         self.script("OpenCuller.lua")
-        self.assertEqual(self.lua.globals().EXPORTED, self.lua.globals().RAW + "|4|Purple|-1\n" + self.tmp.name + "/unsupported.JPG|1|Red|0\n" + self.tmp.name + "/Canon.CR2|2|Blue|0\n" + self.tmp.name + "/Nikon.NEF|3|Green|1\n")
+        self.assertEqual(self.lua.globals().EXPORTED, self.lua.globals().RAW + "|4|Purple|-1\n" + self.tmp.name + "/unsupported.JPG|1|Red|0\n" + self.tmp.name + "/Canon.CR2|2|Blue|0\n" + self.tmp.name + "/Nikon.NEF|3|Green|1\n" + self.tmp.name + "/Adobe.DnG|5|Yellow|1\n")
         command = self.lua.globals().COMMANDS[1]
         self.assertTrue(command.startswith('""'))
         self.assertTrue(command.endswith('2>&1"'))
@@ -343,7 +350,10 @@ class BridgeTests(unittest.TestCase):
 
     def manifest(self, raw, *, revision=1, marks=(1,0,0), closed=True):
         path=Path(self.tmp.name)/'session.txt'
-        version={3:1,4:2,6:3}[len(marks)]
+        version={3:1,4:2,6:3,7:4,8:5}[len(marks)]
+        if version==5:
+            # This helper's basic fixture changes all seven child fields at once.
+            marks=tuple(marks)+(marks[7],)*7
         path.write_text(f'FASTCULL_SESSION_V{version}\ttest-id\t'+('closed' if closed else 'active')+f'\t{revision}\n'
                         +str(raw).encode().hex()+'\t'+'\t'.join(map(str,marks))+'\n',encoding='utf-8')
         self.lua.globals().RAW=str(raw);self.lua.globals().MANIFEST=str(path)
@@ -512,6 +522,101 @@ class BridgeTests(unittest.TestCase):
                 assert(not pcall(Common.parseBridge,'SESSION\\ttest-id\\tclosed\\t1\\n'..bad..'\\nRESULT rows=1 error=0\\n'))
             end
         ''')
+
+    def white_balance_fixture(self, *, mode='Custom', temperature=4850, tint=17,
+                              marks=(0,0,0,0,0,0,1), extension='ARW'):
+        raw=Path(self.tmp.name)/('白平衡 照片.'+extension)
+        attrs=f'crs:WhiteBalance="{mode}"'
+        if temperature is not None: attrs+=f' crs:Temperature="{temperature}"'
+        if tint is not None: attrs+=f' crs:Tint="{tint}"'
+        raw.with_suffix('.xmp').write_text(f'''<rdf:Description
+            xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+            xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/"
+            xmp:Rating="4" {attrs} crs:CameraProfile="Adobe Color" crs:Contrast2012="23"/>''',encoding='utf-8')
+        manifest=self.manifest(raw,marks=marks)
+        self.lua.execute("addPhoto(RAW,1,'Red',1,'original-id');ORIGINAL=PHOTOS[#PHOTOS];PREFS.sessions[1].photos={[RAW]={'original-id'}}")
+        request=manifest.with_suffix('.stars-request');request.write_text('test-id\nall\n')
+        return raw,manifest,request
+
+    def test_white_balance_sync_is_atomic_and_preserves_other_develop_settings(self):
+        for extension in ('ARW','NEF','DNG'):
+            _,_,request=self.white_balance_fixture(extension=extension)
+            self.lua.execute("local d=ORIGINAL:getDevelopSettings();d.WhiteBalance='As Shot';d.CameraProfile='Camera Standard';d.Look={Name='untouched'};PATCHES={}")
+            self.script('SyncSelected.lua')
+            settings=self.lua.eval('ORIGINAL:getDevelopSettings()')
+            self.assertEqual((settings.WhiteBalance,settings.Temperature,settings.Tint),('Custom',4850,17))
+            self.assertEqual(settings.CameraProfile,'Camera Standard')
+            self.assertEqual(settings.Look.Name,'untouched')
+            self.assertEqual(settings.Contrast2012,23)
+            self.assertAlmostEqual(settings.Exposure2012,.1)
+            patch=self.lua.globals().PATCHES[1]
+            self.assertEqual(set(patch.keys()),{'WhiteBalance','Temperature','Tint'})
+            self.assertEqual(len(self.lua.globals().WRITES),0)
+            self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+            self.assertFalse(request.exists())
+
+    def test_as_shot_resets_mode_without_inventing_kelvin_or_tint(self):
+        self.white_balance_fixture(mode='As Shot',temperature=None,tint=None)
+        self.lua.execute("local d=ORIGINAL:getDevelopSettings();d.WhiteBalance='Custom';d.Temperature=5300;d.Tint=-10")
+        self.script('SyncSelected.lua')
+        patch=self.lua.globals().PATCHES[1]
+        self.assertEqual(dict(patch),{'WhiteBalance':'As Shot'})
+        self.assertEqual(self.lua.eval('ORIGINAL:getDevelopSettings().WhiteBalance'),'As Shot')
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+
+    def test_silent_or_partial_white_balance_write_cannot_be_acknowledged(self):
+        _,_,request=self.white_balance_fixture()
+        self.lua.execute("APPLY=ORIGINAL.applyDevelopSettings;ORIGINAL.applyDevelopSettings=function(self,patch) local d=self:getDevelopSettings();d.Temperature=patch.Temperature;d.Tint=patch.Tint end")
+        self.script('SyncSelected.lua')
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.assertTrue(request.exists())
+        self.lua.execute('ORIGINAL.applyDevelopSettings=APPLY')
+        self.script('SyncSelected.lua')
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+        self.assertFalse(request.exists())
+
+    def test_stars_only_does_not_acknowledge_or_apply_white_balance(self):
+        self.white_balance_fixture(marks=(1,0,0,0,0,0,1))
+        self.lua.execute("require('sync').run(false,'test-id',true,true)")
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].starsSynced,1)
+        self.assertEqual(len(self.lua.globals().PATCHES),0)
+        self.assertEqual(len(self.lua.globals().WRITES),1)
+        self.script('SyncSelected.lua')
+        self.assertEqual(len(self.lua.globals().WRITES),1)
+        self.assertEqual(len(self.lua.globals().PATCHES),1)
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+
+    def test_v4_output_and_parser_reject_incomplete_or_invalid_white_balance(self):
+        _,manifest,_=self.white_balance_fixture()
+        out=self.backend(f'--sync-session "{manifest}" 0')
+        fields=next(line for line in out.splitlines() if line.startswith('ROW_')).split('\t')
+        self.assertEqual(len(fields),16)
+        self.assertEqual(fields[0],'ROW_V4')
+        self.assertEqual(fields[-3:],['Custom'.encode().hex(),'4850','17'])
+        self.lua.globals().OUTPUT=out
+        self.lua.execute("local row=Common.parseBridge(OUTPUT).rows[1];assert(row.whiteBalance.WhiteBalance=='Custom' and row.whiteBalance.Temperature==4850 and row.whiteBalance.Tint==17)")
+        for bad in ('-\t4850\t17','4175746f\t4850\t17','437573746f6d\t4850\t-',
+                    '437573746f6d\t1999\t17','437573746f6d\t5000\t151',
+                    '437573746f6d\tnan\t17','437573746f6d\t4850\t17.5',
+                    '41732053686f74\t6500\t0'):
+            line='\t'.join(fields[:-3])+'\t'+bad
+            self.lua.globals().OUTPUT='SESSION\ttest-id\tclosed\t1\n'+line+'\nRESULT rows=1 error=0\n'
+            self.lua.execute('assert(not pcall(Common.parseBridge,OUTPUT))')
+
+    def test_catalog_white_balance_baseline_tail_is_optional_and_never_guessed(self):
+        raw=Path(self.tmp.name)/'baseline.NEF';manifest=self.manifest(raw)
+        self.lua.execute("addPhoto(RAW,1,'Red',1)")
+        for source,tail in (("WhiteBalance='Custom',Temperature=4850.0,Tint=17.0",['437573746f6d','4850','17']),
+                            ("WhiteBalance='As Shot'",['41732053686f74','-','-']),
+                            ("WhiteBalance='Custom',Temperature=4850",None),
+                            ("WhiteBalance='Auto',Temperature=4850,Tint=17",None)):
+            self.lua.execute("PHOTOS[1].getDevelopSettings=function() return {Exposure2012=0.25,"+source+"} end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
+            fields=manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')
+            self.assertEqual(fields[1],'250000')
+            self.assertEqual(len(fields),12 if tail else 9)
+            if tail: self.assertEqual(fields[-3:],tail)
 
     def test_concurrent_sync_requests_serialize_snapshots_and_keep_later_edits(self):
         raw,manifest,_=self.edits_fixture((0,0,0,1,0,0))
@@ -753,6 +858,185 @@ class BridgeTests(unittest.TestCase):
         self.script('SyncSelected.lua')
         self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
 
+    def test_legacy_process_exposure_sync_never_upgrades_or_writes_2012_fields(self):
+        for version in ('5.0','5.7'):
+            self.lua.execute('PHOTOS={};REGISTERED={};UUIDS={};PATCHES={}')
+            self.edits_fixture((0,0,0,1,0,0))
+            self.lua.globals().PROCESS=version
+            self.lua.execute("local d=ORIGINAL:getDevelopSettings();d.ProcessVersion=PROCESS;d.Exposure=-0.25;d.Exposure2012=3.25;d.AutoExposure=true")
+            self.script('SyncSelected.lua')
+            actual=self.lua.eval('ORIGINAL:getDevelopSettings()')
+            self.assertAlmostEqual(actual.Exposure,.433333)
+            self.assertEqual(actual.Exposure2012,3.25)
+            self.assertEqual(actual.ProcessVersion,version)
+            self.assertFalse(actual.AutoExposure)
+            self.assertEqual(actual.Contrast2012,23)
+            self.assertEqual(set(self.lua.globals().PATCHES[1].keys()),{'Exposure','AutoExposure'})
+            self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+            self.assertEqual(len(self.lua.globals().WRITES),0)
+
+    def test_legacy_auto_exposure_readback_failure_stays_pending_and_retries(self):
+        _,_,request=self.edits_fixture((0,0,0,1,0,0))
+        self.lua.execute("local d=ORIGINAL:getDevelopSettings();d.ProcessVersion='5.7';d.Exposure=.433333;d.AutoExposure=true;APPLY=ORIGINAL.applyDevelopSettings;ORIGINAL.applyDevelopSettings=function(self,patch) APPLY(self,patch);self:getDevelopSettings().AutoExposure=true end")
+        self.script('SyncSelected.lua')
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.assertTrue(request.exists())
+        self.assertFalse(self.lua.globals().PATCHES[1].AutoExposure)
+        self.lua.execute('ORIGINAL.applyDevelopSettings=APPLY')
+        self.script('SyncSelected.lua')
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+        self.assertFalse(request.exists())
+        self.assertEqual(self.lua.eval('ORIGINAL:getDevelopSettings().ProcessVersion'),'5.7')
+        self.lua.execute("local count=#PATCHES;IN_GATE=true;require('photo_edits').apply(ORIGINAL,{exposure=.433333});IN_GATE=false;assert(#PATCHES==count)")
+
+    def test_legacy_exposure_limit_is_checked_before_any_develop_write(self):
+        raw,_,request=self.edits_fixture((0,0,0,1,0,0))
+        packet=raw.with_suffix('.xmp').read_text(encoding='utf-8')
+        raw.with_suffix('.xmp').write_text(packet.replace('0.433333','4.500000'),encoding='utf-8')
+        self.lua.execute("local d=ORIGINAL:getDevelopSettings();d.ProcessVersion='5.0';d.Exposure=0;d.AutoExposure=false")
+        self.script('SyncSelected.lua')
+        self.assertEqual(len(self.lua.globals().PATCHES),0)
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.assertEqual(self.lua.eval('ORIGINAL:getDevelopSettings().Exposure'),0)
+        self.assertTrue(request.exists())
+
+    def test_process_selection_rejects_ambiguous_versions_without_blocking_white_balance(self):
+        self.lua.execute('''
+            local edits=require 'photo_edits'
+            for _,settings in ipairs({{ProcessVersion='6.0',Exposure=0,Exposure2012=0},
+                    {ProcessVersion='bad',Exposure2012=0},{ProcessVersion=math.huge,Exposure2012=0},
+                    {Exposure=0,Exposure2012=0}}) do
+                local photo={getDevelopSettings=function() return settings end,
+                    applyDevelopSettings=function(self,patch)
+                        assert(patch.Exposure==nil and patch.Exposure2012==nil and patch.ProcessVersion==nil)
+                        for k,v in pairs(patch) do settings[k]=v end
+                    end}
+                assert(not pcall(edits.apply,photo,{exposure=.5}))
+                local row={whiteBalance={WhiteBalance='Custom',Temperature=4850,Tint=17}}
+                edits.apply(photo,row);edits.verify(photo,row)
+                assert(settings.Temperature==4850 and settings.Tint==17)
+            end
+            local key,limit,old=edits.exposureParameters({Exposure=0})
+            assert(key=='Exposure' and limit==4 and old)
+            key,limit,old=edits.exposureParameters({Exposure2012=0})
+            assert(key=='Exposure2012' and limit==5 and not old)
+        ''')
+
+    def test_catalog_exposure_baseline_uses_the_active_process_and_limit(self):
+        raw=Path(self.tmp.name)/'process.ARW';manifest=self.manifest(raw)
+        self.lua.execute("addPhoto(RAW,1,'Red',1)")
+        for settings,expected in (("ProcessVersion='5.0',Exposure=1.25,Exposure2012=-2",'1250000'),
+                                  ("ProcessVersion='5.7',Exposure=-4,Exposure2012=3",'-4000000'),
+                                  ("ProcessVersion='5.7',Exposure=4.1,Exposure2012=3",'-'),
+                                  ("ProcessVersion='6.6',Exposure=-3,Exposure2012=4.75",'4750000'),
+                                  ("ProcessVersion='6.7',Exposure=-3,Exposure2012=5",'5000000'),
+                                  ("ProcessVersion='15.4',Exposure=-3,Exposure2012=-5",'-5000000'),
+                                  ("Exposure=-.75",'-750000'),
+                                  ("Exposure=1,Exposure2012=2",'-'),
+                                  ("ProcessVersion='6.0',Exposure=1,Exposure2012=2",'-')):
+            self.lua.execute("PHOTOS[1].getDevelopSettings=function() return {"+settings+",orientation='BC',WhiteBalance='As Shot'} end;require('develop').start(CATALOG,'test-id',MANIFEST,{{path=RAW,photo=PHOTOS[1]}})")
+            fields=manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')
+            self.assertEqual(fields[1],expected,settings)
+            self.assertEqual(fields[2],'6')
+            self.assertEqual(fields[-3:],['41732053686f74','-','-'])
+        self.assertEqual(len(self.lua.globals().PATCHES),0)
+
+    def basic_fixture(self, *, fields=None, marks=(0,0,0,0,0,0,0,1)):
+        fields=fields or {'Contrast2012':0,'Highlights2012':-23,'Shadows2012':44,
+                          'Whites2012':-12,'Blacks2012':17,'Vibrance':0,'Saturation':-100}
+        raw=Path(self.tmp.name)/'基础调整.NEF'
+        attrs=' '.join(f'crs:{key}="{value}"' for key,value in fields.items())
+        raw.with_suffix('.xmp').write_text(f'''<rdf:Description
+            xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+            xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/"
+            xmp:Rating="4" crs:ProcessVersion="15.4" {attrs}/>''',encoding='utf-8')
+        manifest=self.manifest(raw,marks=marks)
+        self.lua.execute("ALLOW_BASIC=true;addPhoto(RAW,1,'Red',1,'basic-id');ORIGINAL=PHOTOS[1];PREFS.sessions[1].photos={[RAW]={'basic-id'}};local d=ORIGINAL:getDevelopSettings();d.ProcessVersion='15.4';d.CameraProfile='Camera Standard';d.CustomVendor='preserve'")
+        return raw,manifest
+
+    def test_all_seven_basic_fields_sync_zero_values_and_preserve_other_settings(self):
+        _,manifest=self.basic_fixture()
+        output=self.backend(f'--sync-session "{manifest}" 0')
+        fields=next(line for line in output.splitlines() if line.startswith('ROW_')).split('\t')
+        self.assertEqual((fields[0],len(fields)),('ROW_V5',23))
+        self.assertEqual(fields[-7:],['0','-23','44','-12','17','0','-100'])
+        self.script('SyncSelected.lua')
+        patch=self.lua.globals().PATCHES[1]
+        self.assertEqual(dict(patch),{'Contrast2012':0,'Highlights2012':-23,'Shadows2012':44,
+                                      'Whites2012':-12,'Blacks2012':17,'Vibrance':0,'Saturation':-100})
+        actual=self.lua.eval('ORIGINAL:getDevelopSettings()')
+        self.assertEqual(actual.ProcessVersion,'15.4')
+        self.assertEqual(actual.CameraProfile,'Camera Standard')
+        self.assertEqual(actual.CustomVendor,'preserve')
+        self.assertEqual(actual.Exposure2012,.1)
+        self.assertEqual(len(self.lua.globals().WRITES),0)
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+
+    def test_basic_sync_filters_unchanged_children_and_stars_only_cannot_ack_group(self):
+        _,manifest=self.basic_fixture(marks=(1,0,0,0,0,0,0,1))
+        rows=manifest.read_text().splitlines();tokens=rows[1].split('\t')
+        # Only contrast belongs to the edit; all the other values are recipe context.
+        tokens[-6:]=['0']*6;rows[1]='\t'.join(tokens);manifest.write_text('\n'.join(rows)+'\n')
+        self.lua.execute("require('sync').run(false,'test-id',true,true)")
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.assertEqual(len(self.lua.globals().PATCHES),0)
+        self.script('SyncSelected.lua')
+        self.assertEqual(dict(self.lua.globals().PATCHES[1]),{'Contrast2012':0})
+        self.assertEqual(len(self.lua.globals().WRITES),1)
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+
+    def test_basic_partial_sdk_write_cannot_confirm_the_group(self):
+        self.basic_fixture()
+        self.lua.execute("APPLY=ORIGINAL.applyDevelopSettings;ORIGINAL.applyDevelopSettings=function(self,patch) local d=self:getDevelopSettings();d.Contrast2012=patch.Contrast2012 end")
+        self.script('SyncSelected.lua')
+        self.assertEqual(self.lua.globals().PREFS.sessions[1].synced,0)
+        self.lua.execute('ORIGINAL.applyDevelopSettings=APPLY')
+        self.script('SyncSelected.lua')
+        # The already applied contrast is not written again during retry.
+        self.assertIsNone(self.lua.globals().PATCHES[1].Contrast2012)
+        self.assertEqual(len(self.lua.globals().PREFS.sessions),0)
+
+    def test_basic_legacy_and_unknown_processes_keep_their_original_process(self):
+        self.lua.execute('''
+            local edits=require 'photo_edits'
+            local settings={ProcessVersion='5.7',Contrast=20,AutoContrast=true,Exposure=.1,Vendor='keep'}
+            local writes={}
+            local photo={getDevelopSettings=function() return settings end,
+                applyDevelopSettings=function(self,patch)
+                    writes[#writes+1]=patch
+                    assert(patch.ProcessVersion==nil and patch.Contrast2012==nil)
+                    for k,v in pairs(patch) do settings[k]=v end
+                end}
+            local row={basic={contrast=0,vibrance=17,saturation=-100}}
+            edits.apply(photo,row);edits.verify(photo,row)
+            assert(settings.ProcessVersion=='5.7' and settings.Contrast==0 and not settings.AutoContrast)
+            assert(settings.Vendor=='keep' and writes[1].AutoContrast==false)
+            for _,basic in ipairs({{contrast=-51},{highlights=0},{shadows=0},{whites=0},{blacks=0}}) do
+                local count=#writes
+                assert(not pcall(edits.apply,photo,{basic=basic}))
+                assert(#writes==count)
+            end
+            settings.ProcessVersion='unknown'
+            local row={basic={vibrance=0,saturation=100}}
+            edits.apply(photo,row);edits.verify(photo,row)
+            assert(settings.ProcessVersion=='unknown')
+            assert(not pcall(edits.apply,photo,{basic={contrast=0}}))
+        ''')
+
+    def test_v5_parser_rejects_invalid_basic_values_and_missing_columns(self):
+        self.lua.execute('''
+            local prefix='SESSION\\ttest-id\\tclosed\\t1\\nROW_V5\\t61\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-\\t-'
+            local suffix='\\nRESULT rows=1 error=0\\n'
+            local good=prefix..'\\t0\\t-100\\t100\\t-\\t-\\t0\\t-'..suffix
+            local basic=Common.parseBridge(good).rows[1].basic
+            assert(basic.contrast==0 and basic.highlights== -100 and basic.shadows==100 and basic.whites==nil)
+            for _,token in ipairs({'101','-101','1.5','nan','inf','1e1',''}) do
+                assert(not pcall(Common.parseBridge,prefix..'\\t'..token..'\\t-\\t-\\t-\\t-\\t-\\t-'..suffix))
+            end
+            assert(not pcall(Common.parseBridge,prefix..'\\t0\\t-\\t-\\t-\\t-\\t-'..suffix))
+        ''')
+
     def test_close_auto_stars_ignores_selection_and_never_acknowledges_other_fields(self):
         raw=Path(self.tmp.name)/'original.ARW'
         raw.with_suffix('.xmp').write_text('<rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmp:Rating="5" xmp:Label="Blue" sr:Flag="reject"/>',encoding='utf-8')
@@ -785,6 +1069,7 @@ class BridgeTests(unittest.TestCase):
         self.lua.execute('TASKS[1]()')
         self.assertEqual(manifest.with_suffix('.exposure').read_text().splitlines()[0].split('\t')[1], '-200000')
         self.assertEqual(len(self.lua.globals().WRITES),0)
+        self.assertEqual(len(self.lua.globals().RAW_SETTINGS_STARTS),1)
         self.lua.execute('TASKS[2]()')
         self.assertEqual(len(self.lua.globals().WRITES),0)
         self.lua.execute('TASKS[3]()')

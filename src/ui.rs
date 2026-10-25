@@ -135,6 +135,8 @@ impl Photo {
     }
 }
 pub struct App {
+    raw_windows: Arc<crate::raw_window::Windows>,
+    raw_smoke_started: bool,
     crop_editor: Option<crate::crop_ui::Editor>,
     crop_requested: bool,
     baselines: crate::exposure::Baselines,
@@ -318,6 +320,8 @@ impl App {
         };
         Self {
             folder_editor,
+            raw_windows: crate::raw_window::Windows::new(session.clone()),
+            raw_smoke_started: false,
             crop_editor: None,
             crop_requested: false,
             mover: None,
@@ -1020,7 +1024,8 @@ impl App {
     }
     fn fast_thumb_available(&self, i: usize) -> bool {
         self.photos[i].info.as_ref().is_some_and(|info| {
-            info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset
+            info.bitmap_thumbnail.is_some()
+                || (info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset)
         })
     }
     fn retry_current(&mut self) {
@@ -1794,6 +1799,50 @@ impl App {
         } else {
             self.crop_requested = true;
             self.request(self.current, Level::Full);
+        }
+    }
+    fn begin_raw(&mut self, ctx: &egui::Context) {
+        if self.visible.is_empty() || self.moving(self.current) {
+            return;
+        }
+        self.raw_windows.open(
+            self.paths[self.current].clone(),
+            self.current,
+            self.session.as_ref().and_then(|s| s.raw_settings_source()),
+            ctx,
+        );
+    }
+    fn receive_raw(&mut self) {
+        for event in self.raw_windows.poll() {
+            match event {
+                crate::raw_window::Event::Saved(path, saved) => {
+                    let (values, updates) = *saved;
+                    if let Some(index) = self.paths.iter().position(|p| p == &path) {
+                        let current = &mut self.photos[index].values;
+                        if updates.exposure.is_some() {
+                            current.exposure = values.exposure;
+                        }
+                        if updates.white_balance.is_some() {
+                            current.white_balance = values.white_balance;
+                        }
+                        if updates.crop.is_some() {
+                            current.crop = values.crop;
+                        }
+                        if updates.orientation.is_some() {
+                            current.orientation = values.orientation;
+                        }
+                        for control in fastcull::xmp::BasicControl::ALL {
+                            if updates.basic.get(control).is_some() {
+                                current.basic.set(control, values.basic.get(control));
+                            }
+                        }
+                        self.photos[index].develop_loaded = true;
+                        self.pool.retry_metadata(index);
+                        self.filter_dirty = true;
+                    }
+                }
+                crate::raw_window::Event::Error(error) => self.error = Some(error),
+            }
         }
     }
     fn apply_crop(&mut self) {
@@ -2715,6 +2764,7 @@ impl eframe::App for App {
         if ctx.input(|i| i.viewport().close_requested())
             && !self.allow_close
             && self.smoke.is_none()
+            && std::env::var_os("FASTCULL_RAW_EDIT_SMOKE_DIR").is_none()
         {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.close_dialog = true;
@@ -2735,6 +2785,14 @@ impl eframe::App for App {
         self.receive_metadata();
         self.receive_develop();
         self.receive_index();
+        if std::env::var_os("FASTCULL_RAW_EDIT_SMOKE_DIR").is_some()
+            && !self.raw_smoke_started
+            && self.photos[self.current].loaded
+        {
+            self.raw_smoke_started = true;
+            self.begin_raw(ctx);
+        }
+        self.receive_raw();
         if self.filter_dirty {
             self.refilter();
         }
@@ -2803,6 +2861,20 @@ impl eframe::App for App {
                 if self.filters.active() {
                     ui.add_space(8.);
                     ui.colored_label(Color32::LIGHT_BLUE, "已筛选");
+                }
+                ui.add_space(6.);
+                let raw_enabled =
+                    crop_enabled && crate::raw_editor::supported(&self.paths[self.current]);
+                if ui
+                    .add_enabled_ui(raw_enabled, |ui| {
+                        navigation_button(ui, "RAW 编辑", false, NavigationIcon::Raw).on_hover_text(
+                            "独立 RAW 窗口 · 本地 LibRaw · 曝光、白平衡与色调 · sRGB",
+                        )
+                    })
+                    .inner
+                    .clicked()
+                {
+                    self.begin_raw(ctx);
                 }
             });
         egui::TopBottomPanel::top("hud")
@@ -3070,6 +3142,16 @@ impl eframe::App for App {
                     .unwrap_or(egui::CursorIcon::NotAllowed),
             );
         }
+        // Opt-in end-to-end probe: lets the test observe input processing while
+        // the independent RAW process is decoding, without timing GUI screenshots.
+        if let Some(path) = std::env::var_os("FASTCULL_RAW_WINDOW_QA_FILE") {
+            let stamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis();
+            let _ = std::fs::write(path, format!("{stamp}\t{}\t{}", self.current, self.grid));
+            ctx.request_repaint_after(std::time::Duration::from_millis(50));
+        }
         self.smoke(ctx);
     }
 }
@@ -3159,6 +3241,7 @@ enum NavigationIcon {
     Folder,
     Filter,
     Crop,
+    Raw,
 }
 fn navigation_button(
     ui: &mut egui::Ui,
@@ -3194,6 +3277,16 @@ fn navigation_button(
     }
     let origin = rect.center_top() + Vec2::new(-11., 13.);
     let points = match icon {
+        NavigationIcon::Raw => vec![
+            origin + Vec2::new(0., 22.),
+            origin + Vec2::new(0., 2.),
+            origin + Vec2::new(0., 22.),
+            origin + Vec2::new(22., 22.),
+            origin + Vec2::new(2., 20.),
+            origin + Vec2::new(7., 17.),
+            origin + Vec2::new(13., 7.),
+            origin + Vec2::new(22., 3.),
+        ],
         NavigationIcon::Filter => vec![
             origin,
             origin + Vec2::new(22., 0.),
@@ -3238,7 +3331,7 @@ fn navigation_button(
     );
     response.on_hover_cursor(egui::CursorIcon::PointingHand)
 }
-fn configure(ctx: &egui::Context) {
+pub(crate) fn configure(ctx: &egui::Context) {
     ctx.set_theme(egui::Theme::Dark);
     let mut visuals = egui::Visuals::dark();
     visuals.panel_fill = PANEL;
@@ -3433,7 +3526,7 @@ impl eframe::App for Shell {
                     }
                     ui.add_space(22.);
                     ui.weak("也可以将照片或文件夹拖到这里");
-                    ui.weak("ARW · CR2 · NEF · JPG / JPEG");
+                    ui.weak("ARW · CR2 · NEF · DNG · JPG / JPEG");
                     if let Some(error) = &self.error {
                         ui.add_space(16.);
                         ui.colored_label(RED, error);
@@ -3562,6 +3655,9 @@ fn run_session(paths: Vec<PathBuf>, session: Option<Arc<Session>>, bridge: bool)
     if let Some(dir) = std::env::var_os("FASTCULL_SMOKE_DIR") {
         std::fs::create_dir_all(dir)?;
     }
+    let keep_session = session.is_some();
+    let windows = crate::raw_window::Windows::new(session.clone());
+    let render_windows = windows.clone();
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Glow,
         viewport: egui::ViewportBuilder::default()
@@ -3571,7 +3667,7 @@ fn run_session(paths: Vec<PathBuf>, session: Option<Arc<Session>>, bridge: bool)
         ..Default::default()
     };
     log::info!("startup native-window begin");
-    eframe::run_native(
+    let result = eframe::run_native(
         "FastCull · RAW/JPEG",
         options,
         Box::new(move |cc| {
@@ -3579,13 +3675,18 @@ fn run_session(paths: Vec<PathBuf>, session: Option<Arc<Session>>, bridge: bool)
                 Some(session) => App::new_session(cc, paths, Some(session)),
                 None => App::new(cc, paths),
             };
+            app.raw_windows = render_windows;
             if bridge {
                 app.enable_bridge_moves(&cc.egui_ctx, crate::logger::directory().join("moves"));
             }
             Ok(Box::new(app))
         }),
     )
-    .map_err(|e| anyhow::anyhow!("GUI: {e}"))
+    .map_err(|e| anyhow::anyhow!("GUI: {e}"));
+    if keep_session {
+        windows.finish()?;
+    }
+    result
 }
 
 #[cfg(test)]
@@ -3594,6 +3695,7 @@ mod tests {
     #[test]
     fn catalog_crop_overrides_stale_xmp_but_never_later_user_edits() {
         let catalog = crate::exposure::Baseline {
+            white_balance: None,
             exposure: None, // Older process version must not disable crop import.
             crop: Some(fastcull::crop::Crop {
                 enabled: true,

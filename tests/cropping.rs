@@ -74,7 +74,13 @@ fn sample_crop() -> Crop {
 #[test]
 fn load_adobe_crop_from_raw_sidecar_and_jpeg_embedded_xmp_without_rewriting() {
     let dir = tempfile::tempdir().unwrap();
-    for name in ["adobe.ARW", "adobe.CR2", "adobe.NEF", "adobe.jpg"] {
+    for name in [
+        "adobe.ARW",
+        "adobe.CR2",
+        "adobe.NEF",
+        "adobe.DNG",
+        "adobe.jpg",
+    ] {
         let path = dir.path().join(name);
         let jpeg = fastcull::formats::is_jpeg(&path);
         fs::write(
@@ -208,11 +214,13 @@ fn invalid_crop_or_broken_xml_never_overwrites_original() {
 
 #[test]
 fn crop_moves_with_raw_and_jpeg_and_allows_edits_after_two_moves() {
-    for extension in ["ARW", "CR2", "NEF", "JPG"] {
+    for extension in ["ARW", "CR2", "NEF", "DNG", "JPG"] {
         let dir = tempfile::tempdir().unwrap();
         let src = dir.path().join(format!("测试.{extension}"));
-        let bytes = if extension == "JPG" {
+        let bytes: &[u8] = if extension == "JPG" {
             include_bytes!("fixtures/tiny.jpg").as_slice()
+        } else if extension == "DNG" {
+            b"II\x2a\0\x08\0\0\0\0\0\0\0\0\0"
         } else {
             b"original RAW"
         };

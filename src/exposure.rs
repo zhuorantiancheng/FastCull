@@ -18,10 +18,11 @@ pub struct Baseline {
     pub exposure: Option<i32>,
     pub crop: Option<fastcull::crop::Crop>,
     pub orientation: Option<u16>,
+    pub white_balance: Option<fastcull::xmp::WhiteBalance>,
 }
 fn parse_row(line: &str) -> Option<(PathBuf, Baseline)> {
     let fields: Vec<_> = line.trim_end_matches(['\r', '\n']).split('\t').collect();
-    if !matches!(fields.len(), 2 | 9) {
+    if !matches!(fields.len(), 2 | 9 | 12) {
         return None;
     }
     let path = PathBuf::from(fastcull::handoff::decode(fields[0]).ok()?);
@@ -32,7 +33,7 @@ fn parse_row(line: &str) -> Option<(PathBuf, Baseline)> {
             .filter(|v| (-5_000_000..=5_000_000).contains(v)),
         ..Default::default()
     };
-    if fields.len() == 9 {
+    if fields.len() >= 9 {
         value.orientation = fields[2]
             .parse::<u16>()
             .ok()
@@ -50,6 +51,22 @@ fn parse_row(line: &str) -> Option<(PathBuf, Baseline)> {
                 };
                 crop.valid().then_some(crop)
             })(),
+            _ => None,
+        };
+    }
+    if fields.len() == 12 {
+        let mode = fastcull::handoff::decode(fields[9]).ok();
+        value.white_balance = match mode.as_deref() {
+            Some("As Shot") => Some(fastcull::xmp::WhiteBalance::AsShot),
+            Some("Custom") => fields[10]
+                .parse()
+                .ok()
+                .zip(fields[11].parse().ok())
+                .map(|(temperature, tint)| fastcull::xmp::WhiteBalance::Custom {
+                    temperature,
+                    tint,
+                })
+                .filter(|wb| wb.valid()),
             _ => None,
         };
     }
@@ -102,6 +119,34 @@ impl Drop for Baselines {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn wb_baseline_is_atomic_and_never_invents_as_shot_parameters() {
+        use fastcull::xmp::WhiteBalance;
+        let prefix = "61\t120000\t6\t0\t0\t0\t1000000\t1000000\t0";
+        let (_, custom) = parse_row(&format!("{prefix}\t437573746f6d\t4850\t17\n")).unwrap();
+        assert_eq!(
+            custom.white_balance,
+            Some(WhiteBalance::Custom {
+                temperature: 4_850,
+                tint: 17
+            })
+        );
+        let (_, shot) = parse_row(&format!("{prefix}\t41732053686f74\t-\t-\n")).unwrap();
+        assert_eq!(shot.white_balance, Some(WhiteBalance::AsShot));
+        for tail in [
+            "437573746f6d\t4850\t-",
+            "437573746f6d\t1999\t0",
+            "437573746f6d\t5000\t151",
+            "4175746f\t5000\t0",
+            "garbage\t5000\t0",
+        ] {
+            let (_, partial) = parse_row(&format!("{prefix}\t{tail}\n")).unwrap();
+            assert_eq!(partial.white_balance, None);
+            assert_eq!(partial.exposure, Some(120_000));
+            assert_eq!(partial.orientation, Some(6));
+        }
+        assert!(parse_row(&format!("{prefix}\t437573746f6d\t4850\n")).is_none());
+    }
     #[test]
     fn catalog_crop_is_independent_of_exposure_and_legacy_rows_still_work() {
         let (_, b) = parse_row("61\t-\t6\t1\t100000\t200000\t900000\t800000\t2500000\n").unwrap();

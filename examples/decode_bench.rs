@@ -1,4 +1,4 @@
-//! Reproducible, warm-cache decode benchmark: decode_bench <photo> [runs].
+//! Warm-cache benchmark: decode_bench <photo> [runs] [native].
 use fastcull::{
     arw::ArwInfo,
     imaging::{Level, decode_level},
@@ -11,11 +11,22 @@ fn main() -> anyhow::Result<()> {
         .next()
         .and_then(|s| s.to_str()?.parse().ok())
         .unwrap_or(7);
+    let native = args.next().is_some_and(|s| s == "native");
     anyhow::ensure!((1..=1000).contains(&runs), "runs must be 1..1000");
     let t = Instant::now();
-    let info = ArwInfo::read(&path)?;
+    let info = if native {
+        fastcull::native_raw::read(&path)?
+    } else {
+        ArwInfo::read(&path)?
+    };
     println!("metadata_ms={:.3}", t.elapsed().as_secs_f64() * 1000.);
-    for level in [Level::Thumb, Level::Fit(2560), Level::Full] {
+    let mut levels = vec![Level::Thumb, Level::Fit(2560), Level::Full];
+    if info.bitmap_thumbnail.is_some()
+        || (info.thumbnail.len > 0 && info.thumbnail.offset != info.preview.offset)
+    {
+        levels.insert(0, Level::FastThumb);
+    }
+    for level in levels {
         let mut times = Vec::new();
         for run in 0..=runs {
             let t = Instant::now();

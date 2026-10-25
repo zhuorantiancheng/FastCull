@@ -11,7 +11,7 @@ fn rated_tiff(rating: u16) -> Vec<u8> {
 #[test]
 fn camera_stars_are_loaded_and_explicit_zero_wins() {
     let dir = tempfile::tempdir().unwrap();
-    for ext in ["ARW", "CR2", "NEF"] {
+    for ext in ["ARW", "CR2", "NEF", "DNG"] {
         let path = dir.path().join(format!("rated-{ext}.{ext}"));
         let original = rated_tiff(4);
         fs::write(&path, &original).unwrap();

@@ -116,6 +116,11 @@ class DistributionTests(unittest.TestCase):
 class SourceManifestTests(unittest.TestCase):
     def test_source_manifest_is_complete_and_excludes_private_outputs(self):
         paths = release.source_paths()
+        for required in ['scripts/adobe-raw-render.ps1', 'bridge/FastCullRawRender.jsx',
+                         'lrplugins/FastCull.lrplugin/raw_settings.lua',
+                         'docs/RAW-EDITING.md', 'docs/DNG.md',
+                         'docs/raw-window-validation-2026-10-24.json']:
+            self.assertIn(ROOT/required, paths)
         self.assertGreater(len(paths), 60)
         for path in paths:
             self.assertTrue(path.is_file(), str(path))

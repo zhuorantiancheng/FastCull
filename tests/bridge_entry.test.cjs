@@ -5,7 +5,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
 const path = require("node:path");
-const source = fs.readFileSync(path.join(__dirname, "../bridge/FastCull.jsx"), "utf8").replace(/^#target.*$/m, "");
+// Point at an installed script to catch a stale Bridge deployment as well as
+// regressions in the repository entry (e.g. FASTCULL_BRIDGE_SCRIPT=<path>).
+const sourcePath = process.env.FASTCULL_BRIDGE_SCRIPT || path.join(__dirname, "../bridge/FastCull.jsx");
+const source = fs.readFileSync(sourcePath, "utf8").replace(/^\uFEFF/, "").replace(/^#target.*$/m, "");
 function host(mac = false) {
     const menus = {}, files = {}, commands = [], alerts = [];
     const executable = mac ? "/Users/测试 O'Brien/$photos/FastCull.app/Contents/MacOS/fastcull" : "E:\\Photo tools\\FastCull\\fastcull.exe";
@@ -86,11 +89,23 @@ test("large selections use a constant-size command, not thousands of arguments",
 });
 test("Bridge and Rust agree on each enabled and deferred file extension", () => {
     const h=host();
-    for (const ext of ['ARW','cr2','NEF','JPG','jpeg','JPE']) {
+    for (const ext of ['ARW','cr2','NEF','DNG','dng','JPG','jpeg','JPE']) {
         h.select('D:\\photo.'+ext);assert.equal(h.context.FastCullBridge.paths().length,1);
     }
-    for (const ext of ['CR3','RAF','DNG','RW2','ORF','png','xmp','mp4']) {
+    for (const ext of ['CR3','RAF','RW2','ORF','png','xmp','mp4']) {
         h.select('D:\\photo.'+ext);assert.equal(h.context.FastCullBridge.paths().length,0);
+    }
+});
+
+test("DNG-only selection launches without the empty-selection alert", () => {
+    for (const name of ['20261018-DSC03309.dng', '照片 二.DNG', 'photo.DnG']) {
+        const h = host();
+        h.select('D:\\照片\\DxO\\' + name);
+        h.context.FastCullBridge.open();
+        assert.deepEqual(h.alerts, [], 'DNG selection must not report 读取所选照片 / 请先在 Bridge 中选中');
+        assert.equal(h.commands.length, 1);
+        const request = Object.keys(h.files).find(name => /bridge-requests.*\.txt$/.test(name));
+        assert.equal(h.files[request], 'FASTCULL_BRIDGE_V1\nD:\\照片\\DxO\\' + name + '\n');
     }
 });
 test("multiple folder selection enables menus and passes roots without scanning Bridge", () => {

@@ -120,6 +120,7 @@ fn thumbnail_uses_picture_preview_instead_of_padded_camera_icon() {
     };
     let info = ArwInfo {
         jpeg: full.clone(),
+        bitmap_thumbnail: None,
         preview: full,
         thumbnail: JpegRef {
             offset: 0,
@@ -156,6 +157,7 @@ fn fit_preview_is_bounded_but_full_keeps_actual_pixels_and_recovers_bad_thumbnai
     fs::write(&path, data).unwrap();
     let info = ArwInfo {
         raw_size: None,
+        bitmap_thumbnail: None,
         image_size: None,
         jpeg: JpegRef {
             offset: 4,
@@ -301,6 +303,8 @@ fn element_style_and_namespace_insertion_are_valid() {
             flag: Some("".into()),
             orientation: Some(1),
             exposure: None,
+            white_balance: None,
+            basic: Default::default(),
             crop: None,
         },
     )
@@ -437,6 +441,8 @@ fn roundtrip_and_clear_are_atomic() {
             flag: Some("pick".into()),
             orientation: Some(6),
             exposure: None,
+            white_balance: None,
+            basic: Default::default(),
             crop: None,
         },
     )

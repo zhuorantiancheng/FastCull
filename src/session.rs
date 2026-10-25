@@ -56,6 +56,10 @@ impl Session {
         Values {
             crop: u.crop,
             exposure: u.exposure,
+            basic: u.basic,
+            white_balance: u.white_balance.map(Into::into),
+            camera_profile: None,
+            process_version: None,
             rating: u.rating,
             label: u.label.clone(),
             flag: u.flag.clone(),
@@ -102,6 +106,13 @@ impl Session {
             .unwrap()
             .as_ref()
             .map(|(p, m)| (p.with_extension("folders"), m.id.clone()))
+    }
+    pub fn raw_settings_source(&self) -> Option<(PathBuf, String)> {
+        self.manifest
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map(|(p, m)| (p.with_extension("raw-request"), m.id.clone()))
     }
     pub fn request_sync(&self) -> anyhow::Result<()> {
         use std::io::Write;
