@@ -28,3 +28,5 @@
 - [dng-support 补记](dng-support.md#2026-10-24-bridge-实际安装脚本修订) — 本机 Bridge 2025/2026 旧 2.7.4 启动脚本拒绝 DNG；已备份更新为 2.7.7，需重启 Bridge；实际安装脚本各 19 项通过（2026-10-24，Codex）
 
 - [raw-editing 最新修订](raw-editing.md#2026-10-24-最新修订本地-libraw完整基本调节与独立窗口) — 已替换Adobe后端：本地LibRaw/GPU七项调节、灰点吸管、独立窗口、DNG本地内嵌；214项Rust和6组真实窗口验证，现有插件目录exe/DLL已更新；上方Adobe条目为历史（2026-10-24，Codex）
+
+- [公开发布 v2.8.0](release-and-macos.md#2026-10-25-公开发布-v280) — 已公开GitHub仓库并发布8附件；Windows/Apple Silicon/Intel同一标签CI、原生显影与自动RAW窗口均通过，Source/安装注册包与哈希已核对（2026-10-25，Codex）

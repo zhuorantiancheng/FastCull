@@ -40,3 +40,20 @@
 - 期间 CI 两次在 Windows 上失败，都是"App 创建后立即写旁车并读回"的测试：`rapid_rating_and_navigation_keep_original_event_order` 与 `folder_plan_filtering_and_grading_keep_original_photo_identity`。修复两项：测试先排空后台 metadata 读取再发按键（`5d59657`），`Pool::write_xmp` 对 Windows 瞬时占用做 4 次重试（`9d0d59a`）。
 - 手动/重推 tag 后第三次两个工作流均成功；从成功 run 下载 arm64 与 x86_64 包，校验 SHA-256 与包内 `scripts/build-macos.py`（已含 `lib/libraw_r.la`）后上传 Release 并取消 draft：<https://github.com/zhuorantiancheng/FastCull/releases/tag/v2.7.7>，8 个附件。
 - 旧 tag：`v2.7.5` 指向失败构建（`870dc60`，无 Release）；`v2.7.6` 已发布但源码包的 `build-macos.py` 是修复前版本。如需清理 `v2.7.5` 需另行确认。
+
+## 2026-10-25 公开发布 v2.8.0
+
+事实：RAW/DNG 版本已提交、打正式标签并发布，GitHub 仓库按用户明确要求改为 PUBLIC；本版明确排除独立 Bridge/DxO 扩展的五个文件。标签 v2.8.0 指向 d25f314688aba3a020609f3c5c6284642221442c，源码 ZIP 与正式三平台二进制均来自此提交，不移动历史标签。
+适用条件：下载与复现以 v2.8.0 标签为准，main 后续允许追加发版记忆而不改变标签或发布包。
+证据：2026-10-25，https://github.com/zhuorantiancheng/FastCull/releases/tag/v2.8.0；提交 68494be 为功能与版本提交，d25f314 只补 Mac 验证附件的 include-hidden-files，修复 .agent-temp 隐藏目录过滤。
+更新人和时间：Codex，2026-10-25。
+
+事实：正式标签 Windows 工作流40194335781、Mac工作流40194335783均成功；Apple Silicon与Intel实际macOS runner完成Rust/Bridge/路径测试、原生线性DNG显影/EV/WB/缓存/取消往返，以及真实RAW窗口自动编辑、全尺寸、XMP/回执保存与四张截图。两种Mac截图已视觉核对；没有使用或上传用户RAW原片。新增Mac跨进程flock及双进程测试，Git入口文件改为精确 Info.lua 大小写。
+适用条件：合成DNG测试不代表所有机型色彩准确性；Mac桌面完整手动操作与Adobe宿主未人工验收，包为ad-hoc签名、未公证。首次Intel预检慢在编译而非显影；正式标签复测成功。Windows真实安装解压使用QA模式和隔离路径，不注册现有Adobe配置。
+证据：2026-10-25，`.github/workflows/macos-build.yml`、`src/raw_gate.rs`、`tests/macos_native_smoke.py`、`tests/macos_raw_gui_smoke.py`、`docs/MACOS.md`；https://github.com/zhuorantiancheng/FastCull/actions/runs/40194335781 与 https://github.com/zhuorantiancheng/FastCull/actions/runs/40194335783。
+更新人和时间：Codex，2026-10-25。
+
+事实：Release含8附件：Windows Setup/Portable/Source、两架构Mac ZIP与各自.sha256、覆盖其余7文件的统一SHA256SUMS；本地正式副本位于 `dist/public-2.8.0/`。上传后逐份核对GitHub asset digest与本地SHA一致，Release已非draft/非prerelease并设为latest。源码ZIP116文件与标签规范化字节一致，Portable两个exe/双DLL/13Lua/文档齐全；最终Windows包实际加载自身DLL并完成native+GUI/XMP测试。
+适用条件：本地早期预检构建和正式CI构建二进制哈希可能不同；正式发布目录已替换为最终CI附件，早期四文件仅在临时 local-preflight-artifacts 中留作验证对照，不混入Release。临时日志/快照/截图/安装QA在 `.agent-temp/2026-10-25-release/`，交付程序不依赖它。Windows Setup SHA256=0aab95c9b215fcefe3f9cd4d0ceb8b3b29d0759a9f2a2e61ae8aa9ded9c465db。
+证据：2026-10-25，`scripts/release.py`、`scripts/build-macos.py`、`dist/public-2.8.0/SHA256SUMS.txt`、`.agent-temp/2026-10-25-release/final-release-validation.json`、`final-package-qa/package-report.json`。
+更新人和时间：Codex，2026-10-25。
