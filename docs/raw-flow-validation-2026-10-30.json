@@ -1,0 +1,103 @@
+{
+  "completed_date": "2026-10-30",
+  "platform": "Windows x86_64",
+  "features": [
+    "Parallel decode results retain up to 64 messages within 96 MiB, rather than dropping all but four; one oversized foreground image can exceed the budget alone",
+    "Four metadata workers, up to twelve decoders, bounded full-size work; useful queued neighbours survive navigation",
+    "Forward/backward preloads; small texture uploads drain up to sixteen per frame within a 5 ms scheduling budget",
+    "RAW rating controls shared with main UI; RAW crop editor reuses the main geometry, handles, presets and undo",
+    "Crop ratio lock rendered as a vector lock icon with accessible tooltip; no emoji/font dependency",
+    "Native parent disabled for the full child lifetime; main-frame keyboard events blocked; restore only after child exit and receipt acknowledgement",
+    "Ordinary close automatically saves current exposure/WB/basics/rating and unapplied crop; failures retain editor and drafts",
+    "Failed receipts queue in order across later saves; main receives explicit fields, protects crop/orientation and refreshes the exposure anchor"
+  ],
+  "tests": {
+    "passed": 227,
+    "failed": 0,
+    "ignored": 2,
+    "log": ".agent-temp/2026-10-29-raw-flow/test-.log",
+    "clippy": "passed --all-targets --locked -- -D warnings; filesystem incremental hard-link copy warning only"
+  },
+  "batch_benchmark": {
+    "files": 28,
+    "formats": 7,
+    "runs_per_case": 3,
+    "conditions": "Same local sample list and OS cache; Pool harness, existing decode dependencies; consumer waits 120 ms then drains every 16 ms; not end-to-end cold-folder UI timing",
+    "results": {
+      "Thumb": {
+        "before_ms": [
+          284.3341,
+          284.7634,
+          300.3771
+        ],
+        "after_ms": [
+          218.3549,
+          202.3674,
+          202.54420000000002
+        ],
+        "median_before_ms": 284.7634,
+        "median_after_ms": 202.54420000000002,
+        "median_latency_reduction_percent": 28.872811604300264
+      },
+      "Fit(512)": {
+        "before_ms": [
+          333.9553,
+          335.54089999999997,
+          367.997
+        ],
+        "after_ms": [
+          303.47049999999996,
+          319.43240000000003,
+          319.0718
+        ],
+        "median_before_ms": 335.54089999999997,
+        "median_after_ms": 319.0718,
+        "median_latency_reduction_percent": 4.908224302909114
+      }
+    }
+  },
+  "native_flow": {
+    "result": {
+      "exit_code": 0,
+      "seconds": 25.64000000001397,
+      "files": [
+        "00-loaded.png",
+        "01-rating-tone.png",
+        "02-crop.png",
+        "03-saved-crop.png",
+        "04-second-crop.png",
+        "closing-with-unapplied-crop.txt",
+        "editor-state.txt",
+        "parent-disabled.txt",
+        "parent-restored.txt",
+        "quick-ms.txt",
+        "timings.tsv"
+      ]
+    },
+    "checks": [
+      "native IsWindowEnabled false while RAW editor open and true after closing",
+      "rating=4, exposure=0.35, portrait crop manually saved with a fresh visible texture",
+      "second crop left unapplied; actual close path saved it, wrote receipt, restored parent with current fields",
+      "new exposure anchor and user-edited crop flag asserted in restored parent"
+    ],
+    "method": "Temporary harness references production modules; only scripted state/screenshot hooks differ. Five GPU frame PNGs; loaded, tone/stars, crop and saved-crop frames visually inspected.",
+    "manual_input_boundary": "Windows desktop locked. No OS mouse/keyboard interaction verification was continued after detecting the lock screen."
+  },
+  "metadata_check": {
+    "rating": "4",
+    "exposure_ev": "0.350000",
+    "has_crop": "True",
+    "original_dng_sha256": "5b6b749b31683c69418b8229c9eb11d9dafc05b2a9454edbdd816828765e44a1",
+    "original_unchanged_since_initial_private_copy": true
+  },
+  "scope": "No new Lightroom native host or macOS desktop end-to-end validation; LR receipt/field contracts and local native Windows flow tested. Local preview is not Adobe pixel equivalence.",
+  "environment_notes": [
+    "Existing junction regression needs access beyond sandbox.",
+    "First automated flow used virtualized per-process AppData; child receipt persistence was denied, and editor correctly retained pending data. Complete isolated AppData inside workspace passed."
+  ],
+  "installed_executable": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "exe_sha256": "241aae872e824428084b94b80ec1fe3588177ced9824e32bb7a452b374fed94a",
+  "backup": "backups/2026-10-29-raw-flow/fastcull.exe",
+  "temporary_directory": ".agent-temp/2026-10-29-raw-flow/",
+  "runtime_depends_on_temporary_directory": false
+}

@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "scope": "Fixed-sample numerical RAW development regression, native scene-float decode plus production CPU display evaluator.",
+  "status": "release numerical verification passed",
+  "primary_configuration": "release",
+  "reference_provenance": {
+    "kind": "Previously archived actual ACR PNG renders from 2026-10-24; no new ACR or Lightroom process started.",
+    "camera_profile": "unknown; archived experiment did not record the ACR profile name or exact profile fingerprint",
+    "process_version": "Archived experiment used ProcessVersion 11.0 XMP; complete contemporary Adobe rendering pipeline/version is not established by these PNGs.",
+    "known_controls": "Same retained RAW, Custom WB 5500K/Tint0 or 7500K/Tint20; base/warm EV0, bright EV+1.",
+    "limitation": "Results measure similarity to these retained reference images. They do not establish equivalence to Adobe Standard, Adobe Color, current Lightroom, every camera, or every scene."
+  },
+  "method": {
+    "source_count": 3,
+    "formats": [
+      "arw",
+      "nef",
+      "dng"
+    ],
+    "native_call": "fastcull::local_raw::render_scene(SceneRequest {source, xmp, max_edge:1280})",
+    "display_call": "src/raw_preview.rs::evaluate_scene with actual Frame recipe, converted losslessly to raw_preview::Recipe/HsvLookup",
+    "white_balance": [
+      {
+        "variant": "base",
+        "temperature": 5500,
+        "tint": 0
+      },
+      {
+        "variant": "warm",
+        "temperature": 7500,
+        "tint": 20
+      }
+    ],
+    "display_exposures_ev": [
+      -1,
+      0,
+      1
+    ],
+    "xmp_exposure_ev": 0,
+    "xmp_requested_camera_profile": "omitted; production default resolves Adobe Standard DCP where available",
+    "tone_boundary": "When DCP has no profile curve, production default_tone uses 11 sparse landmarks of a public classic SDR curve; it does not reproduce contemporary Lightroom ProcessVersion tone mapping.",
+    "spatial_comparison": "Resize local PNG to archived reference dimensions with Pillow LANCZOS, then resize both RGB images to 192x128 with Pillow default BICUBIC, matching the old experiment.",
+    "mae_rgb_8bit": "Mean absolute difference over all 192x128 RGB channels, scaled to 0..255; lower is closer. Not a perceptual DeltaE score.",
+    "median_luminance_difference_ev": "Inverse sRGB transfer, Y=.2126R+.7152G+.0722B; median(log2(Yreference/Ylocal)) where both Y>.015 and Y<.9. Positive means the reference is brighter.",
+    "linear_chromaticity_mae": "On the same luminance mask, normalize linear RGB by R+G+B and report mean absolute channel difference. Separates normalized color balance from overall brightness; not a colorimetric DeltaE score.",
+    "per_photo_fitting": false,
+    "exposure_compensation_applied_to_match_reference": false,
+    "old_brightness_alignment": "The earlier report included a post-hoc brightness-aligned MAE for diagnosis. This report retains it under previous_brightness_aligned_mae_diagnostic_only but does not apply that fit to current output or regression thresholds."
+  },
+  "assertions": {
+    "all_passed": true,
+    "six_ev0_samples_mae_less_than_half_previous": true,
+    "six_ev0_samples_abs_median_ev_below_0_1": true,
+    "scope_of_thresholds": "Fixed-sample regression gates only, not a universal color accuracy acceptance standard.",
+    "source_sha256_unchanged_before_after": {
+      "arw": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+      "nef": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+      "dng": "d7556912a76b95ff7c385e52a060b30a52ba42d9f5062ef4a621c0d5e50ac88b"
+    },
+    "finite_float_pixels": true,
+    "hdr_above_one_preserved": true,
+    "negative_nef_working_values_preserved": true,
+    "float_cache": {
+      "frames": 6,
+      "f32_pixel_bits_identical": true,
+      "look_curve_baseline_metadata_equal": true,
+      "ev0_png_sha256_identical": true,
+      "paths_not_parsed_as_profile_in_cache": true
+    },
+    "synthetic_grey_picker": {
+      "source_cases": 54,
+      "cached_cases": 54,
+      "single_sensor_channel_clip_rejected_cases_including_cache": 36,
+      "temperatures": [
+        3000,
+        5500,
+        7500
+      ],
+      "tints": [
+        -20,
+        0,
+        20
+      ],
+      "max_temperature_error_kelvin": 5,
+      "max_tint_error": 1,
+      "boundary": "Known synthetic camera-neutral samples using actual frame matrices/gains; verifies inverse-model consistency before/after cache, not whether a real photographed surface is neutral."
+    },
+    "ev_minus1_zero_plus1_monotonic_mean_display_rgb": true,
+    "rendered_primary_pngs": 18,
+    "rendered_cache_check_pngs": 6
+  },
+  "comparisons": [
+    {
+      "format": "arw",
+      "variant": "base",
+      "exposure": 0,
+      "reference": "arw-base.png",
+      "mae_rgb_8bit": 4.418538411458333,
+      "median_luminance_difference_ev": -0.006659584402387885,
+      "linear_chromaticity_mae": 0.027314087082816244,
+      "local_mean_rgb": [
+        111.42451985677187,
+        100.54003906249739,
+        81.03983561197136
+      ],
+      "reference_mean_rgb": [
+        113.84810384114803,
+        99.63057454426855,
+        72.89412434895353
+      ],
+      "previous_mae_rgb_8bit": 20.704386393229164,
+      "previous_median_luminance_difference_ev": 0.7144867816445611,
+      "reference_sha256": "29cb8d4111f3e396b011e19d613e7f6cc6ed8adc1c385016617a54bcf22b7522",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/arw-base.png",
+      "mae_reduction_percent": 78.65892604813779,
+      "mae_before": 20.704386393229164,
+      "mae_after": 4.418538411458333,
+      "median_ev_before": 0.7144867816445611,
+      "median_ev_after": -0.006659584402387885,
+      "previous_brightness_aligned_mae_diagnostic_only": 7.939511389067275
+    },
+    {
+      "format": "arw",
+      "variant": "base",
+      "exposure": 1,
+      "reference": "arw-bright.png",
+      "mae_rgb_8bit": 5.222886827256944,
+      "median_luminance_difference_ev": 0.043008720306717936,
+      "linear_chromaticity_mae": 0.024736400526568603,
+      "local_mean_rgb": [
+        151.97660319011132,
+        140.9443766276142,
+        117.81103515627386
+      ],
+      "reference_mean_rgb": [
+        156.81970214844063,
+        141.58837890626012,
+        109.7793782552337
+      ],
+      "reference_sha256": "ee77fb724dcbf15d143de2c8794af4e5cc6cb9367b35304b7a566438a64f65d8",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/arw-bright.png"
+    },
+    {
+      "format": "arw",
+      "variant": "warm",
+      "exposure": 0,
+      "reference": "arw-warm.png",
+      "mae_rgb_8bit": 4.585761176215279,
+      "median_luminance_difference_ev": 0.010092910835732778,
+      "linear_chromaticity_mae": 0.026079768113618798,
+      "local_mean_rgb": [
+        127.2431233724055,
+        101.13020833333135,
+        75.51399739582567
+      ],
+      "reference_mean_rgb": [
+        130.11572265626202,
+        100.23628743489401,
+        67.45039876301684
+      ],
+      "previous_mae_rgb_8bit": 23.58062065972222,
+      "previous_median_luminance_difference_ev": 0.7761601889512033,
+      "reference_sha256": "9761816346fb4767b333248517cbcd5e486155922c548a1bf8077df65c2ebc75",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/arw-warm.png",
+      "mae_reduction_percent": 80.55283937437592,
+      "mae_before": 23.58062065972222,
+      "mae_after": 4.585761176215279,
+      "median_ev_before": 0.7761601889512033,
+      "median_ev_after": 0.010092910835732778,
+      "previous_brightness_aligned_mae_diagnostic_only": 8.958682941705629
+    },
+    {
+      "format": "nef",
+      "variant": "base",
+      "exposure": 0,
+      "reference": "nef-base.png",
+      "mae_rgb_8bit": 1.3780924479166667,
+      "median_luminance_difference_ev": -0.008534442236699944,
+      "linear_chromaticity_mae": 0.00786959914432359,
+      "local_mean_rgb": [
+        30.209147135412582,
+        40.639241536455266,
+        26.01184082031104
+      ],
+      "reference_mean_rgb": [
+        29.112792968746472,
+        39.7424723307267,
+        24.62540690104075
+      ],
+      "previous_mae_rgb_8bit": 5.151814778645833,
+      "previous_median_luminance_difference_ev": 0.4395360200874129,
+      "reference_sha256": "68bd324c6a4b7c3ed26aeae595de1c2e994dbc9f30a6d94f24a4833ddcf814e7",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/nef-base.png",
+      "mae_reduction_percent": 73.25034949569942,
+      "mae_before": 5.151814778645833,
+      "mae_after": 1.3780924479166667,
+      "median_ev_before": 0.4395360200874129,
+      "median_ev_after": -0.008534442236699944,
+      "previous_brightness_aligned_mae_diagnostic_only": 6.6545042458165735
+    },
+    {
+      "format": "nef",
+      "variant": "base",
+      "exposure": 1,
+      "reference": "nef-bright.png",
+      "mae_rgb_8bit": 1.532172309027778,
+      "median_luminance_difference_ev": 0.009576119240758043,
+      "linear_chromaticity_mae": 0.007003953990137322,
+      "local_mean_rgb": [
+        51.08121744791048,
+        63.76497395832837,
+        44.0416666666638
+      ],
+      "reference_mean_rgb": [
+        50.701904296869,
+        63.18432617187091,
+        42.98217773437288
+      ],
+      "reference_sha256": "9d0521c1c10f159709559ceb136e474d7911719098d09d00431b8c7e27baf4f4",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/nef-bright.png"
+    },
+    {
+      "format": "nef",
+      "variant": "warm",
+      "exposure": 0,
+      "reference": "nef-warm.png",
+      "mae_rgb_8bit": 1.425808376736111,
+      "median_luminance_difference_ev": -0.004119230933929833,
+      "linear_chromaticity_mae": 0.0075421057453294235,
+      "local_mean_rgb": [
+        39.60738118489105,
+        40.9087320963513,
+        21.91605631510328
+      ],
+      "reference_mean_rgb": [
+        38.45621744791226,
+        40.04292805989358,
+        20.413330078124336
+      ],
+      "previous_mae_rgb_8bit": 5.907280815972222,
+      "previous_median_luminance_difference_ev": 0.46856805416444686,
+      "reference_sha256": "567aa689b90291e087be9903a4c5a46a620d3873b88327703aeded60f0b021ad",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/nef-warm.png",
+      "mae_reduction_percent": 75.86354159969876,
+      "mae_before": 5.907280815972222,
+      "mae_after": 1.425808376736111,
+      "median_ev_before": 0.46856805416444686,
+      "median_ev_after": -0.004119230933929833,
+      "previous_brightness_aligned_mae_diagnostic_only": 6.423490430117606
+    },
+    {
+      "format": "dng",
+      "variant": "base",
+      "exposure": 0,
+      "reference": "dng-base.png",
+      "mae_rgb_8bit": 3.479668511284722,
+      "median_luminance_difference_ev": -0.041038895379227114,
+      "linear_chromaticity_mae": 0.01091393651833199,
+      "local_mean_rgb": [
+        147.2062174479056,
+        122.64237467449236,
+        91.97383626299714
+      ],
+      "reference_mean_rgb": [
+        144.7805989583242,
+        120.94409179688952,
+        85.68086751298979
+      ],
+      "previous_mae_rgb_8bit": 31.933715820312504,
+      "previous_median_luminance_difference_ev": 1.109401562521751,
+      "reference_sha256": "bea4f3416d91c828778be54c30efb0a60be1b5afce0fd3346cce1d36d106d3e1",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/dng-base.png",
+      "mae_reduction_percent": 89.10346503092708,
+      "mae_before": 31.933715820312504,
+      "mae_after": 3.479668511284722,
+      "median_ev_before": 1.109401562521751,
+      "median_ev_after": -0.041038895379227114,
+      "previous_brightness_aligned_mae_diagnostic_only": 7.670731783579037
+    },
+    {
+      "format": "dng",
+      "variant": "base",
+      "exposure": 1,
+      "reference": "dng-bright.png",
+      "mae_rgb_8bit": 2.955796983506944,
+      "median_luminance_difference_ev": -0.014793971762511923,
+      "linear_chromaticity_mae": 0.0098346218329599,
+      "local_mean_rgb": [
+        194.40747070308618,
+        167.91255696612032,
+        133.86116536458903
+      ],
+      "reference_mean_rgb": [
+        193.00333658850303,
+        166.96455891924558,
+        127.4398193359467
+      ],
+      "reference_sha256": "7b13444e0d124a935bad2b299d97c8f4b4ca964db8d19394d3cf1ad0017a6d39",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/dng-bright.png"
+    },
+    {
+      "format": "dng",
+      "variant": "warm",
+      "exposure": 0,
+      "reference": "dng-warm.png",
+      "mae_rgb_8bit": 3.457302517361111,
+      "median_luminance_difference_ev": -0.03431818856838173,
+      "linear_chromaticity_mae": 0.010095524459934816,
+      "local_mean_rgb": [
+        167.56892903643043,
+        122.54040527345155,
+        82.8111572265315
+      ],
+      "reference_mean_rgb": [
+        165.45019531247388,
+        120.78942871095234,
+        76.32889811195285
+      ],
+      "previous_mae_rgb_8bit": 34.853190104166664,
+      "previous_median_luminance_difference_ev": 1.1297431627638708,
+      "reference_sha256": "e35428a63ebeb7eff0eff8abdfaef2243e2db9f0b249f46374e4cddb2fd96e99",
+      "reference_path": ".agent-temp/2026-10-23-raw-edit/adobe/dng-warm.png",
+      "mae_reduction_percent": 90.08038430046668,
+      "mae_before": 34.853190104166664,
+      "mae_after": 3.457302517361111,
+      "median_ev_before": 1.1297431627638708,
+      "median_ev_after": -0.03431818856838173,
+      "previous_brightness_aligned_mae_diagnostic_only": 7.2045022592969366
+    }
+  ],
+  "frames": [
+    {
+      "format": "arw",
+      "variant": "base",
+      "size": [
+        853,
+        1280
+      ],
+      "profile": "Adobe Standard · ILCE-6700",
+      "warning": null,
+      "temperature": 5500,
+      "tint": 0,
+      "baseline": 0,
+      "peak": 2.3351972,
+      "minimum": 3.1567179e-06,
+      "profile_fingerprint": 18389956002043219635,
+      "render_ms": 1030.4347,
+      "profile_ms": 248.81310000000002,
+      "cache_roundtrip_ms": 28.693,
+      "wall_ms": 1908.3389,
+      "exposure_mean_rgb": [
+        0.25872331468156884,
+        0.3830727512185244,
+        0.5369869421041888
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    },
+    {
+      "format": "arw",
+      "variant": "warm",
+      "size": [
+        853,
+        1280
+      ],
+      "profile": "Adobe Standard · ILCE-6700",
+      "warning": null,
+      "temperature": 7500,
+      "tint": 20,
+      "baseline": 0,
+      "peak": 2.828053,
+      "minimum": 3.926456e-06,
+      "profile_fingerprint": 18389956002043219635,
+      "render_ms": 450.9991,
+      "profile_ms": 259.1358,
+      "cache_roundtrip_ms": 30.461599999999997,
+      "wall_ms": 1425.3018,
+      "exposure_mean_rgb": [
+        0.27050866803484314,
+        0.39730351693868704,
+        0.5522703971168392
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    },
+    {
+      "format": "nef",
+      "variant": "base",
+      "size": [
+        1280,
+        852
+      ],
+      "profile": "Adobe Standard · D3S",
+      "warning": null,
+      "temperature": 5500,
+      "tint": 0,
+      "baseline": 0,
+      "peak": 1.7169341,
+      "minimum": -0.095114596,
+      "profile_fingerprint": 7746879288136924590,
+      "render_ms": 452.7608,
+      "profile_ms": 51.104200000000006,
+      "cache_roundtrip_ms": 57.3606,
+      "wall_ms": 1446.0338,
+      "exposure_mean_rgb": [
+        0.07355791974488303,
+        0.1265938864029927,
+        0.2076447726416
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    },
+    {
+      "format": "nef",
+      "variant": "warm",
+      "size": [
+        1280,
+        852
+      ],
+      "profile": "Adobe Standard · D3S",
+      "warning": null,
+      "temperature": 7500,
+      "tint": 20,
+      "baseline": 0,
+      "peak": 2.0710475,
+      "minimum": -0.092017956,
+      "profile_fingerprint": 7746879288136924590,
+      "render_ms": 141.4982,
+      "profile_ms": 44.9163,
+      "cache_roundtrip_ms": 32.1923,
+      "wall_ms": 1045.5821999999998,
+      "exposure_mean_rgb": [
+        0.07847358461965524,
+        0.1338739334952918,
+        0.21760244968889114
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    },
+    {
+      "format": "dng",
+      "variant": "base",
+      "size": [
+        1280,
+        853
+      ],
+      "profile": "Adobe Standard · ILCE-6700",
+      "warning": null,
+      "temperature": 5500,
+      "tint": 0,
+      "baseline": 0.1,
+      "peak": 1.1655594,
+      "minimum": 0.0023427329,
+      "profile_fingerprint": 18389956002043219635,
+      "render_ms": 2116.6339000000003,
+      "profile_ms": 144.83950000000002,
+      "cache_roundtrip_ms": 33.1557,
+      "wall_ms": 3089.1699,
+      "exposure_mean_rgb": [
+        0.3140193212176497,
+        0.4729635656734659,
+        0.648603557547484
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    },
+    {
+      "format": "dng",
+      "variant": "warm",
+      "size": [
+        1280,
+        853
+      ],
+      "profile": "Adobe Standard · ILCE-6700",
+      "warning": null,
+      "temperature": 7500,
+      "tint": 20,
+      "baseline": 0.1,
+      "peak": 1.3916763,
+      "minimum": 0.0021785984,
+      "profile_fingerprint": 18389956002043219635,
+      "render_ms": 583.6731,
+      "profile_ms": 142.9903,
+      "cache_roundtrip_ms": 30.386,
+      "wall_ms": 1457.5339999999999,
+      "exposure_mean_rgb": [
+        0.3303424962897901,
+        0.48747337568766047,
+        0.6579467106148651
+      ],
+      "picker_synthetic_cases": 9,
+      "picker_single_channel_clip_rejected_cases": 3,
+      "cache_preserves_f32_bits": true
+    }
+  ],
+  "output_png_sha256": [
+    {
+      "file": "arw-base-ev-1.png",
+      "sha256": "b6e01f7c3af778640b42c9caeae972f91291244a7a900eac0da74b0c6a390b2e",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "arw-base-ev0.png",
+      "sha256": "bc7a78ff097f02d29b7c8673207060f744777f1f94e21f77dafe1bd82d0727f0",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "arw-base-ev1.png",
+      "sha256": "2f6262c57c0b9059b2f2fe757bee53dcb6d6498c6bc239f5fca3f01276257e07",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "arw-warm-ev-1.png",
+      "sha256": "43004a49b5cb629543aa6f410bbb3a9df4cba9ace10ffebdcfc153c0547580e4",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "arw-warm-ev0.png",
+      "sha256": "8cd29671dd6152933a3ba977fbad49d1bce5f135971c101e5361a7dfb70f76f3",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "arw-warm-ev1.png",
+      "sha256": "c5fa712713e07b973ed30e263fd14c7dfbd15d33c0b19561c107486fcebf2d07",
+      "size": [
+        853,
+        1280
+      ]
+    },
+    {
+      "file": "nef-base-ev-1.png",
+      "sha256": "b877062680e1e373b5423e098675004439a60d17dc2ec285d27bef6a1ca891e5",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "nef-base-ev0.png",
+      "sha256": "83154c900f7e3dc13efa3522205fc647c714d7896e03bfff155c909f78b79c94",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "nef-base-ev1.png",
+      "sha256": "d885f554ded9b6f92b97f2eb0093c28b82205fe4a1a18fbc88427a9ef8f1c3a5",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "nef-warm-ev-1.png",
+      "sha256": "e6ed3dbffbcb806000282c2a9a6939059d242017ab65800c0c8d501c96895539",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "nef-warm-ev0.png",
+      "sha256": "51fa68eeb4fb9077053bae0fd3654cfcd2c18603dd3f18fc11c6292d76916882",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "nef-warm-ev1.png",
+      "sha256": "b3fbe15d97d3bc268c178097083e2517a343d01be34e65cae613df22c439bbc1",
+      "size": [
+        1280,
+        852
+      ]
+    },
+    {
+      "file": "dng-base-ev-1.png",
+      "sha256": "bfc199199550adfda11d10b9f79b22af8538c78f71e91c7f01417490b645f088",
+      "size": [
+        1280,
+        853
+      ]
+    },
+    {
+      "file": "dng-base-ev0.png",
+      "sha256": "ed6a33a5661b63dd58c228599f3182969e10b5464161eb07a74577614fb8abc8",
+      "size": [
+        1280,
+        853
+      ]
+    },
+    {
+      "file": "dng-base-ev1.png",
+      "sha256": "4e3459eca8e843b2be8d22d4abece81260a74495d6a345b0acbbdbfe6cf2c747",
+      "size": [
+        1280,
+        853
+      ]
+    },
+    {
+      "file": "dng-warm-ev-1.png",
+      "sha256": "af687631ab293e5f0ee33150858e13aaca168c2554a772341dbe48729310b23b",
+      "size": [
+        1280,
+        853
+      ]
+    },
+    {
+      "file": "dng-warm-ev0.png",
+      "sha256": "ae50b3d4e4d18433062bf42d9110d7326e6dd6710fee820f9c71f51fac72dec5",
+      "size": [
+        1280,
+        853
+      ]
+    },
+    {
+      "file": "dng-warm-ev1.png",
+      "sha256": "bc8cca5a84180d25117a49e30bc298302045a6f4f1366dfca5f3471c7a2091c1",
+      "size": [
+        1280,
+        853
+      ]
+    }
+  ],
+  "build": {
+    "library_artifacts": {
+      "eframe": {
+        "sha256": "c03f1734c45c5431811e8c666f8cad32aa6e15035deec361429056f54f8a3ed2",
+        "path": ".agent-temp/2026-10-30-raw-zoom/target/x86_64-pc-windows-msvc/release/deps/libeframe-17ae1bec1b786fb4.rlib"
+      },
+      "anyhow": {
+        "sha256": "12dbc2c5e0ec4e43934b7f85052c8b8190be63225e2f9d7f83f40d93cd2f0319",
+        "path": ".agent-temp/2026-10-30-raw-zoom/target/x86_64-pc-windows-msvc/release/deps/libanyhow-fd180146431078b1.rlib"
+      },
+      "log": {
+        "sha256": "c6f33c23c9c02164d1ccced6fad434f61ef1154602beb2e4baccb885579b7afc",
+        "path": ".agent-temp/2026-10-30-raw-zoom/target/x86_64-pc-windows-msvc/release/deps/liblog-9f19c7b89f63c7b3.rlib"
+      },
+      "fastcull": {
+        "sha256": "d56ce3065b4012953b2d94d3dec99ee62b5216844de153c93df0ed11467e4e79",
+        "path": ".agent-temp/2026-10-30-raw-zoom/target/x86_64-pc-windows-msvc/release/deps/libfastcull-ee310cb306e97593.rlib"
+      },
+      "png": {
+        "sha256": "91f8f62e54f09d32d4e2fbbd3f6fa69518f8aabf0f6993916b3559abb9af910a",
+        "path": ".agent-temp/2026-10-30-raw-zoom/target/x86_64-pc-windows-msvc/release/deps/libpng-0d48e4ad99ef2613.rlib"
+      }
+    },
+    "native_dll_sha256": "870e78601ddd9340342406eadc041e2a73947cf331649419fd46f2e6fd0585c6",
+    "configuration": "release",
+    "harness_sha256": "94c607db1d710435312405298847f2d0c2e6afb794da0ee56a1e80f76de37533",
+    "source_sha256": {
+      "src/dcp.rs": "554d0548308af1eb9803b16f650614aa3621b3b129d3a928d1fa64d11c0a3401",
+      "src/raw_float_cache.rs": "be894f844e046f5b46d4371161b9bbeef487b2ac087957c8e045696779c1be23",
+      "src/white_balance.rs": "22e35a09f56ac67722903cca3d6417622b8d95c5fdbab0314c2e7de723a56d07",
+      "src/raw_preview.rs": "1905c9ab88597b557b226aba98ccbf25d291aac84793aaf826ba7720d1258315",
+      "src/local_raw.rs": "4b477a7c55205c0ae5eed96fb2cc947346f1558c60d15e07e6cf1f5d07060a1d",
+      "src/raw_color.rs": "cc84282b7494afcd6632be6a9e6799c8ddb412e0ec326663bdf2cf0fce0ff8bc"
+    }
+  },
+  "performance": {
+    "configuration": "release",
+    "full_harness_seconds": 11.422000000020489,
+    "scope": "Observed single sequential diagnostic run, including cache write/read, synthetic picker and PNG encoding; warm/cold I/O is not controlled, and this is not a product latency benchmark. Per-frame milliseconds are preserved in frames."
+  },
+  "offline_glsl_validation": {
+    "tool": "KhronosGroup/glslang official release 16.6.0",
+    "semantics": "Desktop OpenGL GLSL 330; no SPIR-V generation flags",
+    "source_sha256": "1905c9ab88597b557b226aba98ccbf25d291aac84793aaf826ba7720d1258315",
+    "matches_current_raw_preview_source": true,
+    "all_commands_exit_zero": true,
+    "checks": "GLSL 330 vertex syntax, fragment syntax and stage link with glslang; no SPIR-V conversion.",
+    "boundary": "Offline syntax/link checks do not execute a GPU driver or demonstrate CPU/GPU pixel equality, texture format support, ICC presentation, or desktop interaction correctness."
+  },
+  "acceptance_boundaries": {
+    "desktop_or_adobe_started": false,
+    "gpu_runtime_pixel_parity_tested": false,
+    "ui_interaction_acceptance": "Deferred to user, as requested; numerical results do not validate the desktop UI.",
+    "installed_executable_or_dll_modified_by_this_harness": false,
+    "native_dll": "Newly built color-native/fastcull_raw.dll copied beside the diagnostic harness; installed plugin DLL is not used.",
+    "remaining_difference": "ARW night-scene mean blue channel remains approximately 8/255 above the archived ACR reference at EV0; complete pixel equality is not claimed."
+  },
+  "evidence": {
+    "previous_report": {
+      "path": "docs/raw-zoom-color-validation-2026-10-30.json",
+      "sha256": "f8061454f2e31f942dcd157367d61ddee9d3c864f172136fcaad419cc791b249"
+    },
+    "debug_report": {
+      "path": ".agent-temp/2026-10-30-color-dcp/scene-validation.json",
+      "sha256": "9fa2251bf1a082f287ce5e188bc8a9a1634d2a5882c72d4809d42bd3b2748f41"
+    },
+    "release_report": {
+      "path": ".agent-temp/2026-10-30-color-dcp/scene-release-validation.json",
+      "sha256": "754678a5a3f2c779e75cc274a3d217c1de1782bec313142b6aaf0e78acc3041f"
+    },
+    "harness": ".agent-temp/2026-10-30-color-dcp/scene-probe.rs",
+    "build_command": "pwsh -File .agent-temp/2026-10-30-color-dcp/build-scene.ps1 -Configuration release",
+    "run_command": "E:/APP/miniconda3/python.exe .agent-temp/2026-10-30-color-dcp/scene-report.py --release",
+    "publish_command": "E:/APP/miniconda3/python.exe .agent-temp/2026-10-30-color-dcp/publish-validation.py"
+  },
+  "debug_release_reproducibility": {
+    "all_18_png_sha256_match": true,
+    "debug_seconds": 53.95299999997951,
+    "release_seconds": 11.422000000020489,
+    "boundary": "A SHA mismatch alone is not a failure: root may have intentionally changed production source between debug and release builds; numerical sample regression gates remain primary."
+  },
+  "automated_checks": {
+    "rust_tests": {
+      "passed": 263,
+      "failed": 0,
+      "ignored": 2,
+      "mode": "cargo test --locked -- --test-threads=1",
+      "log_sha256": "4ce7b34b72ee3a9d62bf42c84ef8d9330f740264c1d1d7eb51d9a23857929e59",
+      "boundary": "Junction-cycle test required elevated sandbox access to create its temporary junction; no desktop windows launched."
+    },
+    "clippy": {
+      "command": "cargo clippy --all-targets --locked -- -D warnings",
+      "passed": true,
+      "log_sha256": "bfb57f5f138d232400633ff481d6b5c288fb4bc12a71b0f813e9328c546a6577"
+    },
+    "release_build": {
+      "command": "cargo build --release --locked --bin fastcull",
+      "passed": true,
+      "log_sha256": "7b1fb3e62eae45bef71aee8394997cdad19fb717326601208ab4a9c9ad70f64f"
+    },
+    "native_compatibility": {
+      "legacy_decode_pixel_SHA_unchanged": true,
+      "real_formats": [
+        "ARW",
+        "NEF",
+        "DNG"
+      ],
+      "fit_full_fit_and_cancel_recovery_passed": true,
+      "note": "Separate native harness exercised old ABI and new linear ABI. Native results/full-results recorded under temporary evidence."
+    }
+  },
+  "installation": {
+    "exe": {
+      "path": "lrplugins/FastCull.lrplugin/fastcull.exe",
+      "sha256": "758da357ae15d9caed2423a15803fc25ac8bf21e23b08ba3ffebfd0774980457"
+    },
+    "dll": {
+      "path": "lrplugins/FastCull.lrplugin/fastcull_raw.dll",
+      "sha256": "870e78601ddd9340342406eadc041e2a73947cf331649419fd46f2e6fd0585c6"
+    },
+    "backup_directory": "backups/2026-10-30-color-calibration",
+    "backup_exe_sha256": "75fe1f1b993e756b6532d7e31308854cff5b1b5cdc68d079e8d6d0a107eb913a",
+    "backup_dll_sha256": "029e0892508cc421d579cbf897bfe99379b1fb3054cd1e975c18ba822effeda5",
+    "public_release_uploaded": false,
+    "desktop_check_performed": false
+  }
+}

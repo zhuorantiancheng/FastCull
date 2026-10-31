@@ -14,7 +14,11 @@ if ($OutputDirectory) {
     $destination=Join-Path $OutputDirectory 'fastcull_raw.dll'
 }
 if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne 'F4448371523F9960D26A131ED9DC21BEE49F967ADBCC4FB6F56B9B47C2BA87C6') {throw 'LibRaw source hash mismatch'}
-if ((Test-Path -LiteralPath $destination) -and (Get-Item -LiteralPath $destination).LastWriteTimeUtc -gt (Get-Item "$project/native/raw_bridge.cpp").LastWriteTimeUtc -and (Get-Item -LiteralPath $destination).LastWriteTimeUtc -gt (Get-Item "$project/native/jpeg_scaled.cpp").LastWriteTimeUtc -and (Get-Item -LiteralPath $destination).LastWriteTimeUtc -gt (Get-Item -LiteralPath $PSCommandPath).LastWriteTimeUtc) {return}
+$inputs=@("$project/native/raw_bridge.cpp","$project/native/jpeg_scaled.cpp","$project/native/white_balance.h","$project/native/white_balance_table.inc",$PSCommandPath)
+if (Test-Path -LiteralPath $destination) {
+    $built=(Get-Item -LiteralPath $destination).LastWriteTimeUtc
+    if (($inputs | Where-Object { (Get-Item -LiteralPath $_).LastWriteTimeUtc -ge $built }).Count -eq 0) {return}
+}
 New-Item -ItemType Directory -Force "$scratch/tmp" | Out-Null
 $env:TEMP="$scratch/tmp";$env:TMP=$env:TEMP
 if (!(Test-Path "$scratch/LibRaw-0.22.2/Makefile.msvc")) {Expand-Archive -LiteralPath $archive -DestinationPath $scratch}
@@ -30,7 +34,7 @@ if errorlevel 1 exit /b 1
 cd /d "$scratch\LibRaw-0.22.2"
 nmake /nologo $force /f Makefile.msvc "COPT=/EHsc /MP /MT /utf-8 /I. /DWIN32 /O2 /W0 /nologo" lib\libraw_static.lib
 if errorlevel 1 exit /b 1
-cl /nologo /O2 /EHsc /MT /utf-8 /LD /I. "$project\native\raw_bridge.cpp" "$project\native\jpeg_scaled.cpp" lib\libraw_static.lib ole32.lib windowscodecs.lib /Fo"$scratch\\" /link /OUT:"$scratch\fastcull_raw.dll" /IMPLIB:"$scratch\fastcull_raw.lib"
+cl /nologo /std:c++17 /O2 /EHsc /MT /utf-8 /LD /I. "$project\native\raw_bridge.cpp" "$project\native\jpeg_scaled.cpp" lib\libraw_static.lib ole32.lib windowscodecs.lib /Fo"$scratch\\" /link /OUT:"$scratch\fastcull_raw.dll" /IMPLIB:"$scratch\fastcull_raw.lib"
 exit /b %errorlevel%
 "@
 $batch=Join-Path $scratch 'build.cmd'

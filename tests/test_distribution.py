@@ -119,9 +119,13 @@ class SourceManifestTests(unittest.TestCase):
         for required in ['scripts/adobe-raw-render.ps1', 'bridge/FastCullRawRender.jsx',
                          'lrplugins/FastCull.lrplugin/raw_settings.lua',
                          'docs/RAW-EDITING.md', 'docs/DNG.md',
+                         'native/white_balance.h', 'native/white_balance_table.inc',
+                         'docs/COLOR-PIPELINE.md', 'src/dcp.rs', 'src/raw_color.rs',
                          'docs/raw-window-validation-2026-10-24.json']:
             self.assertIn(ROOT/required, paths)
         self.assertGreater(len(paths), 60)
+        self.assertNotIn(ROOT/'bridge/DxOPureRAW.jsx', paths)
+        self.assertNotIn(ROOT/'tests/bridge_dxo.test.cjs', paths)
         for path in paths:
             self.assertTrue(path.is_file(), str(path))
             relative = path.relative_to(ROOT)

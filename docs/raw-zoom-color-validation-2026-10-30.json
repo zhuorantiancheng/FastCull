@@ -1,0 +1,219 @@
+{
+  "date": "2026-10-30",
+  "program": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "exe_sha256": "75fe1f1b993e756b6532d7e31308854cff5b1b5cdc68d079e8d6d0a107eb913a",
+  "backup": "backups/2026-10-30-raw-zoom/fastcull.exe",
+  "backup_sha256": "241aae872e824428084b94b80ec1fe3588177ced9824e32bb7a452b374fed94a",
+  "raw_dll_unchanged": true,
+  "raw_dll_sha256": "029e0892508cc421d579cbf897bfe99379b1fb3054cd1e975c18ba822effeda5",
+  "tests": {
+    "passed": 232,
+    "failed": 0,
+    "ignored": 2,
+    "clippy_all_targets": "passed -D warnings",
+    "targeted_rustfmt": "passed",
+    "full_suite_final_execution": "serial; unrestricted because existing junction test needs it",
+    "transient_failure": "earlier parallel run of existing crop_moves_with_raw_and_jpeg_and_allows_edits_after_two_moves received os error 5; final full serial suite passed"
+  },
+  "zoom": {
+    "inputs": [
+      "ordinary wheel anchored at cursor",
+      "Ctrl-wheel / touchpad zoom",
+      "drag pan constrained to image",
+      "double click / Z toggles fit and 100%",
+      "fit / 100% buttons and editable percentage up to 800%"
+    ],
+    "full_resolution": "requested once zoom exceeds fit; independent source-pixel geometry retains view across texture replacement",
+    "regressions": [
+      "ordinary wheel failed before fix and passes after",
+      "initial fit survives percentage control",
+      "egui real pointer input tests pan/pinch and picker interaction",
+      "actual editor Preview event replaces low-res texture without changing painted image bounds for crop+orientation 6 at DPI 1/1.5/2",
+      "100% uses physical display pixels and clamps pan"
+    ],
+    "desktop_qa": "Windows GPU window opened and initial frame inspected. Found initial fit/percentage clamp bug; corrected and covered by egui regression. User stopped Computer Use with physical Escape; no further app input performed. Final mouse/keyboard desktop acceptance incomplete.",
+    "color_algorithm_modified": false
+  },
+  "color_comparison": [
+    {
+      "format": "arw",
+      "variant": "base",
+      "source_sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 5500,
+      "tint": 0,
+      "mae_rgb_8bit": 20.704386393229164,
+      "median_luminance_difference_ev": 0.7144867816445611,
+      "local_mean_rgb": [
+        87.57657877603572,
+        78.8170572916589,
+        61.584350585930466
+      ],
+      "adobe_mean_rgb": [
+        113.84810384114803,
+        99.63057454426855,
+        72.89412434895353
+      ],
+      "applied_mul": [
+        2.699819326400757,
+        1.0,
+        1.5834095478057861,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 7.939511389067275
+    },
+    {
+      "format": "arw",
+      "variant": "warm",
+      "source_sha256": "1263b3a29e67216ffaae0fd82c1c569b3dc6a9443c1b10a7da17a33feedcb622",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 7500,
+      "tint": 20,
+      "mae_rgb_8bit": 23.58062065972222,
+      "median_luminance_difference_ev": 0.7761601889512033,
+      "local_mean_rgb": [
+        96.86332194009954,
+        79.50382486978347,
+        53.45137532551524
+      ],
+      "adobe_mean_rgb": [
+        130.11572265626202,
+        100.23628743489401,
+        67.45039876301684
+      ],
+      "applied_mul": [
+        3.146939992904663,
+        1.0,
+        1.3610481023788452,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 8.958682941705629
+    },
+    {
+      "format": "nef",
+      "variant": "base",
+      "source_sha256": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 5500,
+      "tint": 0,
+      "mae_rgb_8bit": 5.151814778645833,
+      "median_luminance_difference_ev": 0.4395360200874129,
+      "local_mean_rgb": [
+        29.198079427078397,
+        34.96325683593444,
+        25.57792154947775
+      ],
+      "adobe_mean_rgb": [
+        29.112792968746472,
+        39.7424723307267,
+        24.62540690104075
+      ],
+      "applied_mul": [
+        1.8595247268676758,
+        1.0,
+        1.2649760246276855,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 6.6545042458165735
+    },
+    {
+      "format": "nef",
+      "variant": "warm",
+      "source_sha256": "5922721d13f11795557d97fdeb0a60b900086c402bc82a848ff280d15b99ffd4",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 7500,
+      "tint": 20,
+      "mae_rgb_8bit": 5.907280815972222,
+      "median_luminance_difference_ev": 0.46856805416444686,
+      "local_mean_rgb": [
+        34.36649576822409,
+        35.39241536458022,
+        21.63028971354069
+      ],
+      "adobe_mean_rgb": [
+        38.45621744791226,
+        40.04292805989358,
+        20.413330078124336
+      ],
+      "applied_mul": [
+        2.1403868198394775,
+        1.0,
+        1.0807147026062012,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 6.423490430117606
+    },
+    {
+      "format": "dng",
+      "variant": "base",
+      "source_sha256": "d7556912a76b95ff7c385e52a060b30a52ba42d9f5062ef4a621c0d5e50ac88b",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 5500,
+      "tint": 0,
+      "mae_rgb_8bit": 31.933715820312504,
+      "median_luminance_difference_ev": 1.109401562521751,
+      "local_mean_rgb": [
+        103.32202148438216,
+        87.09431966142196,
+        65.74414062498685
+      ],
+      "adobe_mean_rgb": [
+        144.7805989583242,
+        120.94409179688952,
+        85.68086751298979
+      ],
+      "applied_mul": [
+        2.699819326400757,
+        1.0,
+        1.5834095478057861,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 7.670731783579037
+    },
+    {
+      "format": "dng",
+      "variant": "warm",
+      "source_sha256": "d7556912a76b95ff7c385e52a060b30a52ba42d9f5062ef4a621c0d5e50ac88b",
+      "reference": "archived real ACR render 2026-10-24; same RAW, EV=0, Custom WB",
+      "temperature": 7500,
+      "tint": 20,
+      "mae_rgb_8bit": 34.853190104166664,
+      "median_luminance_difference_ev": 1.1297431627638708,
+      "local_mean_rgb": [
+        114.14542643231262,
+        87.50150553381802,
+        56.70544433593412
+      ],
+      "adobe_mean_rgb": [
+        165.45019531247388,
+        120.78942871095234,
+        76.32889811195285
+      ],
+      "applied_mul": [
+        3.146939992904663,
+        1.0,
+        1.3610481023788452,
+        1.0
+      ],
+      "mae_after_uniform_brightness_alignment_8bit": 7.2045022592969366
+    }
+  ],
+  "color_reference_boundary": "Archived real Camera Raw sRGB renders from 2026-10-24; same retained RAW, Custom WB and EV=0. Not fresh Lightroom catalogue output; exact current user profile unknown. Samples read-only, pre/post hashes verified.",
+  "findings": [
+    "CameraProfile/DCP Look/HueSat/tone-curve data retained in XMP but not executed by local_raw::render/native develop ABI",
+    "local Tint offsets 1e-4 uv per unit vs Adobe public DNG SDK distance scale 1/3000; temperature locus and camera matrices also differ; not equivalent WB numeric contract",
+    "Native RGB already differs before GPU or display ICC, so display cannot explain entire difference",
+    "DNG supplemental sample BaselineExposure=0.1 EV is read but not applied; insufficient to explain 1.1 EV sample difference",
+    "No application-level monitor ICC transform in current Glow path; real display impact unmeasured",
+    "Uniform brightness alignment leaves residual errors and worsens this NEF sample; no universal EV offset applied"
+  ],
+  "limitations": [
+    "No exact LR color match claimed or delivered",
+    "No new Adobe application dependency",
+    "No macOS live UI validation",
+    "No current Lightroom catalogue/profile end-to-end comparison",
+    "MAE and median EV are sample-specific diagnostics, not perceptual color accuracy or recommended XMP values"
+  ],
+  "documentation": "docs/RAW-COLOR-INVESTIGATION-2026-10-30.md",
+  "temporary_files": ".agent-temp/2026-10-30-raw-zoom/"
+}

@@ -12,6 +12,8 @@
 #include <mutex>
 #include <memory>
 #include <string>
+#include <atomic>
+#include "white_balance.h"
 #ifndef _WIN32
 #include <sys/stat.h>
 #endif
@@ -222,13 +224,26 @@ struct FCDevelopInfo {
     float camera_mul[4], applied_mul[4], camera_xyz[12];
     double temperature, tint, open_ms, unpack_ms, process_ms;
 };
+// Additive high-precision API. Returned image is linear 16-bit camera RGB;
+// linear_scale restores green-normalized WB and may produce values above one.
+struct FCLinearInfo {
+    uint32_t abi, orientation;
+    float camera_mul[4], applied_mul[4], camera_xyz[12], camera_to_srgb[12];
+    double temperature, tint, baseline_exposure, linear_scale;
+    double open_ms, unpack_ms, process_ms;
+    char make[64], model[64];
+};
+static_assert(sizeof(FCLinearInfo)==320,"Linear RAW ABI layout changed");
 static std::mutex develop_gate, active_guard;
 static LibRaw *active_develop=nullptr;
+static std::atomic<uint64_t> develop_cancel_generation{0};
 struct DevelopContext {
     const FCDevelopParams *params;
+    uint64_t cancel_generation=develop_cancel_generation.load(std::memory_order_acquire);
     std::chrono::steady_clock::time_point started=std::chrono::steady_clock::now();
     bool cancelled() const {
-        return (params->cancelled && params->cancelled(params->context)) ||
+        return develop_cancel_generation.load(std::memory_order_acquire)!=cancel_generation ||
+          (params->cancelled && params->cancelled(params->context)) ||
           std::chrono::steady_clock::now()-started>std::chrono::seconds(params->max_edge?30:90);
     }
 };
@@ -241,6 +256,7 @@ struct ActiveDevelop {
 };
 FC_EXPORT void fc_raw_develop_cancel() {
     std::lock_guard<std::mutex> lock(active_guard);
+    develop_cancel_generation.fetch_add(1,std::memory_order_acq_rel);
     if(active_develop) active_develop->setCancelFlag();
 }
 static void temperature_uv(double temperature,double &u,double &v) {
@@ -321,6 +337,7 @@ struct DevelopCache {
     FCDevelopInfo basis={};
 };
 static DevelopCache develop_cache;
+static DevelopCache linear_cache;
 static bool file_stamp(const FCPathChar *path,uint64_t &bytes,uint64_t &stamp) {
 #ifdef _WIN32
     WIN32_FILE_ATTRIBUTE_DATA data={};
@@ -425,4 +442,100 @@ FC_EXPORT int fc_raw_develop(const FCPathChar *path,const FCDevelopParams *param
         attempt.success=true;
         return 0;
     }catch(const std::exception &e){return fail(error,e.what());}catch(...){return fail(error,"LibRaw develop exception");}
+}
+
+FC_EXPORT int fc_raw_develop_linear(const FCPathChar *path,const FCDevelopParams *params,FCFrame *out,FCLinearInfo *info,char *error) {
+    if(!out||!info||!error||!path)return -1;
+    std::memset(out,0,sizeof(*out));std::memset(info,0,sizeof(*info));
+    if(!params||params->abi!=1||!std::isfinite(params->exposure)||std::abs(params->exposure)>5||
+       !std::isfinite(params->temperature)||!std::isfinite(params->tint)||std::abs(params->tint)>150||
+       (params->temperature!=0&&(params->temperature<2000||params->temperature>50000)))return fail(error,"Invalid linear RAW develop parameters");
+    std::unique_lock<std::mutex> gate(develop_gate,std::try_to_lock);
+    if(!gate.owns_lock())return fail(error,"Another local RAW develop is active");
+    DevelopContext context{params};
+#ifdef _WIN32
+    struct NamedGate {HANDLE handle=nullptr;bool locked=false;~NamedGate(){if(locked)ReleaseMutex(handle);if(handle)CloseHandle(handle);}} host;
+    host.handle=CreateMutexW(nullptr,FALSE,L"Local\\FastCull.LocalRawDevelop.v1");
+    if(!host.handle)return fail(error,"Cannot create RAW develop mutex");
+    while(!host.locked){
+        const DWORD status=WaitForSingleObject(host.handle,50);
+        if(status==WAIT_OBJECT_0||status==WAIT_ABANDONED)host.locked=true;
+        else if(status!=WAIT_TIMEOUT)return fail(error,"Cannot acquire RAW develop mutex");
+        if(context.cancelled())return fail(error,"Linear RAW develop cancelled");
+        if(!host.locked&&std::chrono::steady_clock::now()-context.started>std::chrono::seconds(3))return fail(error,"Another editor is developing RAW; retry shortly");
+    }
+#endif
+    try {
+        uint64_t bytes,stamp;
+        if(!file_stamp(path,bytes,stamp))return fail(error,"Cannot read RAW file stamp");
+        const bool reused=linear_cache.raw&&linear_cache.path==path&&linear_cache.bytes==bytes&&linear_cache.stamp==stamp;
+        if(!reused){linear_cache.raw.reset(new DevelopRaw);linear_cache.path=path;linear_cache.bytes=bytes;linear_cache.stamp=stamp;}
+        CacheAttempt attempt{linear_cache};auto &raw=*linear_cache.raw;ActiveDevelop active(raw);
+        raw.clearCancelFlag();raw.set_progress_handler(develop_progress,&context);
+        raw.imgdata.rawparams.max_raw_memory_mb=1024;
+        auto &p=raw.imgdata.params;
+        p.user_flip=0;p.use_camera_wb=1;p.use_auto_wb=0;p.use_camera_matrix=3;p.no_auto_bright=1;
+        p.output_color=0;p.output_bps=16;p.gamm[0]=1.;p.gamm[1]=1.;
+        p.user_qual=params->max_edge?0:3;p.exp_correc=0;p.exp_shift=1.;p.bright=1.;
+        // Normalize the largest WB multiplier, instead of clipping a multiplied
+        // red/blue channel at sensor white. The scale is restored in float.
+        p.highlight=1;std::memset(p.user_mul,0,sizeof(p.user_mul));
+        auto started=std::chrono::steady_clock::now();int code=0;
+        if(!reused){
+            code=open_camera(raw,path);if(code)return fail(error,libraw_strerror(code));
+            if(!dimensions(raw.imgdata.sizes.width,raw.imgdata.sizes.height))return fail(error,"RAW dimensions exceed 160 MP limit");
+            linear_cache.basis={};linear_cache.basis.abi=1;
+            linear_cache.basis.orientation=orientation(raw.imgdata.sizes.flip);
+            std::memcpy(linear_cache.basis.camera_mul,raw.imgdata.color.cam_mul,sizeof(info->camera_mul));
+            std::memcpy(linear_cache.basis.camera_xyz,raw.imgdata.color.cam_xyz,sizeof(info->camera_xyz));
+            linear_cache.width=raw.imgdata.sizes.width;linear_cache.height=raw.imgdata.sizes.height;
+        }
+        info->abi=1;info->orientation=linear_cache.basis.orientation;
+        std::memcpy(info->camera_mul,linear_cache.basis.camera_mul,sizeof(info->camera_mul));
+        std::memcpy(info->camera_xyz,linear_cache.basis.camera_xyz,sizeof(info->camera_xyz));
+        const auto matrix=reinterpret_cast<const float(*)[3]>(info->camera_xyz);
+        p.half_size=params->max_edge&&std::max(linear_cache.width,linear_cache.height)/2>=params->max_edge;
+        if(params->temperature>0){
+            if(!fc_wb::multipliers(matrix,params->temperature,params->tint,p.user_mul))return fail(error,"Camera color matrix unavailable for linear white balance");
+            p.use_camera_wb=0;info->temperature=params->temperature;info->tint=params->tint;
+        }
+        info->open_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-started).count();
+        if(context.cancelled())return fail(error,"Linear RAW develop cancelled");
+        if(!reused){
+            started=std::chrono::steady_clock::now();code=raw.unpack();
+            if(code)return fail(error,libraw_strerror(code));
+            info->unpack_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-started).count();
+            raw.recycle_datastream();
+        }
+        if(context.cancelled())return fail(error,"Linear RAW develop cancelled");
+        started=std::chrono::steady_clock::now();code=raw.dcraw_process();
+        if(code)return fail(error,libraw_strerror(code));
+        if(context.cancelled())return fail(error,"Linear RAW develop cancelled");
+        const auto &color=raw.imgdata.color;
+        const double green=color.pre_mul[1];
+        if(!std::isfinite(green)||green<=0.000001)return fail(error,"Invalid linear RAW white balance scale");
+        info->linear_scale=1./green;
+        for(unsigned c=0;c<4;++c){
+            if(!std::isfinite(color.pre_mul[c])||color.pre_mul[c]<0)return fail(error,"Invalid linear RAW white balance");
+            info->applied_mul[c]=float(color.pre_mul[c]/green);
+        }
+        std::memcpy(info->camera_to_srgb,color.rgb_cam,sizeof(info->camera_to_srgb));
+        if(params->temperature==0&&!fc_wb::estimate(matrix,info->applied_mul,info->temperature,info->tint)){info->temperature=0;info->tint=0;}
+        const double baseline=color.dng_levels.baseline_exposure;
+        info->baseline_exposure=std::isfinite(baseline)&&std::abs(baseline)<=16?baseline:0.;
+        std::snprintf(info->make,sizeof(info->make),"%s",raw.imgdata.idata.make);
+        std::snprintf(info->model,sizeof(info->model),"%s",raw.imgdata.idata.model);
+        auto *image=raw.dcraw_make_mem_image(&code);
+        if(!image)return fail(error,libraw_strerror(code));
+        if(context.cancelled()){
+            LibRaw::dcraw_clear_mem(image);return fail(error,"Linear RAW develop cancelled");
+        }
+        if(image->type!=LIBRAW_IMAGE_BITMAP||image->bits!=16||image->colors!=3||!dimensions(image->width,image->height)){
+            LibRaw::dcraw_clear_mem(image);return fail(error,"Unsupported linear RAW bitmap");
+        }
+        out->kind=2;out->width=image->width;out->height=image->height;out->channels=image->colors;out->bits=image->bits;
+        out->rendered=1;out->len=image->data_size;out->data=image->data;out->owner=image;
+        info->process_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-started).count();
+        attempt.success=true;return 0;
+    }catch(const std::exception &e){return fail(error,e.what());}catch(...){return fail(error,"LibRaw linear develop exception");}
 }

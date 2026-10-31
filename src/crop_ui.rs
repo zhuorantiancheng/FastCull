@@ -139,7 +139,7 @@ impl Editor {
         self.preset_name = if let Some(r) = s.ratio {
             self.width = r;
             self.height = 1.;
-            format!("{r:.4} : 1")
+            ratio_name(r)
         } else {
             "自由".into()
         };
@@ -170,7 +170,7 @@ impl Editor {
         self.geometry = value.geometry(self.size, orientation);
         if let Some(r) = self.ratio {
             self.ratio = Some(1. / r);
-            self.preset_name = format!("{:.4} : 1", 1. / r);
+            self.preset_name = ratio_name(1. / r);
         }
         std::mem::swap(&mut self.width, &mut self.height);
     }
@@ -202,15 +202,17 @@ impl Editor {
                 for (w, h) in [
                     (1, 1),
                     (3, 2),
-                    (4, 3),
-                    (5, 4),
-                    (7, 5),
-                    (16, 9),
                     (2, 3),
+                    (4, 3),
                     (3, 4),
+                    (5, 4),
+                    (4, 5),
+                    (7, 5),
+                    (5, 7),
+                    (16, 9),
                     (9, 16),
                 ] {
-                    let name = format!("{w} : {h}");
+                    let name = ratio_name(w as f32 / h as f32);
                     if ui
                         .selectable_label(self.preset_name == name, &name)
                         .clicked()
@@ -237,18 +239,19 @@ impl Editor {
             self.select_ratio(name, ratio);
         }
         ui.horizontal(|ui| {
-            let mut locked = self.ratio.is_some();
-            if ui.checkbox(&mut locked, "锁定比例").changed() {
+            let locked = self.ratio.is_some();
+            if ratio_lock_button(ui, locked).clicked() {
                 self.remember();
                 self.ratio =
-                    locked.then(|| self.geometry.rect.width() / self.geometry.rect.height());
-                self.preset_name = if locked { "当前比例" } else { "自由" }.into();
+                    (!locked).then(|| self.geometry.rect.width() / self.geometry.rect.height());
+                self.preset_name = self.ratio.map_or_else(|| "自由".into(), ratio_name);
             }
             if ui
-                .add_enabled(self.ratio.is_some(), egui::Button::new("交换宽高"))
+                .add_enabled(self.ratio.is_some(), egui::Button::new("横竖互换"))
                 .clicked()
             {
-                self.select_ratio("自定比例".into(), self.ratio.map(|r| 1. / r));
+                let ratio = self.ratio.map(|r| 1. / r);
+                self.select_ratio(ratio.map_or_else(|| "自由".into(), ratio_name), ratio);
             }
         });
         ui.add_space(8.);
@@ -378,6 +381,7 @@ impl Editor {
         ui.weak(
             "拖动边框或八个手柄改变范围；框内拖动位置，框外拖动重画。旋转时自动约束到照片边缘。",
         );
+        ui.weak("锁定比例时，拖动角点自动适应横拍 / 竖拍。解锁后可自由改变宽高。");
         ui.weak("Enter 应用 · Esc 取消 · Ctrl/Cmd+Z 撤销");
         if let Some(e) = self.error.as_ref().or(self.presets_error.as_ref()) {
             ui.colored_label(Color32::LIGHT_RED, e);
@@ -443,6 +447,14 @@ impl Editor {
         {
             let p = ((pos - image.min) / scale).to_pos2();
             self.geometry.rect = drag_rect(d, p, self.ratio);
+            if let Some(ratio) = self.ratio {
+                let next = drag_ratio(d, p, ratio);
+                if (ratio - next).abs() > 0.0001 {
+                    self.ratio = Some(next);
+                    std::mem::swap(&mut self.width, &mut self.height);
+                    self.preset_name = ratio_name(next);
+                }
+            }
             self.geometry.constrain(display);
         }
         if response.drag_stopped() {
@@ -502,6 +514,60 @@ impl Editor {
         }
     }
 }
+fn ratio_lock_button(ui: &mut egui::Ui, locked: bool) -> egui::Response {
+    let response = ui
+        .add_sized([30., 28.], egui::Button::new("").selected(locked))
+        .on_hover_text(if locked {
+            "解锁比例（当前已锁定）"
+        } else {
+            "锁定当前裁切比例"
+        });
+    response.widget_info(|| {
+        egui::WidgetInfo::selected(
+            egui::WidgetType::Button,
+            ui.is_enabled(),
+            locked,
+            if locked {
+                "解锁比例"
+            } else {
+                "锁定比例"
+            },
+        )
+    });
+    let center = response.rect.center();
+    let color = ui.style().interact(&response).fg_stroke.color;
+    let painter = ui.painter();
+    let stroke = Stroke::new(1.6, color);
+    painter.rect_stroke(
+        Rect::from_center_size(center + Vec2::new(0., 3.), Vec2::new(12., 10.)),
+        2.,
+        stroke,
+        egui::StrokeKind::Inside,
+    );
+    let x = if locked { 0. } else { 4. };
+    let points = (0..=16)
+        .map(|i| {
+            let angle = std::f32::consts::PI + i as f32 * std::f32::consts::PI / 16.;
+            center + Vec2::new(x + angle.cos() * 4., -2. + angle.sin() * 5.)
+        })
+        .collect();
+    painter.add(egui::Shape::line(points, stroke));
+    painter.line_segment(
+        [
+            center + Vec2::new(4. + x, -2.),
+            center + Vec2::new(4. + x, 1.),
+        ],
+        stroke,
+    );
+    if locked {
+        painter.line_segment(
+            [center + Vec2::new(-4., -2.), center + Vec2::new(-4., 1.)],
+            stroke,
+        );
+    }
+    painter.circle_filled(center + Vec2::new(0., 3.), 1.2, color);
+    response
+}
 pub fn clockwise(o: u16) -> u16 {
     match o {
         1 => 6,
@@ -517,6 +583,54 @@ pub fn clockwise(o: u16) -> u16 {
 }
 fn counterclockwise(o: u16) -> u16 {
     clockwise(clockwise(clockwise(o)))
+}
+fn ratio_name(ratio: f32) -> String {
+    let direction = if (ratio - 1.).abs() < 0.0001 {
+        "方形"
+    } else if ratio > 1. {
+        "横向"
+    } else {
+        "竖向"
+    };
+    for (w, h) in [
+        (1, 1),
+        (3, 2),
+        (2, 3),
+        (4, 3),
+        (3, 4),
+        (5, 4),
+        (4, 5),
+        (7, 5),
+        (5, 7),
+        (16, 9),
+        (9, 16),
+    ] {
+        if (ratio - w as f32 / h as f32).abs() < 0.0001 {
+            return format!("{w} : {h} · {direction}");
+        }
+    }
+    format!("{ratio:.4} : 1 · {direction}")
+}
+// A small dead band around the diagonal prevents orientation flicker. Only
+// corner handles and drawing a new crop express both width and height intent.
+fn drag_ratio(d: Drag, p: Pos2, ratio: f32) -> f32 {
+    let anchor = match d.handle {
+        0 => d.rect.right_bottom(),
+        2 => d.rect.left_bottom(),
+        4 => d.rect.left_top(),
+        6 => d.rect.right_top(),
+        9 => d.start,
+        _ => return ratio,
+    };
+    let delta = (p - anchor).abs();
+    let landscape = ratio.max(1. / ratio);
+    if delta.x > delta.y * 1.08 {
+        landscape
+    } else if delta.y > delta.x * 1.08 {
+        1. / landscape
+    } else {
+        ratio
+    }
 }
 fn drag_rect(d: Drag, p: Pos2, ratio: Option<f32>) -> Rect {
     if d.handle == 8 {
@@ -536,7 +650,7 @@ fn drag_rect(d: Drag, p: Pos2, ratio: Option<f32>) -> Rect {
     let delta = point - anchor;
     let mut size = delta.abs().max(Vec2::splat(1.));
     let edge = matches!(d.handle, 1 | 3 | 5 | 7);
-    if let Some(r) = ratio {
+    if let Some(r) = ratio.map(|r| drag_ratio(d, p, r)) {
         if matches!(d.handle, 1 | 5) {
             size.x = size.y * r;
         } else if matches!(d.handle, 3 | 7) || size.x / size.y > r {
@@ -571,6 +685,103 @@ fn drag_rect(d: Drag, p: Pos2, ratio: Option<f32>) -> Rect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn locked_corner_drag_switches_orientation_and_edge_move_stays_stable() {
+        let rect = Rect::from_min_max(Pos2::new(100., 100.), Pos2::new(400., 300.));
+        for (handle, anchor) in [
+            (0, rect.right_bottom()),
+            (2, rect.left_bottom()),
+            (4, rect.left_top()),
+            (6, rect.right_top()),
+            (9, rect.left_top()),
+        ] {
+            let d = Drag {
+                start: rect.left_top(),
+                rect,
+                handle,
+            };
+            for (offset, ratio) in [
+                (Vec2::new(100., 150.), 2. / 3.),
+                (Vec2::new(180., 120.), 1.5),
+            ] {
+                let p = anchor + offset;
+                let result = drag_rect(d, p, Some(1.5));
+                assert!((result.width() / result.height() - ratio).abs() < 0.0001);
+                assert_eq!(result.min, anchor);
+            }
+            let near_diagonal = anchor + Vec2::new(100., 101.);
+            assert_eq!(drag_ratio(d, near_diagonal, 1.5), 1.5);
+            assert_eq!(drag_ratio(d, near_diagonal, 2. / 3.), 2. / 3.);
+            let free = drag_rect(d, anchor + Vec2::new(100., 170.), None);
+            assert!((free.width() / free.height() - 100. / 170.).abs() < 0.0001);
+        }
+        for handle in [1, 3, 5, 7, 8] {
+            let d = Drag {
+                start: rect.center(),
+                rect,
+                handle,
+            };
+            assert_eq!(drag_ratio(d, Pos2::ZERO, 1.5), 1.5);
+        }
+    }
+    #[test]
+    fn locked_orientation_switch_is_undoable_through_pointer_events() {
+        let ctx = egui::Context::default();
+        let mut e = Editor::new(Crop::default(), Vec2::new(600., 600.), 1);
+        e.geometry.rect = Rect::from_min_max(Pos2::new(100., 100.), Pos2::new(400., 300.));
+        e.ratio = Some(1.5);
+        let before = e.geometry.rect;
+        let mut frame = |events| {
+            let _ = ctx.run(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::splat(700.))),
+                    events,
+                    ..Default::default()
+                },
+                |ctx| {
+                    egui::CentralPanel::default()
+                        .frame(egui::Frame::NONE)
+                        .show(ctx, |ui| {
+                            let (_, response) = ui.allocate_exact_size(
+                                Vec2::splat(600.),
+                                egui::Sense::click_and_drag(),
+                            );
+                            e.overlay(
+                                ui,
+                                &response,
+                                Rect::from_min_size(Pos2::ZERO, Vec2::splat(600.)),
+                            );
+                        });
+                },
+            );
+        };
+        frame(vec![]);
+        frame(vec![
+            egui::Event::PointerMoved(before.max),
+            egui::Event::PointerButton {
+                pos: before.max,
+                button: egui::PointerButton::Primary,
+                pressed: true,
+                modifiers: Default::default(),
+            },
+        ]);
+        let target = Pos2::new(300., 400.);
+        frame(vec![egui::Event::PointerMoved(target)]);
+        frame(vec![egui::Event::PointerButton {
+            pos: target,
+            button: egui::PointerButton::Primary,
+            pressed: false,
+            modifiers: Default::default(),
+        }]);
+        assert_eq!(e.ratio, Some(2. / 3.));
+        assert_eq!(e.geometry.rect.min, before.min);
+        assert!((e.geometry.rect.width() / e.geometry.rect.height() - 2. / 3.).abs() < 0.0001);
+        e.undo();
+        assert_eq!(e.geometry.rect, before);
+        assert_eq!(e.ratio, Some(1.5));
+        e.redo();
+        assert_eq!(e.ratio, Some(2. / 3.));
+    }
     #[test]
     fn all_handles_resize_about_opposite_anchor_and_keep_locked_ratio() {
         let original = Rect::from_min_max(Pos2::new(100., 100.), Pos2::new(500., 300.));

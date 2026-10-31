@@ -109,6 +109,33 @@ struct Photo {
     ms: f64,
 }
 impl Photo {
+    fn apply_raw_saved(&mut self, values: Values, updates: Updates) {
+        if updates.exposure.is_some() {
+            self.values.exposure = values.exposure;
+            self.exposure_base = values.exposure;
+            self.exposure_delta = 0.;
+        }
+        if updates.rating.is_some() {
+            self.values.rating = values.rating;
+        }
+        if updates.white_balance.is_some() {
+            self.values.white_balance = values.white_balance;
+        }
+        if updates.crop.is_some() {
+            self.values.crop = values.crop;
+            self.crop_edited = true;
+        }
+        if updates.orientation.is_some() {
+            self.values.orientation = values.orientation;
+            self.orientation_edited = true;
+        }
+        for control in fastcull::xmp::BasicControl::ALL {
+            if updates.basic.get(control).is_some() {
+                self.values.basic.set(control, values.basic.get(control));
+            }
+        }
+        self.develop_loaded = true;
+    }
     fn apply_develop_baseline(&mut self, baseline: crate::exposure::Baseline) {
         if self.exposure_base.is_none() {
             self.exposure_base = baseline.exposure;
@@ -136,6 +163,7 @@ impl Photo {
 }
 pub struct App {
     raw_windows: Arc<crate::raw_window::Windows>,
+    raw_parent_lock: crate::focus::ParentLock,
     raw_smoke_started: bool,
     crop_editor: Option<crate::crop_ui::Editor>,
     crop_requested: bool,
@@ -166,6 +194,8 @@ pub struct App {
     zoom: bool,
     // Fraction of the oriented image dimensions, independent of resolution/DPI.
     pan: Vec2,
+    // Photo indices stay stable when files move; retain image-relative loupe anchors.
+    loupe_positions: std::collections::HashMap<usize, Vec2>,
     canvas_size: Vec2,
     error: Option<String>,
     started: Instant,
@@ -321,6 +351,7 @@ impl App {
         Self {
             folder_editor,
             raw_windows: crate::raw_window::Windows::new(session.clone()),
+            raw_parent_lock: Default::default(),
             raw_smoke_started: false,
             crop_editor: None,
             crop_requested: false,
@@ -358,6 +389,7 @@ impl App {
             grid: false,
             zoom: false,
             pan: Vec2::ZERO,
+            loupe_positions: Default::default(),
             canvas_size: Vec2::ZERO,
             error: None,
             started: Instant::now(),
@@ -504,6 +536,12 @@ impl App {
             c.indices[c.active] = i;
         }
         if i != self.current {
+            if self.compare.is_none() && self.zoom {
+                self.loupe_positions.insert(self.current, self.pan);
+                if let Some(pan) = self.loupe_positions.get(&i) {
+                    self.pan = *pan;
+                }
+            }
             self.direction = if i > self.current { 1 } else { -1 };
             self.current = i;
             self.navigation_at = Instant::now();
@@ -960,9 +998,25 @@ impl App {
         for (i, size) in self.pool.take_full_sizes() {
             self.photos[i].full_size = Some(Vec2::new(size[0] as f32, size[1] as f32));
         }
-        // Limit expensive full-size uploads to one per frame.
-        for _ in 0..4 {
-            let Some(message) = self.pool.take_decoded() else {
+        // Drain small parallel previews in batches, with a short UI time budget.
+        // Full-size uploads still stop the batch after one texture.
+        let uploads_started = Instant::now();
+        let mut full_indices = Vec::with_capacity(2);
+        if let Some(c) = &self.compare {
+            for side in 0..2 {
+                if c.views[side].zoom > 0. {
+                    full_indices.push(c.indices[side]);
+                }
+            }
+        } else if self.zoom || self.crop_requested || self.crop_editor.is_some() {
+            full_indices.push(self.current);
+        }
+        for slot in 0..16 {
+            if slot > 0 && uploads_started.elapsed() >= std::time::Duration::from_millis(5) {
+                ctx.request_repaint();
+                break;
+            }
+            let Some(message) = self.pool.take_decoded_for(&full_indices) else {
                 break;
             };
             let i = message.task.index;
@@ -1120,7 +1174,7 @@ impl App {
                                 "B · 候选"
                             },
                         )
-                        .on_hover_text("点击选中当前操作对象；滚轮缩放，拖动平移；双击适配 / 100%")
+                        .on_hover_text("点击图片切换适配 / 100%；滚轮缩放，拖动平移")
                         .clicked()
                     {
                         self.activate_compare(side);
@@ -1155,6 +1209,7 @@ impl App {
                 let (area, response) =
                     ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
                 self.compare_sizes[side] = area.size();
+                self.fit_edge = preview_edge(area.size(), ctx.pixels_per_point());
                 let painter = ui.painter_at(area);
                 painter.rect_filled(area, 0., BG);
                 self.request(i, Level::Fit(self.fit_edge));
@@ -1184,7 +1239,7 @@ impl App {
                     if response.clicked() || response.drag_started() || wheel != 0. {
                         self.activate_compare(side);
                     }
-                    if response.double_clicked() {
+                    if response.clicked() {
                         self.zoom_compare(side, if view.zoom > 0. { 0. } else { 1. });
                         if view.zoom == 0.
                             && let Some(pos) = response.interact_pointer_pos()
@@ -1217,7 +1272,7 @@ impl App {
                     if native.is_some() && response.dragged() {
                         self.move_view(response.drag_delta(), ctx.pixels_per_point());
                     }
-                    if response.double_clicked() || response.dragged() || wheel != 0. {
+                    if response.clicked() || response.dragged() || wheel != 0. {
                         ctx.request_repaint();
                     }
                     view = self.compare.as_ref().unwrap().views[side];
@@ -1321,25 +1376,9 @@ impl App {
             }
             ui.separator();
             control_group(ui, 126., |ui| {
-                let rating = self.photos[self.current].values.rating.unwrap_or(0);
-                for r in 1..=5 {
-                    if ui
-                        .add_enabled(
-                            enabled,
-                            egui::Button::new(if r <= rating { "★" } else { "☆" }).frame(false),
-                        )
-                        .on_hover_text(format!("{r} 星（{r}），再次点击清星"))
-                        .clicked()
-                    {
-                        self.rating(if r == rating { 0 } else { r });
-                    }
-                }
-                if ui
-                    .add_enabled(enabled, egui::Button::new("0").small())
-                    .on_hover_text("清除星级（0）")
-                    .clicked()
-                {
-                    self.rating(0);
+                let mut rating = self.photos[self.current].values.rating.unwrap_or(0);
+                if rating_control(ui, &mut rating, enabled) {
+                    self.rating(rating);
                 }
             });
             ui.separator();
@@ -1818,25 +1857,7 @@ impl App {
                 crate::raw_window::Event::Saved(path, saved) => {
                     let (values, updates) = *saved;
                     if let Some(index) = self.paths.iter().position(|p| p == &path) {
-                        let current = &mut self.photos[index].values;
-                        if updates.exposure.is_some() {
-                            current.exposure = values.exposure;
-                        }
-                        if updates.white_balance.is_some() {
-                            current.white_balance = values.white_balance;
-                        }
-                        if updates.crop.is_some() {
-                            current.crop = values.crop;
-                        }
-                        if updates.orientation.is_some() {
-                            current.orientation = values.orientation;
-                        }
-                        for control in fastcull::xmp::BasicControl::ALL {
-                            if updates.basic.get(control).is_some() {
-                                current.basic.set(control, values.basic.get(control));
-                            }
-                        }
-                        self.photos[index].develop_loaded = true;
+                        self.photos[index].apply_raw_saved(values, updates);
                         self.pool.retry_metadata(index);
                         self.filter_dirty = true;
                     }
@@ -2646,6 +2667,29 @@ fn control_group(ui: &mut egui::Ui, width: f32, controls: impl FnOnce(&mut egui:
         },
     );
 }
+pub(crate) fn rating_control(ui: &mut egui::Ui, rating: &mut u8, enabled: bool) -> bool {
+    let before = *rating;
+    for r in 1..=5 {
+        if ui
+            .add_enabled(
+                enabled,
+                egui::Button::new(if r <= *rating { "★" } else { "☆" }).frame(false),
+            )
+            .on_hover_text(format!("{r} 星（{r}），再次点击清星"))
+            .clicked()
+        {
+            *rating = if r == *rating { 0 } else { r };
+        }
+    }
+    if ui
+        .add_enabled(enabled, egui::Button::new("0").small())
+        .on_hover_text("清除星级（0）")
+        .clicked()
+    {
+        *rating = 0;
+    }
+    *rating != before
+}
 #[derive(Clone, Copy)]
 enum CloseChoice {
     Sync,
@@ -2793,6 +2837,22 @@ impl eframe::App for App {
             self.begin_raw(ctx);
         }
         self.receive_raw();
+        let raw_busy = self.raw_windows.busy();
+        self.raw_parent_lock.update(frame, raw_busy);
+        if raw_busy {
+            self.close_dialog = false;
+            ctx.input_mut(|i| i.events.clear());
+            if ctx.input(|i| i.viewport().close_requested()) {
+                ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            }
+            egui::CentralPanel::default().frame(egui::Frame::new().fill(BG)).show(ctx, |ui| {
+                ui.centered_and_justified(|ui| {
+                    ui.label("RAW 编辑中 · 请在独立编辑窗口完成操作\n关闭编辑窗口时自动保存 XMP，之后恢复选片器");
+                });
+            });
+            ctx.request_repaint_after(std::time::Duration::from_millis(100));
+            return;
+        }
         if self.filter_dirty {
             self.refilter();
         }
@@ -3117,13 +3177,14 @@ impl eframe::App for App {
             } else {
                 Level::Fit(self.fit_edge)
             };
-            for step in 1..=if self.compare.is_some() {
-                0
+            let offsets: &[isize] = if self.compare.is_some() {
+                &[]
             } else if self.zoom {
-                1
+                &[1, -1]
             } else {
-                2
-            } {
+                &[1, -1, 2, 3]
+            };
+            for &step in offsets {
                 if let Some(i) = fastcull::filtering::step_visible(
                     &self.visible,
                     self.current,
@@ -3217,7 +3278,7 @@ fn paint_adjusted(
     }
     rect
 }
-fn paint_uv(painter: &egui::Painter, t: &TextureHandle, rect: Rect, uvs: [Pos2; 4]) {
+pub(crate) fn paint_uv(painter: &egui::Painter, t: &TextureHandle, rect: Rect, uvs: [Pos2; 4]) {
     let mut mesh = egui::Mesh::with_texture(t.id());
     for (pos, uv) in fastcull::crop::corners(rect).into_iter().zip(uvs) {
         mesh.vertices.push(egui::epaint::Vertex {
@@ -4278,6 +4339,108 @@ mod tests {
     }
 
     #[test]
+    fn compare_single_click_zooms_and_drag_does_not_toggle() {
+        for side in [0, 1] {
+            let ctx = egui::Context::default();
+            let cc = eframe::CreationContext::_new_kittest(ctx.clone());
+            let mut app = App::new(&cc, vec![PathBuf::from("a.ARW"), PathBuf::from("b.ARW")]);
+            app.enter_compare();
+            app.compare.as_mut().unwrap().linked = false;
+            for i in 0..2 {
+                app.photos[i].full_size = Some(Vec2::new(2400., 1600.));
+                let t = ctx.load_texture(
+                    format!("photo-{i}"),
+                    egui::ColorImage::filled([120, 80], Color32::WHITE),
+                    TextureOptions::LINEAR,
+                );
+                app.fit.insert(i, t, 0);
+            }
+            let mut time = 0.;
+            let mut draw = |app: &mut App, events| {
+                time += 0.1;
+                ctx.run(
+                    egui::RawInput {
+                        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1200., 800.))),
+                        time: Some(time),
+                        events,
+                        ..Default::default()
+                    },
+                    |ctx| {
+                        egui::CentralPanel::default().show(ctx, |ui| app.compare_canvas(ui, ctx));
+                    },
+                )
+            };
+            draw(&mut app, vec![]);
+            draw(&mut app, vec![]);
+            let pos = Pos2::new(200. + side as f32 * 600., 300.);
+            let button = |pos, pressed| egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed,
+                modifiers: egui::Modifiers::NONE,
+            };
+            draw(
+                &mut app,
+                vec![egui::Event::PointerMoved(pos), button(pos, true)],
+            );
+            draw(&mut app, vec![button(pos, false)]);
+            assert_eq!(app.compare.as_ref().unwrap().active, side);
+            assert!(
+                (app.compare.as_ref().unwrap().views[side].zoom - 1.).abs() < 0.00001,
+                "one click must enter 100% in either compare pane"
+            );
+            assert_eq!(app.compare.as_ref().unwrap().views[1 - side].zoom, 0.);
+            let anchor = app.compare.as_ref().unwrap().views[side].pan;
+            assert_ne!(
+                anchor,
+                Vec2::ZERO,
+                "zoom must center the clicked image point"
+            );
+            draw(&mut app, vec![button(pos, true)]);
+            let moved = pos + Vec2::new(40., 20.);
+            draw(&mut app, vec![egui::Event::PointerMoved(moved)]);
+            draw(&mut app, vec![button(moved, false)]);
+            assert!(
+                (app.compare.as_ref().unwrap().views[side].zoom - 1.).abs() < 0.00001,
+                "drag release must not toggle zoom"
+            );
+            draw(&mut app, vec![]);
+            draw(&mut app, vec![]);
+            draw(&mut app, vec![button(moved, true)]);
+            draw(&mut app, vec![button(moved, false)]);
+            assert_eq!(app.compare.as_ref().unwrap().views[side].zoom, 0.);
+            assert!(
+                app.fit_edge <= 1280,
+                "compare previews must follow the pane size instead of the 2560px startup default"
+            );
+            for (label, expected) in [("100%", 1.), ("适配", 0.)] {
+                let output = draw(&mut app, vec![]);
+                let pos = output
+                    .shapes
+                    .iter()
+                    .find_map(|s| match &s.shape {
+                        egui::Shape::Text(t)
+                            if t.galley.job.text == label && (t.pos.x >= 600.) == (side == 1) =>
+                        {
+                            Some(t.pos + Vec2::splat(3.))
+                        }
+                        _ => None,
+                    })
+                    .expect("each pane must render a zoom control");
+                draw(
+                    &mut app,
+                    vec![egui::Event::PointerMoved(pos), button(pos, true)],
+                );
+                draw(&mut app, vec![button(pos, false)]);
+                assert!(
+                    (app.compare.as_ref().unwrap().views[side].zoom - expected).abs() < 0.00001,
+                    "{label} button must work on side {side}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn click_zoom_centers_clicked_image_point_and_modes_are_consistent() {
         let ctx = egui::Context::default();
         let cc = eframe::CreationContext::_new_kittest(ctx.clone());
@@ -5112,7 +5275,13 @@ mod tests {
         app.move_view(Vec2::new(60., -40.), 2.);
         assert_eq!(app.pan, anchor * 2.);
         app.next(-1);
-        assert_eq!(app.pan, anchor * 2.);
+        assert_eq!(
+            app.pan, anchor,
+            "returning to a visited photo must restore its own anchor"
+        );
+        app.next(1);
+        assert_eq!(app.pan, anchor * 2., "each photo remembers its last anchor");
+        app.next(-1);
         app.compare = Some(Compare {
             indices: [0, 1],
             views: [View {
@@ -5194,5 +5363,80 @@ mod tests {
         assert!(c.items.contains_key(&0));
         assert!(c.items.contains_key(&1));
         assert!(!c.items.contains_key(&2));
+    }
+    #[test]
+    fn raw_modal_gate_blocks_main_frame_navigation_and_grading_then_recovers() {
+        let ctx = egui::Context::default();
+        let cc = eframe::CreationContext::_new_kittest(ctx.clone());
+        let mut app = App::new(&cc, vec![PathBuf::from("a.jpg"), PathBuf::from("b.jpg")]);
+        let mut frame = eframe::Frame::_new_kittest();
+        app.raw_windows.set_busy_for_test(true);
+        let input = |keys: Vec<Key>| egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280., 850.))),
+            events: keys
+                .into_iter()
+                .map(|key| egui::Event::Key {
+                    key,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Default::default(),
+                })
+                .collect(),
+            ..Default::default()
+        };
+        let _ = ctx.run(input(vec![Key::ArrowRight, Key::Num5]), |ctx| {
+            eframe::App::update(&mut app, ctx, &mut frame)
+        });
+        assert_eq!(app.current, 0);
+        assert_eq!(app.photos[0].values.rating, None);
+        assert_eq!(app.photos[1].values.rating, None);
+        app.raw_windows.set_busy_for_test(false);
+        let _ = ctx.run(input(vec![Key::ArrowRight]), |ctx| {
+            eframe::App::update(&mut app, ctx, &mut frame)
+        });
+        assert_eq!(app.current, 1);
+    }
+    #[test]
+    fn raw_save_becomes_the_new_main_exposure_anchor_and_protects_crop_from_stale_lr_data() {
+        let crop = fastcull::crop::Crop {
+            enabled: true,
+            left: 100000,
+            right: 900000,
+            top: 200000,
+            bottom: 800000,
+            angle: 0,
+        };
+        let mut photo = Photo {
+            exposure_base: Some(0),
+            exposure_delta: 1.,
+            ..Default::default()
+        };
+        let values = Values {
+            exposure: Some(350000),
+            rating: Some(4),
+            crop: Some(crop),
+            orientation: Some(6),
+            ..Default::default()
+        };
+        let updates = Updates {
+            exposure: Some(350000),
+            rating: Some(4),
+            crop: Some(crop),
+            orientation: Some(6),
+            ..Default::default()
+        };
+        photo.apply_raw_saved(values, updates);
+        photo.apply_develop_baseline(crate::exposure::Baseline {
+            exposure: Some(0),
+            crop: Some(Default::default()),
+            orientation: Some(1),
+            ..Default::default()
+        });
+        assert_eq!(photo.exposure_base, Some(350000));
+        assert_eq!(photo.exposure_delta, 0.);
+        assert_eq!(photo.values.crop, Some(crop));
+        assert_eq!(photo.values.orientation, Some(6));
+        assert_eq!(photo.values.rating, Some(4));
     }
 }

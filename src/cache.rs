@@ -91,13 +91,16 @@ impl Queue {
         self.current = index;
         self.generation = self.generation.wrapping_add(1);
         self.idle_full.clear();
-        // Cancel queued work, but retain in-flight decodes: pixel identity does
-        // not change when the cursor moves. Requests deduplicate across epochs.
-        for task in self.tasks.drain(..) {
-            self.pending.remove(&task);
-        }
+        // Keep useful queued neighbours as well as in-flight decodes.
+        self.tasks.retain(|task| {
+            let keep = task.index.abs_diff(index) <= 3 || Some(task.index) == self.reference;
+            if !keep {
+                self.pending.remove(task);
+            }
+            keep
+        });
         self.results.retain(|d| {
-            let keep = d.task.index.abs_diff(index) <= 2 || Some(d.task.index) == self.reference;
+            let keep = d.task.index.abs_diff(index) <= 3 || Some(d.task.index) == self.reference;
             if !keep {
                 self.pending.remove(&d.task);
             }
@@ -109,16 +112,24 @@ impl Queue {
             return;
         }
         if decoded.task.generation != self.generation
-            && decoded.task.index.abs_diff(self.current) > 2
+            && decoded.task.index.abs_diff(self.current) > 3
             && Some(decoded.task.index) != self.reference
         {
             self.pending.remove(&decoded.task);
             return;
         }
         self.results.push(decoded);
-        // Nonblocking mailbox: stale/prefetch results can never hold a foreground
-        // worker in send(). Retain the best four; the current result is protected.
-        if self.results.len() > 4 {
+        // Bound pixels, not just message count: parallel thumbnails are tiny.
+        // Keeping a batch avoids repeatedly decoding it during texture uploads.
+        while self.results.len() > 64
+            || (self.results.len() > 1
+                && self
+                    .results
+                    .iter()
+                    .map(|d| d.result.as_ref().map_or(0, |(_, p)| p.pixels.len() * 4))
+                    .sum::<usize>()
+                    > 96 * 1024 * 1024)
+        {
             let worst = self
                 .results
                 .iter()
@@ -134,7 +145,7 @@ impl Queue {
 pub struct Pool {
     queue: Arc<(Mutex<Queue>, Condvar)>,
     locations: Arc<Vec<RwLock<PathBuf>>>,
-    metadata_worker: Option<thread::JoinHandle<()>>,
+    metadata_workers: Vec<thread::JoinHandle<()>>,
 }
 // Serialize only the first probe for one photo, not independent photos. Failed
 // probes remain retryable (unlike caching Result in OnceLock).
@@ -166,7 +177,8 @@ fn color_image(width: usize, height: usize, rgba: Vec<u8>) -> egui::ColorImage {
     // The block was allocated for `u8` (align 1). The Windows heap and the macOS
     // allocator return 16-byte aligned blocks and ignore the layout on release;
     // the alignment check above keeps the conversion itself from misaligning.
-    let pixels = unsafe { Vec::from_raw_parts(rgba.as_mut_ptr().cast::<egui::Color32>(), len, cap) };
+    let pixels =
+        unsafe { Vec::from_raw_parts(rgba.as_mut_ptr().cast::<egui::Color32>(), len, cap) };
     egui::ColorImage::new([width, height], pixels)
 }
 fn priority(task: Task, current: usize) -> (usize, usize) {
@@ -183,9 +195,7 @@ fn priority(task: Task, current: usize) -> (usize, usize) {
     (class, task.index.abs_diff(current))
 }
 fn rank(task: Task, current: usize, reference: Option<usize>) -> (usize, usize) {
-    if Some(task.index) == reference
-        && !matches!(task.level, Level::Thumb | Level::FastThumb)
-    {
+    if Some(task.index) == reference && !matches!(task.level, Level::Thumb | Level::FastThumb) {
         (if task.level == Level::Full { 1 } else { 0 }, 1)
     } else {
         priority(task, current)
@@ -333,74 +343,79 @@ impl Pool {
                 }
             })
             .expect("spawn capture index");
-        let (meta_queue, meta_ctx, meta_paths) = (queue.clone(), ctx.clone(), paths.clone());
-        let metadata_worker = thread::Builder::new()
-            .name("photo-metadata".into())
-            .spawn(move || {
-                let start = Instant::now();
-                loop {
-                    let task = {
-                        let (lock, wake) = &*meta_queue;
-                        let mut q = lock.lock().unwrap();
-                        loop {
-                            if !q.meta.is_empty() {
-                                let current = q.current;
-                                break q
-                                    .meta
-                                    .remove(&current)
-                                    .unwrap_or_else(|| q.meta.pop_first().unwrap().1);
+        let mut metadata_workers = Vec::new();
+        for worker in 0..count.min(4) {
+            let (meta_queue, meta_ctx, meta_paths, session) =
+                (queue.clone(), ctx.clone(), paths.clone(), session.clone());
+            let metadata_worker = thread::Builder::new()
+                .name(format!("photo-metadata-{worker}"))
+                .spawn(move || {
+                    let start = Instant::now();
+                    loop {
+                        let task = {
+                            let (lock, wake) = &*meta_queue;
+                            let mut q = lock.lock().unwrap();
+                            loop {
+                                if !q.meta.is_empty() {
+                                    let current = q.current;
+                                    break q
+                                        .meta
+                                        .remove(&current)
+                                        .unwrap_or_else(|| q.meta.pop_first().unwrap().1);
+                                }
+                                if q.stop {
+                                    return;
+                                }
+                                q = wake.wait(q).unwrap();
                             }
-                            if q.stop {
-                                return;
+                        };
+                        let result = std::panic::catch_unwind(|| -> anyhow::Result<Values> {
+                            let path = meta_paths[task.index]
+                                .read()
+                                .unwrap_or_else(|e| e.into_inner());
+                            if let Some(session) = &session {
+                                (if task.retry {
+                                    session.retry(task.index)
+                                } else {
+                                    session.initialize(task.index)
+                                })
+                                .map_err(anyhow::Error::msg)?;
                             }
-                            q = wake.wait(q).unwrap();
+                            xmp::read(&path)
+                        })
+                        .map_err(|_| "metadata worker panicked".into())
+                        .and_then(|r| r.map_err(|e| format!("{e:#}")));
+                        let mut q = meta_queue.0.lock().unwrap();
+                        if q.versions[task.index] == task.version {
+                            q.metadata.push(Metadata {
+                                index: task.index,
+                                version: task.version,
+                                result,
+                            });
                         }
-                    };
-                    let result = std::panic::catch_unwind(|| -> anyhow::Result<Values> {
-                        let path = meta_paths[task.index]
-                            .read()
-                            .unwrap_or_else(|e| e.into_inner());
-                        if let Some(session) = &session {
-                            (if task.retry {
-                                session.retry(task.index)
-                            } else {
-                                session.initialize(task.index)
-                            })
-                            .map_err(anyhow::Error::msg)?;
+                        if q.meta.is_empty()
+                            && let Some(s) = &session
+                        {
+                            let stats = s.stats();
+                            log::info!(
+                                "LR state complete {:.1}ms wrote={} kept={} error={}",
+                                start.elapsed().as_secs_f64() * 1000.,
+                                stats.wrote,
+                                stats.kept,
+                                stats.error
+                            );
                         }
-                        xmp::read(&path)
-                    })
-                    .map_err(|_| "metadata worker panicked".into())
-                    .and_then(|r| r.map_err(|e| format!("{e:#}")));
-                    let mut q = meta_queue.0.lock().unwrap();
-                    if q.versions[task.index] == task.version {
-                        q.metadata.push(Metadata {
-                            index: task.index,
-                            version: task.version,
-                            result,
-                        });
+                        drop(q);
+                        meta_ctx.request_repaint();
                     }
-                    if q.meta.is_empty()
-                        && let Some(s) = &session
-                    {
-                        let stats = s.stats();
-                        log::info!(
-                            "LR state complete {:.1}ms wrote={} kept={} error={}",
-                            start.elapsed().as_secs_f64() * 1000.,
-                            stats.wrote,
-                            stats.kept,
-                            stats.error
-                        );
-                    }
-                    drop(q);
-                    meta_ctx.request_repaint();
-                }
-            })
-            .expect("spawn metadata worker");
+                })
+                .expect("spawn metadata worker");
+            metadata_workers.push(metadata_worker);
+        }
         Self {
             queue,
             locations: paths,
-            metadata_worker: Some(metadata_worker),
+            metadata_workers,
         }
     }
     pub fn locations(&self) -> Arc<Vec<RwLock<PathBuf>>> {
@@ -482,12 +497,25 @@ impl Pool {
             self.queue.1.notify_all();
         }
     }
+    #[cfg(test)]
     pub fn take_decoded(&self) -> Option<Decoded> {
+        self.take_decoded_matching(|_| true)
+    }
+    /// Keep predecoded full images on the CPU until a visible loupe needs them.
+    /// Uploading neighbour/warm textures can otherwise stall navigation for a
+    /// whole large RAW texture even though it is never drawn in that frame.
+    pub fn take_decoded_for(&self, full_indices: &[usize]) -> Option<Decoded> {
+        self.take_decoded_matching(|task| {
+            task.level != Level::Full || full_indices.contains(&task.index)
+        })
+    }
+    fn take_decoded_matching(&self, accept: impl Fn(&Task) -> bool) -> Option<Decoded> {
         let mut q = self.queue.0.lock().unwrap();
         let i = q
             .results
             .iter()
             .enumerate()
+            .filter(|(_, d)| accept(&d.task))
             .min_by_key(|(_, d)| rank(d.task, q.current, q.reference))?
             .0;
         let d = q.results.swap_remove(i);
@@ -535,7 +563,7 @@ impl Drop for Pool {
         self.queue.0.lock().unwrap().stop = true;
         self.queue.1.notify_all();
         // Preserve all LR initialization even if the user closes immediately.
-        if let Some(worker) = self.metadata_worker.take() {
+        for worker in self.metadata_workers.drain(..) {
             let _ = worker.join();
         }
     }
@@ -543,6 +571,57 @@ impl Drop for Pool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn warm_full_waits_for_loupe_without_blocking_previews_or_redecoding() {
+        let mut q = Queue::new(3);
+        for (i, level) in [(0, Level::Full), (1, Level::Full), (2, Level::Thumb)] {
+            let d = result(i, level, 0);
+            q.pending.insert(d.task);
+            q.publish(d);
+        }
+        let pool = Pool {
+            queue: Arc::new((Mutex::new(q), Condvar::new())),
+            locations: Arc::new(Vec::new()),
+            metadata_workers: Vec::new(),
+        };
+        assert_eq!(pool.take_decoded_for(&[]).unwrap().task.level, Level::Thumb);
+        assert!(pool.take_decoded_for(&[]).is_none());
+        pool.warm_full(0);
+        assert!(
+            pool.queue.0.lock().unwrap().tasks.is_empty(),
+            "ready warm pixels must not be decoded twice"
+        );
+        assert_eq!(pool.take_decoded_for(&[1]).unwrap().task.index, 1);
+        assert!(pool.requested(0, Level::Full));
+        assert_eq!(pool.take_decoded_for(&[0]).unwrap().task.index, 0);
+        assert!(!pool.requested(0, Level::Full));
+    }
+    #[test]
+    fn parallel_thumbnail_batch_survives_a_busy_ui_frame() {
+        let mut q = Queue::new(32);
+        for index in 0..32 {
+            let decoded = result(index, Level::Thumb, 0);
+            q.pending.insert(decoded.task);
+            q.publish(decoded);
+        }
+        assert_eq!(
+            q.results.len(),
+            32,
+            "completed small previews must not be thrown away while the UI is busy"
+        );
+    }
+    #[test]
+    fn navigation_keeps_useful_queued_preloads_and_cancels_distant_work() {
+        let mut q = Queue::new(12);
+        let next = result(1, Level::Fit(1600), 0).task;
+        let far = result(10, Level::Fit(1600), 0).task;
+        q.tasks.extend([next, far]);
+        q.pending.extend([next, far]);
+        q.navigate(1);
+        assert_eq!(q.tasks, [next]);
+        assert!(q.pending.contains(&next));
+        assert!(!q.pending.contains(&far));
+    }
     #[test]
     fn color_image_reuses_the_rgba_buffer_without_changing_pixels() {
         let rgba: Vec<u8> = (0..3 * 2 * 4).map(|v| (v * 37) as u8).collect();
@@ -730,7 +809,7 @@ mod tests {
             q.pending.insert(thumbnail.task);
             q.publish(thumbnail);
         }
-        assert!(q.results.len() <= 4);
+        assert!(q.results.len() <= 64);
         assert!(
             q.results
                 .iter()

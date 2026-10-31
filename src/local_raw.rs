@@ -18,6 +18,55 @@ pub struct Request {
     pub output: PathBuf,
     pub max_edge: u32,
 }
+pub struct SceneRequest {
+    pub source: PathBuf,
+    pub xmp: String,
+    pub max_edge: u32,
+}
+pub struct SceneRendered {
+    pub frame: crate::raw_color::Frame,
+    pub timings: Timings,
+}
+/// High-precision editor path. No exposure, Look, tone or sRGB encoding is baked
+/// into the returned ProPhoto pixels; those operations share one display recipe.
+pub fn render_scene(request: &SceneRequest) -> Result<SceneRendered> {
+    let started = Instant::now();
+    let generation = GENERATION.load(Ordering::Acquire);
+    let cancelled = || GENERATION.load(Ordering::Acquire) != generation;
+    let values = if request.xmp.trim().is_empty() {
+        xmp::Values::default()
+    } else {
+        xmp::parse_values(&request.xmp)?
+    };
+    let wb = values
+        .white_balance
+        .as_ref()
+        .filter(|w| w.mode.as_deref() != Some("As Shot"));
+    let temperature = wb.and_then(|w| w.temperature).map(f64::from);
+    let tint = wb.and_then(|w| w.tint).map(f64::from).unwrap_or(0.);
+    let decoded = native_raw::develop_linear(
+        &request.source,
+        &native_raw::DevelopSettings {
+            max_edge: request.max_edge,
+            temperature,
+            tint,
+            exposure: 0.,
+        },
+        &cancelled,
+    )?;
+    let mut timings = Timings {
+        raw_open_ms: decoded.open_ms,
+        metadata_ms: decoded.open_ms,
+        unpack_ms: decoded.unpack_ms,
+        process_ms: decoded.process_ms,
+        ..Default::default()
+    };
+    let color_started = Instant::now();
+    let frame = crate::raw_color::prepare(decoded, &values, request.max_edge, &cancelled)?;
+    timings.profile_ms = color_started.elapsed().as_secs_f64() * 1000.;
+    timings.wall_ms = started.elapsed().as_secs_f64() * 1000.;
+    Ok(SceneRendered { frame, timings })
+}
 #[derive(Clone, Debug, Default)]
 pub struct Timings {
     pub copy_ms: f64,

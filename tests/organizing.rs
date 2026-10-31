@@ -180,6 +180,9 @@ fn path_identity_obeys_platform_filename_rules() {
         assert_eq!(upper, lower);
     } else {
         assert_ne!(upper, lower);
-        assert_ne!(path_key(Path::new("/Photos/a\\b.JPG")), path_key(Path::new("/Photos/a/b.JPG")));
+        assert_ne!(
+            path_key(Path::new("/Photos/a\\b.JPG")),
+            path_key(Path::new("/Photos/a/b.JPG"))
+        );
     }
 }

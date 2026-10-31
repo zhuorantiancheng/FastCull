@@ -23,6 +23,57 @@ pub struct Developed {
     pub unpack_ms: f64,
     pub process_ms: f64,
 }
+/// Linear, white-balanced camera RGB, normalized to the green multiplier.
+/// Values above one retain sensor highlight headroom. Exposure is not applied.
+pub struct LinearDeveloped {
+    pub width: usize,
+    pub height: usize,
+    pub rgb: Vec<[f32; 3]>,
+    pub orientation: u16,
+    pub temperature: Option<f64>,
+    pub tint: Option<f64>,
+    pub camera_multipliers: [f32; 4],
+    /// WB actually used for the returned RGB, normalized to green = 1.
+    pub applied_mul: [f32; 4],
+    pub camera_matrix: [[f32; 3]; 4],
+    pub camera_to_srgb: [[f32; 4]; 3],
+    pub baseline_exposure: f64,
+    pub make: String,
+    pub model: String,
+    pub open_ms: f64,
+    pub unpack_ms: f64,
+    pub process_ms: f64,
+}
+
+#[cfg(any(windows, target_os = "macos", test))]
+fn decode_linear_bytes(
+    bytes: &[u8],
+    count: usize,
+    scale: f64,
+    cancelled: &(dyn Fn() -> bool + Sync),
+) -> Result<Vec<[f32; 3]>> {
+    ensure!(
+        count > 0 && count <= 160_000_000 && count.checked_mul(6) == Some(bytes.len()),
+        "无效线性 RAW 缓冲长度"
+    );
+    ensure!(
+        scale.is_finite() && scale > 0. && scale <= 65536.,
+        "无效线性 RAW 通道归一尺度"
+    );
+    let mut rgb = Vec::new();
+    rgb.try_reserve_exact(count)?;
+    let factor = (scale / 65535.) as f32;
+    for (index, pixel) in bytes.chunks_exact(6).enumerate() {
+        if index % 8192 == 0 {
+            ensure!(!cancelled(), "已取消线性 RAW 转换");
+        }
+        rgb.push(std::array::from_fn(|c| {
+            u16::from_ne_bytes([pixel[2 * c], pixel[2 * c + 1]]) as f32 * factor
+        }));
+    }
+    ensure!(!cancelled(), "已取消线性 RAW 转换");
+    Ok(rgb)
+}
 
 #[cfg(any(windows, target_os = "macos"))]
 mod desktop {
@@ -102,11 +153,41 @@ mod desktop {
         unpack_ms: f64,
         process_ms: f64,
     }
+    #[repr(C)]
+    struct LinearInfo {
+        abi: u32,
+        orientation: u32,
+        camera_mul: [f32; 4],
+        applied_mul: [f32; 4],
+        camera_xyz: [[f32; 3]; 4],
+        camera_to_srgb: [[f32; 4]; 3],
+        temperature: f64,
+        tint: f64,
+        baseline_exposure: f64,
+        linear_scale: f64,
+        open_ms: f64,
+        unpack_ms: f64,
+        process_ms: f64,
+        make: [u8; 64],
+        model: [u8; 64],
+    }
+    impl Default for LinearInfo {
+        fn default() -> Self {
+            unsafe { std::mem::zeroed() }
+        }
+    }
     type Develop = unsafe extern "C" fn(
         *const PathChar,
         *const DevelopParams,
         *mut Frame,
         *mut DevelopInfo,
+        *mut u8,
+    ) -> i32;
+    type DevelopLinear = unsafe extern "C" fn(
+        *const PathChar,
+        *const DevelopParams,
+        *mut Frame,
+        *mut LinearInfo,
         *mut u8,
     ) -> i32;
     type CancelDevelop = unsafe extern "C" fn();
@@ -128,6 +209,7 @@ mod desktop {
         release: Release,
         scaled_jpeg: Option<(ScaledJpeg, Release)>,
         develop: Option<Develop>,
+        develop_linear: Option<DevelopLinear>,
         cancel_develop: Option<CancelDevelop>,
         write_jpeg: Option<WriteJpeg>,
         #[cfg(target_os = "macos")]
@@ -153,9 +235,10 @@ mod desktop {
                     .zip(GetProcAddress(module,c"fc_jpeg_release".as_ptr().cast()))
                     .map(|(decode,release)| (std::mem::transmute::<unsafe extern "system" fn()->isize,ScaledJpeg>(decode), std::mem::transmute::<unsafe extern "system" fn()->isize,Release>(release)));
                 let develop=GetProcAddress(module,c"fc_raw_develop".as_ptr().cast()).map(|p|std::mem::transmute::<unsafe extern "system" fn()->isize,Develop>(p));
+                let develop_linear=GetProcAddress(module,c"fc_raw_develop_linear".as_ptr().cast()).map(|p|std::mem::transmute::<unsafe extern "system" fn()->isize,DevelopLinear>(p));
                 let cancel_develop=GetProcAddress(module,c"fc_raw_develop_cancel".as_ptr().cast()).map(|p|std::mem::transmute::<unsafe extern "system" fn()->isize,CancelDevelop>(p));
                 let write_jpeg=GetProcAddress(module,c"fc_jpeg_write".as_ptr().cast()).map(|p|std::mem::transmute::<unsafe extern "system" fn()->isize,WriteJpeg>(p));
-                Ok(Library {probe:std::mem::transmute::<unsafe extern "system" fn()->isize,Probe>(probe),decode:std::mem::transmute::<unsafe extern "system" fn()->isize,Decode>(decode),release:std::mem::transmute::<unsafe extern "system" fn()->isize,Release>(release),scaled_jpeg,develop,cancel_develop,write_jpeg})
+                Ok(Library {probe:std::mem::transmute::<unsafe extern "system" fn()->isize,Probe>(probe),decode:std::mem::transmute::<unsafe extern "system" fn()->isize,Decode>(decode),release:std::mem::transmute::<unsafe extern "system" fn()->isize,Release>(release),scaled_jpeg,develop,develop_linear,cancel_develop,write_jpeg})
             }
         }).as_ref().map_err(|e|anyhow::anyhow!(e.clone()))
     }
@@ -190,6 +273,10 @@ mod desktop {
                         release,
                         scaled_jpeg: None,
                         develop: module.get::<Develop>(b"fc_raw_develop\0").ok().map(|p| *p),
+                        develop_linear: module
+                            .get::<DevelopLinear>(b"fc_raw_develop_linear\0")
+                            .ok()
+                            .map(|p| *p),
                         cancel_develop: module
                             .get::<CancelDevelop>(b"fc_raw_develop_cancel\0")
                             .ok()
@@ -310,6 +397,98 @@ mod desktop {
             tint: has_wb.then_some(info.tint),
             camera_multipliers: info.camera_mul,
             camera_matrix: info.camera_xyz,
+            open_ms: info.open_ms,
+            unpack_ms: info.unpack_ms,
+            process_ms: info.process_ms,
+        })
+    }
+    pub fn develop_linear(
+        path: &Path,
+        settings: &DevelopSettings,
+        cancelled: &(dyn Fn() -> bool + Sync),
+    ) -> Result<LinearDeveloped> {
+        let lib = library()?;
+        let develop = lib
+            .develop_linear
+            .ok_or_else(|| anyhow::anyhow!("高精度 RAW 显影接口缺失，请更新 fastcull_raw.dll"))?;
+        struct Context<'a> {
+            cancelled: &'a (dyn Fn() -> bool + Sync),
+        }
+        unsafe extern "C" fn check(pointer: *mut c_void) -> i32 {
+            let context = unsafe { &*(pointer as *const Context<'_>) };
+            i32::from((context.cancelled)())
+        }
+        let mut context = Context { cancelled };
+        let params = DevelopParams {
+            abi: 1,
+            max_edge: settings.max_edge,
+            temperature: settings.temperature.unwrap_or(0.),
+            tint: settings.tint,
+            // Exposure belongs to the downstream float color pipeline. It is
+            // deliberately not included in this linear sensor decode.
+            exposure: 0.,
+            cancelled: Some(check),
+            context: (&mut context as *mut Context<'_>).cast(),
+        };
+        let mut frame = Frame::default();
+        let mut info = LinearInfo::default();
+        let mut error = [0; 256];
+        let path = native_path(path)?;
+        let status = unsafe {
+            develop(
+                path.as_ptr(),
+                &params,
+                &mut frame,
+                &mut info,
+                error.as_mut_ptr(),
+            )
+        };
+        ensure!(status == 0, "高精度 RAW 显影：{}", text(&error));
+        let owner = OwnedFrame {
+            frame,
+            release: lib.release,
+        };
+        let frame = &owner.frame;
+        ensure!(
+            info.abi == 1
+                && frame.kind == 2
+                && frame.bits == 16
+                && frame.channels == 3
+                && !frame.data.is_null(),
+            "无效高精度 RAW 显影帧"
+        );
+        let count = u64::from(frame.width) * u64::from(frame.height);
+        ensure!(
+            count > 0 && count <= 160_000_000 && frame.len == count * 6,
+            "高精度 RAW 显影尺寸超出限制"
+        );
+        let source = unsafe { std::slice::from_raw_parts(frame.data, frame.len as usize) };
+        let rgb = decode_linear_bytes(source, count as usize, info.linear_scale, cancelled)?;
+        let has_wb = info.temperature.is_finite()
+            && info.temperature >= 2000.
+            && info.temperature <= 50000.
+            && info.tint.is_finite()
+            && info.tint.abs() <= 150.;
+        ensure!(
+            info.camera_to_srgb.iter().flatten().all(|v| v.is_finite())
+                && info.camera_xyz.iter().flatten().all(|v| v.is_finite())
+                && info.baseline_exposure.is_finite(),
+            "无效高精度 RAW 色彩元数据"
+        );
+        Ok(LinearDeveloped {
+            width: frame.width as usize,
+            height: frame.height as usize,
+            rgb,
+            orientation: info.orientation as u16,
+            temperature: has_wb.then_some(info.temperature),
+            tint: has_wb.then_some(info.tint),
+            camera_multipliers: info.camera_mul,
+            applied_mul: info.applied_mul,
+            camera_matrix: info.camera_xyz,
+            camera_to_srgb: info.camera_to_srgb,
+            baseline_exposure: info.baseline_exposure,
+            make: text(&info.make),
+            model: text(&info.model),
             open_ms: info.open_ms,
             unpack_ms: info.unpack_ms,
             process_ms: info.process_ms,
@@ -488,6 +667,19 @@ mod desktop {
         }
         Ok(pixels)
     }
+    #[cfg(test)]
+    mod linear_abi_tests {
+        use super::*;
+        #[test]
+        fn linear_info_layout_matches_the_native_abi() {
+            assert_eq!(std::mem::size_of::<LinearInfo>(), 320);
+            assert_eq!(std::mem::align_of::<LinearInfo>(), 8);
+            assert_eq!(std::mem::offset_of!(LinearInfo, temperature), 136);
+            assert_eq!(std::mem::offset_of!(LinearInfo, linear_scale), 160);
+            assert_eq!(std::mem::offset_of!(LinearInfo, make), 192);
+            assert_eq!(std::mem::offset_of!(LinearInfo, model), 256);
+        }
+    }
 }
 pub fn read(path: &Path) -> Result<ArwInfo> {
     #[cfg(any(windows, target_os = "macos"))]
@@ -555,6 +747,21 @@ pub fn develop(
         anyhow::bail!("此构建没有本地 RAW 显影器")
     }
 }
+pub fn develop_linear(
+    path: &Path,
+    settings: &DevelopSettings,
+    cancelled: &(dyn Fn() -> bool + Sync),
+) -> Result<LinearDeveloped> {
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        desktop::develop_linear(path, settings, cancelled)
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        let _ = (path, settings, cancelled);
+        anyhow::bail!("此构建没有高精度 RAW 显影器")
+    }
+}
 pub fn cancel_develop() {
     #[cfg(any(windows, target_os = "macos"))]
     desktop::cancel_develop();
@@ -568,5 +775,25 @@ pub fn write_jpeg(path: &Path, pixels: &Pixels) -> Result<()> {
     {
         let _ = (path, pixels);
         anyhow::bail!("此构建没有原生 JPEG 写出器")
+    }
+}
+
+#[cfg(test)]
+mod linear_tests {
+    use super::*;
+    #[test]
+    fn sixteen_bit_conversion_preserves_headroom_and_sub_byte_steps() {
+        let words = [32768_u16, 32769, 65535];
+        let bytes: Vec<_> = words.into_iter().flat_map(u16::to_ne_bytes).collect();
+        let rgb = decode_linear_bytes(&bytes, 1, 3., &|| false).unwrap()[0];
+        assert!(rgb[0] > 1.49 && rgb[0] < 1.51);
+        assert!(rgb[1] > rgb[0] && rgb[1] - rgb[0] < 1. / 255.);
+        assert_eq!(rgb[2], 3.);
+    }
+    #[test]
+    fn malformed_and_cancelled_linear_frames_are_rejected() {
+        assert!(decode_linear_bytes(&[0; 6], 2, 1., &|| false).is_err());
+        assert!(decode_linear_bytes(&[0; 6], 1, f64::NAN, &|| false).is_err());
+        assert!(decode_linear_bytes(&[0; 6], 1, 1., &|| true).is_err());
     }
 }

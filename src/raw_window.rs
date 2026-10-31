@@ -8,13 +8,14 @@ use fastcull::{
     xmp::{self, Updates, Values},
 };
 use std::{
+    collections::VecDeque,
     fs,
     io::Write,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{
         Arc, Mutex,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
     thread,
@@ -106,6 +107,8 @@ impl Request {
 }
 fn editable_updates(updates: &Updates) -> Updates {
     Updates {
+        rating: updates.rating,
+        crop: updates.crop,
         exposure: updates.exposure,
         white_balance: updates.white_balance,
         basic: updates.basic,
@@ -129,6 +132,8 @@ fn receipt(text: &str, expected: &Path) -> Result<Updates> {
         .map(|w| w.edit().context("回执白平衡模式不可编辑"))
         .transpose()?;
     let updates = Updates {
+        rating: v.rating,
+        crop: v.crop,
         exposure: v.exposure,
         white_balance,
         basic: v.basic,
@@ -159,12 +164,14 @@ struct Worker {
 pub struct Windows {
     worker: Mutex<Option<Worker>>,
     session: Option<Arc<Session>>,
+    busy: Arc<AtomicBool>,
 }
 impl Windows {
     pub fn new(session: Option<Arc<Session>>) -> Arc<Self> {
         Arc::new(Self {
             worker: Mutex::new(None),
             session,
+            busy: Arc::new(AtomicBool::new(false)),
         })
     }
     pub fn open(
@@ -174,16 +181,34 @@ impl Windows {
         catalog: Option<(PathBuf, String)>,
         ctx: &egui::Context,
     ) {
+        if self.busy.swap(true, Ordering::AcqRel) {
+            return;
+        }
         let mut worker = self.worker.lock().unwrap();
         if worker.is_none() {
-            *worker = Some(start(self.session.clone()));
+            *worker = Some(start(self.session.clone(), self.busy.clone()));
         }
-        let _ = worker.as_ref().unwrap().send.send(Message::Open(Open {
-            path,
-            index,
-            catalog,
-            ctx: ctx.clone(),
-        }));
+        if worker
+            .as_ref()
+            .unwrap()
+            .send
+            .send(Message::Open(Open {
+                path,
+                index,
+                catalog,
+                ctx: ctx.clone(),
+            }))
+            .is_err()
+        {
+            self.busy.store(false, Ordering::Release);
+        }
+    }
+    pub fn busy(&self) -> bool {
+        self.busy.load(Ordering::Acquire)
+    }
+    #[cfg(test)]
+    pub fn set_busy_for_test(&self, busy: bool) {
+        self.busy.store(busy, Ordering::Release);
     }
     pub fn poll(&self) -> Vec<Event> {
         self.worker
@@ -324,7 +349,7 @@ fn launch(job: Open) -> Result<Active> {
         ctx: job.ctx,
     })
 }
-fn start(session: Option<Arc<Session>>) -> Worker {
+fn start(session: Option<Arc<Session>>, busy: Arc<AtomicBool>) -> Worker {
     let (send, jobs) = mpsc::channel();
     let (events, receive) = mpsc::channel();
     thread::Builder::new()
@@ -344,6 +369,7 @@ fn start(session: Option<Arc<Session>>) -> Worker {
                         match result {
                             Ok(a) => active.push(a),
                             Err(e) => {
+                                busy.store(false, Ordering::Release);
                                 let _ = events.send(Event::Error(format!("{e:#}")));
                                 ctx.request_repaint();
                             }
@@ -353,6 +379,7 @@ fn start(session: Option<Arc<Session>>) -> Worker {
                     Err(mpsc::RecvTimeoutError::Disconnected) => return,
                     Err(mpsc::RecvTimeoutError::Timeout) => {}
                 }
+                let had_active = !active.is_empty();
                 active.retain_mut(|a| {
                     let status = a.child.try_wait();
                     a.done = status.as_ref().map_or(true, |s| s.is_some());
@@ -387,8 +414,14 @@ fn start(session: Option<Arc<Session>>) -> Worker {
                     }
                     // A failed, closed editor stays retryable while the main window
                     // remains open. Drain reports the failure and preserves its files.
+                    if a.done && a.error.is_none() {
+                        a.ctx.request_repaint();
+                    }
                     !a.done || a.error.is_some()
                 });
+                if had_active && active.is_empty() {
+                    busy.store(false, Ordering::Release);
+                }
                 if active.iter().all(|a| a.done)
                     && let Some(sender) = drain.take()
                 {
@@ -414,7 +447,17 @@ struct App {
     error: Option<String>,
     preview: Option<Arc<crate::raw_preview::Preview>>,
     allow_close: bool,
-    confirm_close: bool,
+    close_pending: bool,
+    pending_receipts: VecDeque<Updates>,
+}
+impl App {
+    fn flush_receipts(&mut self) -> Result<()> {
+        while let Some(updates) = self.pending_receipts.front() {
+            self.request.saved(updates)?;
+            self.pending_receipts.pop_front();
+        }
+        Ok(())
+    }
 }
 fn load(
     request: &Request,
@@ -444,26 +487,23 @@ impl eframe::App for App {
                 Err(error) => self.error = Some(error),
             }
         }
-        if ctx.input(|i| i.viewport().close_requested())
-            && !self.allow_close
-            && let Some(editor) = &self.editor
-            && (editor.saving() || editor.dirty())
-        {
+        if ctx.input(|i| i.viewport().close_requested()) && !self.allow_close {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-            if !editor.saving() {
-                self.confirm_close = true;
-            }
+            self.close_pending = true;
         }
         if let Some(editor) = &mut self.editor {
             match editor.show(ctx) {
                 crate::raw_editor::Action::Saved(saved) => {
-                    if let Err(error) = self.request.saved(&saved.1) {
-                        self.error = Some(format!("XMP 已保存，但回执失败：{error:#}"));
+                    self.pending_receipts.push_back(saved.1.clone());
+                    match self.flush_receipts() {
+                        Ok(()) => self.error = None,
+                        Err(error) => {
+                            self.error = Some(format!("XMP 已保存，但回执失败：{error:#}"))
+                        }
                     }
                 }
                 crate::raw_editor::Action::Cancel => {
-                    self.allow_close = true;
-                    ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                    self.close_pending = true;
                 }
                 crate::raw_editor::Action::Reload => {
                     self.editor = None;
@@ -476,27 +516,47 @@ impl eframe::App for App {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.heading("RAW 编辑");
                 ui.spinner();
-                ui.label("正在后台读取 RAW / XMP，主选片窗口可继续操作");
+                ui.label("正在后台读取 RAW / XMP，主选片器已锁定");
             });
             ctx.request_repaint_after(Duration::from_millis(50));
         }
-        if self.confirm_close {
-            egui::Window::new("未保存的 RAW 调整")
-                .collapsible(false)
-                .show(ctx, |ui| {
-                    ui.label("关闭将丢弃此窗口中未保存的调整。");
-                    if ui.button("丢弃调整并关闭").clicked() {
+        if self.close_pending {
+            let result = if let Some(editor) = &mut self.editor {
+                editor.auto_save()
+            } else if self.error.is_some() {
+                Ok(true)
+            } else {
+                Ok(false)
+            };
+            match result {
+                Ok(true) => match self.flush_receipts() {
+                    Ok(()) => {
                         self.allow_close = true;
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
-                    if ui.button("继续编辑").clicked() {
-                        self.confirm_close = false;
+                    Err(error) => {
+                        self.close_pending = false;
+                        self.error = Some(format!("XMP 已保存，回传失败：{error:#}"));
                     }
-                });
+                },
+                Ok(false) => {
+                    ctx.request_repaint_after(Duration::from_millis(50));
+                }
+                Err(error) => {
+                    self.close_pending = false;
+                    self.error = Some(format!("自动保存未完成，草稿已保留：{error:#}"));
+                }
+            }
         }
         if let Some(error) = &self.error {
             egui::Window::new("RAW 编辑提示").show(ctx, |ui| {
                 ui.colored_label(egui::Color32::LIGHT_RED, error);
+                if ui.button("重试保存并关闭").clicked() {
+                    if let Some(editor) = &mut self.editor {
+                        editor.retry_save();
+                    }
+                    self.close_pending = true;
+                }
             });
         }
     }
@@ -541,7 +601,8 @@ pub fn run(path: &Path) -> Result<()> {
                 error: None,
                 preview,
                 allow_close: false,
-                confirm_close: false,
+                close_pending: false,
+                pending_receipts: VecDeque::new(),
             }))
         }),
     )
@@ -551,6 +612,96 @@ pub fn run(path: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn failed_receipt_delivery_retains_all_saves_until_the_directory_recovers() {
+        let (directory, mut request, _session, _manifest) = fixture();
+        request.receipt = directory.path().join("temporarily-unavailable/saved.txt");
+        let (_send, receive) = mpsc::channel();
+        let mut app = App {
+            request,
+            load: receive,
+            editor: None,
+            error: None,
+            preview: None,
+            allow_close: false,
+            close_pending: false,
+            pending_receipts: VecDeque::from([
+                Updates {
+                    exposure: Some(350000),
+                    crop: Some(Default::default()),
+                    ..Default::default()
+                },
+                Updates {
+                    rating: Some(4),
+                    ..Default::default()
+                },
+            ]),
+        };
+        assert!(app.flush_receipts().is_err());
+        assert_eq!(app.pending_receipts.len(), 2);
+        fs::create_dir(app.request.receipt.parent().unwrap()).unwrap();
+        app.flush_receipts().unwrap();
+        assert!(app.pending_receipts.is_empty());
+        let files = receipt_files(&app.request).unwrap();
+        assert_eq!(files.len(), 2);
+        let first = receipt(
+            &fs::read_to_string(&files[0].1).unwrap(),
+            &app.request.source,
+        )
+        .unwrap();
+        let second = receipt(
+            &fs::read_to_string(&files[1].1).unwrap(),
+            &app.request.source,
+        )
+        .unwrap();
+        assert_eq!(first.exposure, Some(350000));
+        assert_eq!(first.crop, Some(Default::default()));
+        assert_eq!(second.rating, Some(4));
+    }
+    #[test]
+    fn failed_launch_releases_the_parent_gate_and_publishes_the_error() {
+        let windows = Windows::new(None);
+        windows.open(
+            PathBuf::from("missing-photo-for-test.ARW"),
+            0,
+            None,
+            &egui::Context::default(),
+        );
+        let deadline = std::time::Instant::now() + Duration::from_secs(3);
+        while windows.busy() {
+            assert!(std::time::Instant::now() < deadline);
+            thread::sleep(Duration::from_millis(5));
+        }
+        assert!(
+            windows
+                .poll()
+                .iter()
+                .any(|event| matches!(event, Event::Error(_)))
+        );
+        windows.finish().unwrap();
+    }
+    #[test]
+    fn ratings_and_crop_receipts_reach_the_lightroom_session_together() {
+        let (_directory, request, session, manifest) = fixture();
+        let updates = Updates {
+            rating: Some(4),
+            crop: Some(Default::default()),
+            ..Default::default()
+        };
+        xmp::write(&request.source, &updates).unwrap();
+        request.saved(&updates).unwrap();
+        let mut acknowledged = 0;
+        let mut published = Vec::new();
+        consume_receipts(&request, 0, &mut acknowledged, Some(&session), |_, u| {
+            published.push(u)
+        })
+        .unwrap();
+        assert_eq!(published[0].rating, Some(4));
+        assert_eq!(published[0].crop, Some(Default::default()));
+        let saved = fastcull::handoff::Manifest::read(&manifest).unwrap();
+        assert!(saved.entries[0].revisions[0] > 0);
+        assert!(saved.entries[0].revisions[4] > 0);
+    }
     #[test]
     fn receipt_roundtrip_preserves_only_explicit_edits() {
         let u = Updates {
@@ -724,7 +875,7 @@ mod tests {
         );
     }
     #[test]
-    fn raw_receipts_cannot_record_culling_fields_or_crop() {
+    fn raw_receipts_preserve_rating_and_crop_but_exclude_unedited_label_and_flag() {
         let (_directory, request, _session, _manifest) = fixture();
         request
             .saved(&Updates {
@@ -744,12 +895,9 @@ mod tests {
         let parsed = receipt(&fs::read_to_string(file).unwrap(), &request.source).unwrap();
         assert_eq!(parsed.orientation, Some(6));
         assert_eq!(parsed.basic.vibrance, Some(0));
-        assert!(
-            parsed.rating.is_none()
-                && parsed.label.is_none()
-                && parsed.flag.is_none()
-                && parsed.crop.is_none()
-        );
+        assert_eq!(parsed.rating, Some(5));
+        assert_eq!(parsed.crop, Some(Default::default()));
+        assert!(parsed.label.is_none() && parsed.flag.is_none());
     }
     #[test]
     fn finish_propagates_an_unconfirmed_receipt_error() {
@@ -758,6 +906,7 @@ mod tests {
         let windows = Windows {
             worker: Mutex::new(Some(Worker { send, receive })),
             session: None,
+            busy: Arc::new(AtomicBool::new(false)),
         };
         let thread = thread::spawn(move || {
             if let Message::Drain(reply) = jobs.recv().unwrap() {

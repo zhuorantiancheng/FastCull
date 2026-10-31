@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-29",
+  "platform": "Windows x86_64",
+  "changes": [
+    "Per-photo image-relative 100% loupe position, with inheritance for unvisited photos",
+    "RAW control alignment, thin gradient rails, RGB/luminance histogram and fixed footer",
+    "Landscape/portrait crop preset pairs, independent ratio lock, corner-driven orientation switching with diagonal hysteresis"
+  ],
+  "rust_tests": {
+    "passed": 218,
+    "failed": 0,
+    "ignored": 2,
+    "log": ".agent-temp/2026-10-29-viewer/test-.log"
+  },
+  "clippy": "passed --all-targets --locked -- -D warnings; filesystem incremental hard-link warning only",
+  "visual_qa": {
+    "loupe": "A panned, B inherited A, B independently panned, A/B each restored their own position; native release window",
+    "crop": "3:2 landscape -> 2:3 portrait -> 3:2 landscape by corner dragging; unlock then free resize; canceled draft",
+    "raw": "Real private DxO DNG copy; controls/histogram inspected at 1280x850; +1.20 EV changed both image and histogram; native rerender completed in 1706 ms on this machine/sample",
+    "save": "Private DNG copy saved, sidecar Exposure2012=1.20 and typed save receipt verified; unsaved-close confirmation verified"
+  },
+  "scope": "Local sRGB preview histogram, bounded 128x128 sampling; not a sensor histogram or Adobe pixel parity claim. Position memory belongs to the current photo-list session. No new Adobe-host end-to-end or macOS visual QA.",
+  "environment_notes": [
+    "Junction test required filesystem access outside sandbox. One existing move test had transient access denied, passed on isolated retry and full rerun.",
+    "First release GUI run omitted the native DLL beside the test executable; complete dependency run rerendered and saved successfully."
+  ],
+  "installed_executable": "lrplugins/FastCull.lrplugin/fastcull.exe",
+  "executable_sha256": "e96af049641cc9f472e4d32bb1005fd5501cfd3a99638923c4faccf60bac050f",
+  "backup": "backups/2026-10-29-viewer/fastcull.exe",
+  "temporary_directory": ".agent-temp/2026-10-29-viewer/",
+  "runtime_depends_on_temporary_directory": false
+}

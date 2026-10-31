@@ -27,7 +27,14 @@ SOURCE_FILES = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'LICENSE', 'R
                 '.github/workflows/macos-build.yml',
                 'installer/FastCull.iss', 'docs/DISTRIBUTION.md', 'docs/RELEASE-NOTES.md',
                 'docs/QUICKSTART.txt', 'docs/CROPPING.md', 'docs/LR-SYNC.md', 'docs/MACOS.md',
-                'docs/RAW-EDITING.md', 'docs/DNG.md',
+                'docs/RAW-EDITING.md', 'docs/DNG.md', 'docs/COLOR-PIPELINE.md',
+                'docs/CULLER-PERFORMANCE-2026-10-30.md',
+                'docs/RAW-COLOR-INVESTIGATION-2026-10-30.md',
+                'docs/raw-color-calibration-validation-2026-10-30.json',
+                'docs/raw-color-experiments-2026-10-30.json',
+                'docs/raw-flow-validation-2026-10-30.json',
+                'docs/raw-zoom-color-validation-2026-10-30.json',
+                'docs/viewer-ui-validation-2026-10-29.json',
                 'docs/raw-window-validation-2026-10-24.json',
                 'docs/raw-edit-validation-2026-10-24.json', 'docs/dng-validation-2026-10-23.json',
                 'vendor/LibRaw-0.22.2.zip']
@@ -87,9 +94,10 @@ def source_paths():
     paths += [PLUGIN/p for p in LUA]
     for folder, suffixes in [('src', {'.rs'}), ('examples', {'.rs'}),
                              ('tests', {'.rs', '.py', '.cjs', '.jpg'}),
-                             ('native', {'.cpp'}), ('bridge', {'.jsx'})]:
+                             ('native', {'.cpp', '.h', '.inc'}), ('bridge', {'.jsx'})]:
         paths += [p for p in (ROOT/folder).rglob('*') if p.is_file() and p.suffix in suffixes]
-    return sorted(set(paths))
+    excluded = {ROOT/'bridge/DxOPureRAW.jsx', ROOT/'tests/bridge_dxo.test.cjs'}
+    return sorted(set(paths) - excluded)
 
 
 def main():
@@ -119,8 +127,12 @@ def main():
     for name in BINARIES+LUA:
         copy(PLUGIN/name, payload/'FastCull.lrplugin'/name)
     for path in ['bridge/FastCull.jsx', 'scripts/register-integrations.ps1', 'scripts/build-native.ps1',
-                 'native/raw_bridge.cpp', 'native/jpeg_scaled.cpp', 'vendor/LibRaw-0.22.2.zip', 'LICENSE', 'README.md',
+                 'native/raw_bridge.cpp', 'native/jpeg_scaled.cpp', 'native/white_balance.h',
+                 'native/white_balance_table.inc', 'vendor/LibRaw-0.22.2.zip', 'LICENSE', 'README.md',
                  'docs/RAW-EDITING.md', 'docs/DNG.md', 'docs/MACOS.md',
+                 'docs/COLOR-PIPELINE.md', 'docs/raw-color-calibration-validation-2026-10-30.json',
+                 'docs/RAW-COLOR-INVESTIGATION-2026-10-30.md', 'docs/raw-color-experiments-2026-10-30.json',
+                 'docs/raw-zoom-color-validation-2026-10-30.json', 'docs/raw-flow-validation-2026-10-30.json',
                  'docs/raw-edit-validation-2026-10-24.json',
                  'docs/raw-window-validation-2026-10-24.json', 'docs/dng-validation-2026-10-23.json']:
         copy(ROOT/path, payload/path)

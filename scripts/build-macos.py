@@ -110,8 +110,12 @@ def main():
          contents / "MacOS/fastcull", scratch / "raw-gui"])
     shutil.copytree(app, plugin / "FastCull.app")
     for relative in ("bridge/FastCull.jsx", "scripts/install-macos.command", "scripts/build-macos.py",
-                     "native/raw_bridge.cpp", "vendor/LibRaw-0.22.2.zip", "docs/MACOS.md",
+                     "native/raw_bridge.cpp", "native/white_balance.h", "native/white_balance_table.inc",
+                     "vendor/LibRaw-0.22.2.zip", "docs/MACOS.md",
                      "docs/RAW-EDITING.md", "docs/DNG.md", "docs/raw-window-validation-2026-10-24.json",
+                     "docs/COLOR-PIPELINE.md", "docs/raw-color-calibration-validation-2026-10-30.json",
+                     "docs/RAW-COLOR-INVESTIGATION-2026-10-30.md", "docs/raw-color-experiments-2026-10-30.json",
+                     "docs/raw-zoom-color-validation-2026-10-30.json", "docs/raw-flow-validation-2026-10-30.json",
                      "docs/raw-edit-validation-2026-10-24.json", "docs/dng-validation-2026-10-23.json", "LICENSE"):
         destination = package / relative
         destination.parent.mkdir(parents=True, exist_ok=True)

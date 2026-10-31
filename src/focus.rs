@@ -41,6 +41,54 @@ pub struct StartupFocus {
     #[cfg(windows)]
     origin: (usize, u32),
 }
+
+/// Disable the parent native window for the complete child-editor lifetime.
+/// Drop also restores it when the parent changes workspace or exits early.
+#[derive(Default)]
+pub struct ParentLock {
+    window: Option<usize>,
+}
+impl ParentLock {
+    pub fn update(&mut self, frame: &eframe::Frame, locked: bool) {
+        #[cfg(windows)]
+        {
+            use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+            if locked && self.window.is_none() {
+                if let Ok(handle) = frame.window_handle()
+                    && let RawWindowHandle::Win32(handle) = handle.as_raw()
+                {
+                    let window = handle.hwnd.get() as usize;
+                    unsafe {
+                        windows_sys::Win32::UI::Input::KeyboardAndMouse::EnableWindow(
+                            window as _,
+                            0,
+                        );
+                    }
+                    self.window = Some(window);
+                }
+            } else if !locked {
+                self.restore();
+            }
+        }
+        #[cfg(not(windows))]
+        let _ = (frame, locked);
+    }
+    fn restore(&mut self) {
+        if let Some(window) = self.window.take() {
+            #[cfg(windows)]
+            unsafe {
+                windows_sys::Win32::UI::Input::KeyboardAndMouse::EnableWindow(window as _, 1);
+            }
+            #[cfg(not(windows))]
+            let _ = window;
+        }
+    }
+}
+impl Drop for ParentLock {
+    fn drop(&mut self) {
+        self.restore();
+    }
+}
 impl StartupFocus {
     pub fn new() -> Self {
         Self {

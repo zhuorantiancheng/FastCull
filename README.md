@@ -1,12 +1,12 @@
 # FastCull
 
-轻量 RAW/JPEG 选片器，使用 Rust 开发，可独立运行，也可从 Adobe Bridge 和 Lightroom Classic 打开。2.8.0 提供 Windows 安装与注册包，以及 macOS Apple Silicon / Intel 独立构建包；Mac 桌面与 Adobe 宿主的人工验收范围见下文。
+轻量 RAW/JPEG 选片器，使用 Rust 开发，可独立运行，也可从 Adobe Bridge 和 Lightroom Classic 打开。2.9.0 提供 Windows 安装与注册包，以及 macOS Apple Silicon / Intel 独立构建包；Mac 桌面与 Adobe 宿主的人工验收范围见下文。
 
 A fast RAW/JPEG photo culler with local RAW development, Adobe Bridge and Lightroom Classic integration. Windows installer and separate Apple Silicon / Intel macOS packages.
 
 macOS 的构建、安装和验证范围见 [macOS 说明](docs/MACOS.md)。下述安装包和快捷键说明针对 Windows。
 
-**2.8.0 新增独立 RAW 编辑窗口**：支持 ARW/NEF/DNG，使用本地 LibRaw 显影和 sRGB 预览，编辑曝光、白平衡及七项基础调整，支持灰点吸管估计并保存 XMP。无需安装或启动 Adobe 软件，主选片窗口可继续操作。本地色彩模型与 LR/ACR 的像素结果存在差异，DCP Look、Adobe 曲线及蒙版等保留在 XMP 中；用法、性能策略和验证边界见 [RAW 编辑说明](docs/RAW-EDITING.md)。2.7.x 安装包不包含这套新增功能。
+**独立 RAW 编辑窗口**：支持 ARW/NEF/DNG，使用本地 LibRaw 显影和 sRGB 预览，编辑曝光、白平衡、七项基础调整、裁切与星级。编辑期间锁定主选片器，关闭编辑窗口时自动保存 XMP；保存失败保留草稿供重试。无需安装或启动 Adobe 软件。采用线性浮点显影与机型 DCP 配置文件，曝光和七项基础调整实时预览；默认色调及滑块模型与 LR/ACR 仍有差异，蒙版等未支持设置保留在 XMP 中；用法、性能策略和验证边界见 [RAW 编辑说明](docs/RAW-EDITING.md)。请更新到 2.9.0 或更新版本以使用这些功能。
 
 ## 下载与安装
 
@@ -43,7 +43,7 @@ macOS 的构建、安装和验证范围见 [macOS 说明](docs/MACOS.md)。下�
 - 支持星级、旗标、颜色及拍摄元数据筛选；支持曝光快速调整和双图独立/联动查看。
 - 100% 查看支持点击位置放大，切图保留相对查看位置。
 - **T / 裁切**：自由与固定比例裁切、自定义比例预设、角度微调及 90° 旋转；编辑结果保存在 XMP，移动照片时一起携带。详见 [裁切说明](docs/CROPPING.md)。
-- **RAW 编辑**：在独立窗口调整曝光、白平衡、对比度、高光、阴影、白色、黑色、自然饱和度和饱和度；先显示快速预览，再后台加载适屏显影，全尺寸按需加载。灰点吸管给出可微调的估计值，保存后可通过 XMP 与 LR/ACR 交换参数。
+- **RAW 编辑**：在独立窗口调整曝光、白平衡、对比度、高光、阴影、白色、黑色、自然饱和度和饱和度；滚轮围绕鼠标缩放、拖动平移，双击或 Z 切换适屏 / 100%，放大时按需加载全尺寸。灰点吸管给出可微调的估计值，保存后可通过 XMP 与 LR/ACR 交换参数。
 - 载入已有裁切：LR 插件直接读取目录中的裁切与旋转（无需预先保存 XMP）；Bridge/独立打开读取 RAW 旁车或 JPEG 内嵌 XMP 中已保存的裁切。
 - 从 LR 打开后选择 **同步全部并关闭**，自动同步本次修改的星级、色标、旗标、曝光、白平衡、基础调整、裁切和旋转；失败保留重试，其他显影设置不变。详见 [退出同步说明](docs/LR-SYNC.md) 及 [RAW 编辑说明](docs/RAW-EDITING.md)。
 - 退出时可确认同步评分。Bridge/独立版使用 RAW 旁车 XMP 或 JPEG 内嵌 XMP；LR 会话可将修改同步回目录。
