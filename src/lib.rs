@@ -9,6 +9,8 @@ pub mod enhanced_profile;
 pub mod filtering;
 pub mod formats;
 pub mod handoff;
+#[cfg(target_os = "macos")]
+mod imageio;
 pub mod imaging;
 pub mod jpeg;
 pub mod local_raw;

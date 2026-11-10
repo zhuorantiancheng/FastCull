@@ -10,6 +10,7 @@
 
 - 独立窗口、原生照片／文件夹选择、窗口拖入照片和文件夹。
 - 系统中文字体和 Retina 窗口配置。
+- 缩小 JPEG 解码走系统 Core Graphics/ImageIO 的按需降采样，与 Windows 的 WIC 路径同一契约；失败或不适用时回退 Rust 解码，100% 全尺寸路径不变。
 - RAW 适配层使用 `libfastcull_raw.dylib`，通过 UTF-8 路径调用 LibRaw；Windows 保留 UTF-16 接口和 DLL。
 - ARW/NEF/DNG 本地 RAW 编辑在独立进程窗口运行，读取 XMP 并显示 sRGB，主窗口可继续操作；不通过 Adobe 软件显影。曝光、WB、七项基础调节及兼容范围见 [RAW 编辑说明](RAW-EDITING.md)。
 - 多个 RAW 编辑窗口从同一 LR 会话读取配方时，使用跨进程文件锁串行访问邮箱；取消可中断等待，进程退出自动释放锁。
@@ -17,7 +18,7 @@
 - 设置和日志保存在 `~/Library/Application Support/FastCull/`；“打开日志”使用 Finder。
 - Bridge 菜单启动、Lightroom Classic 菜单启动和原有会话同步流程。Mac 路径按 POSIX 规则引用，保留大小写及反斜杠。
 
-Mac 版不包含 Windows 的 Ctrl+Alt+K 前台快捷键助手，请使用 Bridge 右键／工具菜单和 Lightroom 的“图库 → 增效工具额外命令”。Windows 的 WIC 缩小 JPEG 加速也不用于 Mac，Mac 目前使用已有 Rust JPEG 解码和缩放路径；性能需要实测。
+Mac 版不包含 Windows 的 Ctrl+Alt+K 前台快捷键助手，请使用 Bridge 右键／工具菜单和 Lightroom 的“图库 → 增效工具额外命令”。缩小 JPEG 预览解码改用 Core Graphics/ImageIO 的按需降采样（镜像 Windows WIC 路径的接口契约），失败或不适用时回退 Rust 解码；CMYK 等保持原解码路径。Apple Silicon 暖缓存实测见 [Mac ImageIO 缩小解码基准](MAC-PERFORMANCE-2026-11-10.md)；该数据来自单机，不代表所有 Mac 机型或冷启动。
 
 旧版 Adobe 文本交接协议无法表示含换行的文件名；LR 交接还不能表示路径中的 `|`。插件会提示先重命名，避免将路径拆成错误记录。Mac 不提供旧 Python 原型回退。
 
@@ -62,6 +63,8 @@ GitHub Actions 的 **macOS build** 工作流提供两个架构的独立构建和
 自动检查覆盖跨平台 Rust 逻辑、Bridge 模拟宿主中的启动请求、LR 命令引用和配置迁移、应用包信息。Mac 构建脚本还检查 dylib 加载、UTF-8 路径、新本地显影 ABI，以及无私人照片依赖的合成 DNG 显影与参数往返；这些检查不代替真实 ARW/NEF/DNG 相机覆盖、GPU 界面和 Adobe 宿主验收。
 
 工作流还会自动打开实际 RAW 编辑窗口，以合成 DNG 完成适屏显影、曝光/WB/七项调整、全尺寸和保存，检查 XMP 与回执，并生成四张 GPU 窗口截图。截图和日志在每个架构的 `validation` Artifact 中供核对；该自动流程不代替 Finder 双击、手动交互、多窗口及 Adobe 宿主验收。
+
+Mac 缩小 JPEG 解码（Core Graphics/ImageIO）用仓库内合成样片覆盖尺寸契约、非对称四象限方向回归（横竖排布与 EXIF Orientation=6，含生产入口跨层级对照）、不透明 alpha、损坏与截断输入的回退；真实样张的耗时对照见 [MAC-PERFORMANCE-2026-11-10.md](MAC-PERFORMANCE-2026-11-10.md)。未覆盖全部相机机型、ICC 色彩配置文件组合、冷启动与所有 JPEG 变体；不代替人工界面验收。
 
 首次对外发布前，需在 Apple Silicon 和 Intel Mac 上逐项验收：
 

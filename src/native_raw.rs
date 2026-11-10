@@ -267,11 +267,19 @@ mod desktop {
                     let release = *module
                         .get::<Release>(b"fc_raw_release\0")
                         .map_err(|e| e.to_string())?;
+                    // Capability probe like Windows: the stock dylib has never
+                    // exported fc_jpeg_scaled, so this stays None until a
+                    // future libfastcull_raw build ships a native scaled path.
+                    let scaled_jpeg = module
+                        .get::<ScaledJpeg>(b"fc_jpeg_scaled\0")
+                        .ok()
+                        .zip(module.get::<Release>(b"fc_jpeg_release\0").ok())
+                        .map(|(decode, release)| (*decode, *release));
                     Ok(Library {
                         probe,
                         decode,
                         release,
-                        scaled_jpeg: None,
+                        scaled_jpeg,
                         develop: module.get::<Develop>(b"fc_raw_develop\0").ok().map(|p| *p),
                         develop_linear: module
                             .get::<DevelopLinear>(b"fc_raw_develop_linear\0")
@@ -499,6 +507,13 @@ mod desktop {
         })
     }
     pub fn scaled_jpeg(bytes: &[u8], width: u32, height: u32) -> Option<Pixels> {
+        // A future libfastcull_raw export wins; otherwise ImageIO covers the
+        // stock macOS dylib, which has never shipped fc_jpeg_scaled. Any None
+        // falls back to the bounded Rust decoder in `imaging`.
+        #[cfg(target_os = "macos")]
+        if library().ok().and_then(|lib| lib.scaled_jpeg).is_none() {
+            return crate::imageio::scaled_jpeg(bytes, width, height);
+        }
         let (decode, release) = library().ok()?.scaled_jpeg?;
         let mut frame = Frame::default();
         let status = unsafe {
