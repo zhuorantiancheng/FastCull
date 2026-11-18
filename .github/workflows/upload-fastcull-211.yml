@@ -1,0 +1,63 @@
+name: Upload FastCull 2.11.0 release assets
+on:
+  push:
+    branches: ['release-upload/2.11.0']
+permissions:
+  actions: read
+  contents: write
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download and upload the verified artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          mkdir fastcull-release
+          cd fastcull-release
+          gh run download 44267854309 --name FastCull-Windows --dir windows
+          gh run download 44267854146 --name FastCull-macos-arm64 --dir arm
+          gh run download 44267854146 --name FastCull-macos-x86_64 --dir intel
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import subprocess
+
+          sha = '12d4ad2cd65c9eee0cfe1c3c56d8aae18a0a0e6b'
+          tag = 'v2.11.0'
+          expected = json.loads(r'''{"FastCull-2.11.0-macos-arm64.zip":"fda60c811db0b5ab35fd073af7db3172c00cb92f3bf158bcf8e32a2f6b225434","FastCull-2.11.0-macos-arm64.zip.sha256":"5b095a7f2f302642f4b2094dc089c2a8cd944baa6f625f026666b93a2c4b684e","FastCull-2.11.0-macos-x86_64.zip":"9196870ffe22a8d3322598b07b64abb1cc2a252daaef3e241095be3bf8e7395a","FastCull-2.11.0-macos-x86_64.zip.sha256":"38e12160ec0f9239f7650376eb22efa4a3d7b064bb5d801fabcdbfdcf8b8dd18","FastCull-Portable-2.11.0-windows-x64.zip":"5a1690c3592f0762bf55fe8a9473fe1179626ab06520e757bbda70029e1d3cf7","FastCull-Setup-2.11.0-windows-x64.exe":"e46728f31d28eef58a8eab372ddaec581da30081ff5dbcb085e8b83a007a59df","FastCull-Source-2.11.0.zip":"4b0039047139e9e20cbd77cf020595dfa1a0c125afaa1d46d5b20cda69d25d21","SHA256SUMS.txt":"18651baeea3cd7c1bfb1851ceeca0e4251b3754dd63a1afcc1b82566884ffad4"}''')
+
+          def gh(*args):
+              return subprocess.check_output(['gh', *args], text=True).strip()
+
+          repo = 'zhuorantiancheng/FastCull'
+          assert gh('api', f'repos/{repo}/git/ref/tags/{tag}', '--jq', '.object.sha') == sha
+          release = json.loads(gh('release', 'view', tag, '--json', 'isDraft,tagName,assets'))
+          assert release['isDraft'] and release['tagName'] == tag
+          observed = {a['name']:a for a in release['assets']}
+          assert observed.keys() <= expected.keys()
+          sums = ''.join(f'{digest}  {name}\n' for name, digest in sorted(expected.items())
+                         if name != 'SHA256SUMS.txt')
+          Path('SHA256SUMS.txt').write_text(sums, encoding='ascii')
+          for name, digest in expected.items():
+              if name == 'SHA256SUMS.txt':
+                  path = Path(name)
+              else:
+                  matches = [p for folder in ('windows','arm','intel')
+                             for p in Path(folder).rglob(name)]
+                  assert len(matches)==1, (name, matches)
+                  path = matches[0]
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, name
+              if name in observed:
+                  assert observed[name]['digest'] == 'sha256:' + digest
+                  assert observed[name]['state'] == 'uploaded'
+              else:
+                  subprocess.run(['gh','release','upload',tag,str(path)],check=True)
+              print(f'Verified: {name}', flush=True)
+          PY
